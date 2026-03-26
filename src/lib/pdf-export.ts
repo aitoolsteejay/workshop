@@ -32,7 +32,7 @@ function newSection(doc: jsPDF, title: string) {
   doc.addPage();
   addHeaderFooter(doc);
   doc.setFontSize(18);
-  doc.setTextColor(79, 142, 247);
+  doc.setTextColor(255, 201, 71); // Gold accent
   doc.text(title, 15, 25);
   return 35;
 }
@@ -68,7 +68,7 @@ function addSubHeader(doc: jsPDF, text: string, y: number): number {
   const pageH = doc.internal.pageSize.getHeight() - 20;
   if (y > pageH) { doc.addPage(); addHeaderFooter(doc); y = 25; }
   doc.setFontSize(12);
-  doc.setTextColor(123, 47, 247);
+  doc.setTextColor(255, 201, 71);
   doc.text(text, 15, y);
   return y + 7;
 }
@@ -82,10 +82,10 @@ export function generatePDF(sessionData: any) {
   // Cover page
   addHeaderFooter(doc);
   doc.setFontSize(28);
-  doc.setTextColor(79, 142, 247);
+  doc.setTextColor(255, 201, 71);
   doc.text("B2B Growth Strategy", w / 2, 80, { align: "center" });
   doc.setFontSize(16);
-  doc.setTextColor(150);
+  doc.setTextColor(200);
   doc.text(userName, w / 2, 95, { align: "center" });
   doc.setFontSize(10);
   doc.text(new Date().toLocaleDateString(), w / 2, 105, { align: "center" });
@@ -95,7 +95,7 @@ export function generatePDF(sessionData: any) {
 
   // Table of Contents
   let y = newSection(doc, "Table of Contents");
-  const tocItems = ["Profile Analysis", "ICP 1", "ICP 2", "ICP 3", "Value Propositions", "Website Prompt", "GTM Strategy", "Outreach Sequences"];
+  const tocItems = ["Profile Analysis", "ICP 1", "ICP 2", "ICP 3", "Value Propositions", "Website Prompt", "GTM Strategy", "Outreach Playbook"];
   doc.setFontSize(11);
   doc.setTextColor(60);
   tocItems.forEach((item, i) => {
@@ -161,13 +161,18 @@ export function generatePDF(sessionData: any) {
   for (let i = 0; i < vps.length; i++) {
     const vp = vps[i];
     y = addSubHeader(doc, `ICP ${i + 1} — ${vp.icpName}`, y);
-    const vpFields = ["desiredOutcome", "currentProblem", "yourMethod", "whatTheyReplace", "coreAngle", "whyThisWins"];
-    for (const fk of vpFields) {
-      if (vp[fk]) {
-        y = addWrappedText(doc, `${fk}: ${vp[fk]}`, 15, y, maxW);
+    if (vp.corePromise) { y = addWrappedText(doc, `Core Promise: ${vp.corePromise}`, 15, y, maxW); y += 2; }
+    if (vp.beforeState) { y = addSubHeader(doc, "Before", y); y = addBulletList(doc, vp.beforeState, 15, y, maxW); y += 2; }
+    if (vp.afterState) { y = addSubHeader(doc, "After", y); y = addBulletList(doc, vp.afterState, 15, y, maxW); y += 2; }
+    if (vp.threeStepSystem) {
+      y = addSubHeader(doc, "3-Step System", y);
+      for (const step of vp.threeStepSystem) {
+        y = addWrappedText(doc, `${step.step}: ${step.description}`, 15, y, maxW);
         y += 2;
       }
     }
+    if (vp.oneLiner) { y = addWrappedText(doc, `One-liner: ${vp.oneLiner}`, 15, y, maxW); y += 2; }
+    if (vp.shortPitch) { y = addWrappedText(doc, `Pitch: ${vp.shortPitch}`, 15, y, maxW); y += 2; }
     y += 5;
   }
   if (sessionData?.value_prop_data?.positioning) {
@@ -184,57 +189,67 @@ export function generatePDF(sessionData: any) {
   const gtm = sessionData?.gtm_data?.result;
   y = newSection(doc, "GTM Strategy");
   if (gtm) {
-    if (gtm.outreachStrategy) {
-      for (const os of gtm.outreachStrategy) {
-        y = addSubHeader(doc, `${os.icp} — Outreach`, y);
-        y = addWrappedText(doc, `Channels: ${os.channels?.join(", ")}`, 15, y, maxW);
-        y += 2;
-        y = addBulletList(doc, os.angles, 15, y, maxW);
-        y = addBulletList(doc, os.hooks, 15, y, maxW);
+    if (gtm.channels) {
+      y = addSubHeader(doc, "Primary Channels", y);
+      for (const ch of gtm.channels) {
+        y = addWrappedText(doc, `${ch.name} (Effort: ${ch.effort}, ROI: ${ch.roi})${ch.startHere ? " — START HERE" : ""}`, 15, y, maxW);
+        y = addWrappedText(doc, ch.useCase, 15, y, maxW);
         y += 3;
       }
     }
-    if (gtm.partnerGrowth) {
-      y = addSubHeader(doc, "Partner Outreach", y);
-      y = addBulletList(doc, gtm.partnerGrowth.idealPartners, 15, y, maxW);
-      y = addWrappedText(doc, `Pitch: ${gtm.partnerGrowth.pitch}`, 15, y, maxW);
-      y += 3;
+    if (gtm.timeline) {
+      y = addSubHeader(doc, "Execution Timeline", y);
+      for (const phase of gtm.timeline) {
+        y = addWrappedText(doc, `${phase.phase}: ${phase.title}`, 15, y, maxW);
+        y = addBulletList(doc, phase.tasks, 15, y, maxW);
+        y += 3;
+      }
+    }
+    if (gtm.partners?.types) {
+      y = addSubHeader(doc, "Partner Strategy", y);
+      for (const p of gtm.partners.types) {
+        y = addWrappedText(doc, `${p.type}: ${p.angle}`, 15, y, maxW);
+        y += 2;
+      }
     }
     if (gtm.leadMagnets) {
       y = addSubHeader(doc, "Lead Magnets", y);
       for (const lm of gtm.leadMagnets) {
-        y = addWrappedText(doc, `${lm.name} (${lm.format}) — ${lm.targetICP}`, 15, y, maxW);
-        y = addWrappedText(doc, `  What: ${lm.whatItDoes}. Input: ${lm.userInput}. Output: ${lm.output}`, 15, y, maxW);
+        y = addWrappedText(doc, `${lm.name} (${lm.type || lm.format}) — ${lm.targetICP}`, 15, y, maxW);
+        y = addWrappedText(doc, `  ${lm.description || lm.whatItDoes}`, 15, y, maxW);
         y += 3;
       }
     }
   }
 
-  // Outreach
+  // Outreach Playbook
   const outreach = sessionData?.outreach_data?.result;
-  y = newSection(doc, "Outreach Sequences");
-  if (outreach) {
-    if (outreach.strategySummary) {
-      y = addWrappedText(doc, outreach.strategySummary, 15, y, maxW);
-      y += 5;
-    }
-    if (outreach.linkedIn) {
-      y = addSubHeader(doc, "LinkedIn Sequence", y);
-      y = addWrappedText(doc, `Connection Request: ${outreach.linkedIn.connectionRequest}`, 15, y, maxW);
-      y += 3;
-      outreach.linkedIn.followUps?.forEach((fu: string, i: number) => {
-        y = addWrappedText(doc, `Follow-up ${i + 1}: ${fu}`, 15, y, maxW);
+  y = newSection(doc, "Outreach Playbook");
+  if (outreach?.playbooks) {
+    for (const pb of outreach.playbooks) {
+      y = addSubHeader(doc, pb.icpName, y);
+      if (pb.strategicApproach) {
+        y = addWrappedText(doc, `Best Angle: ${pb.strategicApproach.bestAngle}`, 15, y, maxW);
+        y = addWrappedText(doc, `Style: ${pb.strategicApproach.positioningStyle}`, 15, y, maxW);
         y += 3;
-      });
-    }
-    if (outreach.email?.emails) {
-      y += 3;
-      y = addSubHeader(doc, "Cold Email Sequence", y);
-      for (const em of outreach.email.emails) {
-        y = addWrappedText(doc, `Subject: ${em.subject}`, 15, y, maxW);
-        y = addWrappedText(doc, em.body, 15, y, maxW);
-        y += 5;
       }
+      if (pb.followUpSystem) {
+        y = addWrappedText(doc, `Total Touches: ${pb.followUpSystem.totalTouches}`, 15, y, maxW);
+        y = addWrappedText(doc, `Tone Evolution: ${pb.followUpSystem.toneEvolution}`, 15, y, maxW);
+        y += 3;
+      }
+      if (pb.messageDistribution) {
+        y = addSubHeader(doc, "Message Distribution", y);
+        for (const m of pb.messageDistribution) {
+          y = addWrappedText(doc, `Touch ${m.touch}: ${m.type}`, 15, y, maxW);
+        }
+        y += 3;
+      }
+      if (pb.whatToAvoid) {
+        y = addSubHeader(doc, "What to Avoid", y);
+        y = addBulletList(doc, pb.whatToAvoid, 15, y, maxW);
+      }
+      y += 5;
     }
   }
 
