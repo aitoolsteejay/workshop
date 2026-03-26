@@ -9,8 +9,8 @@ const links = [
 
 export function WorkshopFooter() {
   return (
-    <footer className="mt-16 py-8 border-t border-border/50">
-      <div className="max-w-4xl mx-auto px-4 flex flex-wrap items-center justify-center gap-6">
+    <footer className="mt-16 py-6 border-t border-border">
+      <div className="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-center gap-6">
         {links.map((l) => (
           <a
             key={l.label}

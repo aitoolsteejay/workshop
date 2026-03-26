@@ -37,8 +37,8 @@ export function WelcomeScreen({ onStart, resumeData, onResume, onStartFresh }: W
           <h2 className="text-2xl font-bold mb-2">Welcome back, {resumeData.user_name}!</h2>
           <p className="text-muted-foreground mb-6">Resume where you left off?</p>
           <div className="flex flex-col gap-3">
-            <Button onClick={onResume} className="gradient-bg hover:opacity-90">Continue</Button>
-            <Button variant="ghost" onClick={onStartFresh}>Start Fresh</Button>
+            <Button onClick={onResume} className="accent-bg hover:opacity-90 font-semibold">Continue</Button>
+            <Button variant="ghost" onClick={onStartFresh} className="text-muted-foreground">Start Fresh</Button>
           </div>
         </motion.div>
       </div>
@@ -53,9 +53,9 @@ export function WelcomeScreen({ onStart, resumeData, onResume, onStartFresh }: W
         transition={{ duration: 0.6 }}
         className="max-w-md w-full"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-4xl sm:text-5xl font-extrabold gradient-text mb-4">
-            B2B Growth Workshop
+        <div className="text-center mb-10">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-3 leading-tight">
+            B2B Growth <span className="accent-text">Workshop</span>
           </h1>
           <p className="text-muted-foreground text-lg">
             Build your complete B2B growth strategy in 7 steps
@@ -64,34 +64,34 @@ export function WelcomeScreen({ onStart, resumeData, onResume, onStartFresh }: W
 
         <form onSubmit={handleSubmit} className="glass-card p-8 space-y-5">
           <div>
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name" className="text-sm text-muted-foreground">Full Name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => { setName(e.target.value); setErrors(p => ({ ...p, name: "" })); }}
               placeholder="Your full name"
-              className="mt-1.5 bg-muted/50 border-border/50"
+              className="mt-1.5 bg-secondary border-border focus:border-primary"
             />
             {errors.name && <p className="text-destructive text-xs mt-1">{errors.name}</p>}
           </div>
           <div>
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email" className="text-sm text-muted-foreground">Email Address</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: "" })); }}
               placeholder="you@company.com"
-              className="mt-1.5 bg-muted/50 border-border/50"
+              className="mt-1.5 bg-secondary border-border focus:border-primary"
             />
             {errors.email && <p className="text-destructive text-xs mt-1">{errors.email}</p>}
           </div>
-          <Button type="submit" className="w-full gradient-bg hover:opacity-90 font-semibold text-base h-12">
+          <Button type="submit" className="w-full accent-bg hover:opacity-90 font-semibold text-base h-12">
             Start Workshop →
           </Button>
         </form>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
+        <p className="text-center text-xs text-muted-foreground mt-6">
           Powered by Myntmore
         </p>
       </motion.div>
