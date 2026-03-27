@@ -251,6 +251,23 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
 
       {result && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-4">
+          {/* Overall Clarity Score */}
+          {result.scoreBreakdown && (
+            <div className="glass-card p-6 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Overall Clarity Score</p>
+              <div className="text-5xl font-extrabold accent-text">
+                {Math.round(
+                  (Math.min(result.scoreBreakdown.proof?.score || 0, 20) +
+                   Math.min(result.scoreBreakdown.clarity?.score || 0, 20) +
+                   Math.min(result.scoreBreakdown.execution?.score || 0, 20) +
+                   Math.min(result.scoreBreakdown.specificity?.score || 0, 20) +
+                   Math.min(result.scoreBreakdown.differentiation?.score || 0, 20))
+                )}/100
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Average of Proof, Clarity, Execution, Specificity, Differentiation</p>
+            </div>
+          )}
+
           <div className="glass-card p-6 text-center">
             <div className="text-5xl font-extrabold accent-text">{result.finalScore}/100</div>
             <p className="text-lg font-semibold mt-1">{result.scoreMeaning}</p>
