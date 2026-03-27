@@ -68,7 +68,7 @@ const Index = () => {
   }, [sessionId]);
 
   const handleStart = async (name: string, email: string, phone: string) => {
-    const id = await createSession(name, email);
+    const id = await createSession(name, email, phone);
     setSessionId(id);
     setSessionData({ user_name: name, user_email: email, user_phone: phone, current_step: 1 });
     setStep(1);
