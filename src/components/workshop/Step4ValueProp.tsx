@@ -49,6 +49,8 @@ export function Step4ValueProp({ data, icpData, profileData, onSave, onNext, onB
 
 ${NO_JARGON_RULE}
 
+${PERSONALISATION_RULE}
+
 Core Offer: ${offer}
 ${icpSummary}
 

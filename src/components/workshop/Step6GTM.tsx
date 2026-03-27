@@ -97,6 +97,8 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
 
 ${NO_JARGON_RULE}
 
+${PERSONALISATION_RULE}
+
 ${inputBlock(lite)}
 
 Return JSON: { "icpStrategies": [{ "icpName": string, "leadMagnets": [{ "name": string, "type": "Audit"|"Report"|"Workshop"|"Calculator"|"Diagnostic", "targetICP": string, "includes": [2-3 strings], "whyItWorks": string, "whenToUse": string, "effort": "Low"|"Medium"|"High", "impact": "Low"|"Medium"|"High", "bestStart": boolean }], "eventLedGrowth": { "onlineEvents": [{ "format": string, "topic": string }], "offlineEvents": [{ "format": string, "topic": string }], "eventFunnel": { "preEvent": string, "duringEvent": string, "postEvent": string }, "conversionStrategy": string } }] }

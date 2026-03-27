@@ -92,6 +92,8 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
 
 ${NO_JARGON_RULE}
 
+${PERSONALISATION_RULE}
+
 Core Offer: ${offer}
 ${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}`).join("\n")}
 
