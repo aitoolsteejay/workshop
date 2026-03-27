@@ -157,7 +157,7 @@ export async function generatePDF(sessionData: any) {
   doc.setFontSize(16);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
-  doc.text(userName, w / 2, titleY + 15, { align: "center" });
+  doc.text(`By ${userName}`, w / 2, titleY + 15, { align: "center" });
   doc.setFontSize(11);
   doc.text(new Date().toLocaleDateString(), w / 2, titleY + 25, { align: "center" });
   doc.setFontSize(12);
