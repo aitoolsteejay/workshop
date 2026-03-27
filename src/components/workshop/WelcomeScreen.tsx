@@ -57,6 +57,11 @@ export function WelcomeScreen({ onStart, resumeData, onResume, onStartFresh }: W
         className="max-w-md w-full"
       >
         <div className="text-center mb-10">
+          <img
+            src="/myntmore-logo.png"
+            alt="Myntmore"
+            className="h-16 mx-auto mb-6"
+          />
           <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-3 leading-tight">
             B2B Growth <span className="accent-text">Workshop</span>
           </h1>

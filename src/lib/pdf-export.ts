@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { sanitizeAIText } from "./sanitize";
 import { MYNTMORE_NOTION_LINK } from "./constants";
+import myntmoreLogo from "@/assets/myntmore-logo.png";
 
 const LINKS = {
   linkedin: "https://www.linkedin.com/in/tejasjhaveri",
@@ -122,28 +123,47 @@ function addSubHeader(doc: jsPDF, text: string, y: number, colors: ReturnType<ty
   return y + 8;
 }
 
-export function generatePDF(sessionData: any) {
+export async function generatePDF(sessionData: any) {
   const doc = new jsPDF();
   const w = doc.internal.pageSize.getWidth();
   const maxW = w - 30;
   const userName = sessionData?.user_name || "Attendee";
   const colors = getUserColors(sessionData);
 
+  // Load logo
+  let logoLoaded = false;
+  try {
+    const img = new Image();
+    img.src = myntmoreLogo;
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject();
+      setTimeout(reject, 3000);
+    });
+    const logoW = 30;
+    const logoH = (img.height / img.width) * logoW;
+    doc.addImage(img, "PNG", (w - logoW) / 2, 40, logoW, logoH);
+    logoLoaded = true;
+  } catch {
+    // Skip logo if it fails to load
+  }
+
   // Cover page
   addHeaderFooter(doc, colors);
+  const titleY = logoLoaded ? 90 : 80;
   doc.setFontSize(28);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-  doc.text("B2B Growth Strategy", w / 2, 80, { align: "center" });
+  doc.text("B2B Growth Strategy", w / 2, titleY, { align: "center" });
   doc.setFontSize(16);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(colors.bodyText[0], colors.bodyText[1], colors.bodyText[2]);
-  doc.text(userName, w / 2, 95, { align: "center" });
+  doc.text(userName, w / 2, titleY + 15, { align: "center" });
   doc.setFontSize(11);
-  doc.text(new Date().toLocaleDateString(), w / 2, 105, { align: "center" });
+  doc.text(new Date().toLocaleDateString(), w / 2, titleY + 25, { align: "center" });
   doc.setFontSize(12);
   doc.setTextColor(120, 120, 120);
-  doc.text("Powered by Myntmore", w / 2, 120, { align: "center" });
+  doc.text("Powered by Myntmore", w / 2, titleY + 40, { align: "center" });
 
   // Table of Contents
   let y = newSection(doc, "Table of Contents", colors);
