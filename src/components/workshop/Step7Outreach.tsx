@@ -320,7 +320,7 @@ Return ONLY valid JSON (no markdown):
                       </div>
                     </div>
 
-                    {/* Positioning Style - 2x2 Card Grid */}
+                    {/* Positioning Style - Detailed Card */}
                     <div className="glass-card p-5">
                       <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
                         Positioning Style
@@ -329,15 +329,48 @@ Return ONLY valid JSON (no markdown):
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {POSITIONING_STYLES.map(ps => {
                           const isRecommended = recommendedStyle?.toLowerCase() === ps.name.toLowerCase();
+                          const detail = isRecommended ? pb.strategicApproach?.positioningDetail : null;
                           return (
-                            <div key={ps.name} className={`bg-secondary p-4 rounded-md border ${isRecommended ? "border-primary" : "border-border"}`}>
+                            <div key={ps.name} className={`bg-secondary p-4 rounded-md ${isRecommended ? "border-l-4 border-[#FFC947]" : "border border-border"}`}>
                               <div className="flex items-center justify-between mb-1">
                                 <h4 className="text-sm font-semibold">{ps.name}</h4>
                                 {isRecommended && (
-                                  <span className="text-[10px] font-bold accent-bg px-2 py-0.5 rounded">Recommended for you</span>
+                                  <span className="text-[10px] font-bold bg-[#FFC947] text-black px-2 py-0.5 rounded">Recommended for you</span>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground">{ps.desc}</p>
+                              <p className="text-xs text-muted-foreground mb-2">{ps.desc}</p>
+                              {isRecommended && detail && (
+                                <div className="space-y-2 mt-3 pt-3 border-t border-border">
+                                  {detail.whatItMeans && (
+                                    <div>
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">What it means</span>
+                                      <p className="text-xs text-foreground mt-0.5">{detail.whatItMeans}</p>
+                                    </div>
+                                  )}
+                                  {detail.howToShowUp && (
+                                    <div>
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">How to show up</span>
+                                      <ul className="mt-0.5 space-y-0.5">
+                                        {detail.howToShowUp.map((h: string, i: number) => <li key={i} className="text-xs text-foreground">→ {h}</li>)}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {detail.whatToAvoid && (
+                                    <div>
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">What to avoid</span>
+                                      <ul className="mt-0.5 space-y-0.5">
+                                        {detail.whatToAvoid.map((a: string, i: number) => <li key={i} className="text-xs text-destructive">✗ {a}</li>)}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {detail.exampleOpener && (
+                                    <div>
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Example opener</span>
+                                      <p className="text-xs text-foreground italic mt-0.5">"{detail.exampleOpener}"</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
