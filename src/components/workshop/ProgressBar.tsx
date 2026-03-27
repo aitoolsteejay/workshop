@@ -5,13 +5,13 @@ interface ProgressBarProps {
 
 const stepLabels = [
   "Welcome",
-  "Business Info",
-  "LinkedIn Profile",
+  "Onboarding",
+  "Profile Optimiser",
   "ICP Builder",
-  "Value Props",
-  "Website",
+  "Value Propositions",
+  "Website Builder",
   "GTM Strategy",
-  "Outreach",
+  "Outreach Playbook",
 ];
 
 export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
@@ -28,6 +28,20 @@ export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
       </div>
       <div className="bg-background/90 backdrop-blur-md border-b border-border px-4 py-2">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src="/myntmore-logo.png"
+              alt="Myntmore"
+              className="h-8"
+              onError={(e) => {
+                const target = e.currentTarget;
+                target.style.display = "none";
+                const fallback = target.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = "block";
+              }}
+            />
+            <span className="text-sm font-bold accent-text hidden" style={{ display: "none" }}>Myntmore</span>
+          </div>
           <span className="text-sm text-muted-foreground">
             Step <span className="text-primary font-semibold">{currentStep}</span> of {totalSteps}
           </span>

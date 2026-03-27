@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { MultiSelect } from "./MultiSelect";
 import { callGemini } from "@/lib/workshop-store";
+import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown, ArrowLeft } from "lucide-react";
@@ -34,36 +34,49 @@ interface IcpInput {
   roles: string[];
   sizes: string[];
   industries: string[];
+  industryOther: string;
 }
 
 interface Step3Props {
   data: any;
+  profileData: any;
   onSave: (data: any) => void;
   onNext: () => void;
   onBack?: () => void;
 }
 
-export function Step3ICP({ data, onSave, onNext, onBack }: Step3Props) {
-  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [] });
+export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Props) {
+  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "" });
   const [icps, setIcps] = useState<IcpInput[]>(() => {
     const inputs = data?.inputs || [];
     while (inputs.length < 3) inputs.push(emptyIcp());
-    return inputs;
+    return inputs.map((icp: any) => ({ ...emptyIcp(), ...icp }));
   });
   const [openIcp, setOpenIcp] = useState(0);
-  const [offer, setOffer] = useState(data?.offer || "");
   const [result, setResult] = useState<any[]>(data?.result || []);
   const [niche, setNiche] = useState(data?.niche || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
 
-  const updateIcp = (idx: number, field: keyof IcpInput, value: string[]) => {
+  // Core offer comes from profile data (Step 2) — never re-ask
+  const offer = profileData?.coreOffer || data?.offer || "";
+
+  const updateIcp = (idx: number, field: keyof IcpInput, value: any) => {
     setIcps(p => p.map((icp, i) => i === idx ? { ...icp, [field]: value } : icp));
   };
 
+  const getIndustries = (icp: IcpInput) => {
+    const selected = icp.industries.filter(x => x !== "Other");
+    if (icp.industries.includes("Other") && icp.industryOther) {
+      const custom = icp.industryOther.split(",").map(s => s.trim()).filter(Boolean);
+      return [...selected, ...custom];
+    }
+    return selected;
+  };
+
   const generate = async () => {
-    if (!offer.trim()) { setError("Please enter your core offer"); return; }
+    if (!offer.trim()) { setError("Core offer is missing. Please complete Step 2 first."); return; }
     for (let i = 0; i < 3; i++) {
       if (icps[i].roles.length === 0) { setError(`ICP ${i + 1}: select at least one role`); return; }
       if (icps[i].sizes.length === 0) { setError(`ICP ${i + 1}: select at least one company size`); return; }
@@ -76,7 +89,7 @@ export function Step3ICP({ data, onSave, onNext, onBack }: Step3Props) {
     const prompt = `You are an expert B2B Growth Strategist. Generate 3 deep, strategic Ideal Customer Profiles (ICPs).
 
 Core Offer: ${offer}
-${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${icps[i].roles.join(", ")}, Company Sizes: ${icps[i].sizes.join(", ")}, Industries: ${icps[i].industries.join(", ")}`).join("\n")}
+${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${icps[i].roles.filter(x => x !== "Other").join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}`).join("\n")}
 
 For EACH ICP generate:
 1. ICP Name (descriptive)
@@ -94,6 +107,7 @@ Rules:
 - Make each ICP DISTINCT.
 - Use specific, believable insights. No generic text.
 - Pain Points for all 3 ICPs MUST be filled.
+- Do NOT use em-dashes or asterisks in any output.
 
 Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string).`;
 
@@ -105,15 +119,16 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
         const jsonMatch = raw.match(/\[[\s\S]*\]/);
         parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
       } catch {
-        setError("Failed to parse AI response. Please try again.");
+        setError("Something went wrong. Please try again.");
         setLoading(false);
         return;
       }
+      parsed = sanitizeAIOutput(parsed);
       setResult(parsed);
       onSave({ inputs: icps, offer, result: parsed, niche });
       toast({ title: "✓ Saved", description: "ICPs generated and saved", duration: 3000 });
     } catch (e: any) {
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : (e.message || "Failed"));
+      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -160,16 +175,19 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
               <div className="glass-card p-5 mt-1 space-y-4 border-primary">
                 <MultiSelect label="Roles" options={ROLES} selected={icps[idx].roles} onChange={v => updateIcp(idx, "roles", v)} hasOther />
                 <MultiSelect label="Company Size" options={SIZES} selected={icps[idx].sizes} onChange={v => updateIcp(idx, "sizes", v)} hasOther searchable={false} />
-                <MultiSelect label="Industries" options={INDUSTRIES} selected={icps[idx].industries} onChange={v => updateIcp(idx, "industries", v)} hasOther />
+                <MultiSelect
+                  label="Industries"
+                  options={INDUSTRIES}
+                  selected={icps[idx].industries}
+                  onChange={v => updateIcp(idx, "industries", v)}
+                  hasOther
+                  otherValue={icps[idx].industryOther}
+                  onOtherChange={v => updateIcp(idx, "industryOther", v)}
+                />
               </div>
             </CollapsibleContent>
           </Collapsible>
         ))}
-      </div>
-
-      <div className="glass-card p-5 mb-6">
-        <Label className="text-sm text-muted-foreground">Core Offer / What you sell *</Label>
-        <Textarea value={offer} onChange={e => setOffer(e.target.value)} placeholder="e.g. We help B2B companies generate leads via LinkedIn outreach and cold email" className="mt-1.5 bg-secondary border-border focus:border-primary" />
       </div>
 
       {error && <p className="text-destructive text-sm mb-4">{error}</p>}
@@ -226,24 +244,18 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                       );
                     }
 
+                    // Objections: OPEN by default
                     if (s.key === "objections") {
                       return (
                         <div key={s.key} className="md:col-span-2">
-                          <Collapsible>
-                            <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 cursor-pointer hover:text-foreground">
-                              {s.icon} {s.label}
-                              <ChevronDown className="w-3 h-3" />
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              {Array.isArray(val) ? (
-                                <ul className="space-y-1.5 mt-1">
-                                  {val.map((item: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {item}</li>)}
-                                </ul>
-                              ) : (
-                                <p className="text-sm text-muted-foreground">{val}</p>
-                              )}
-                            </CollapsibleContent>
-                          </Collapsible>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{s.icon} {s.label}</h4>
+                          {Array.isArray(val) ? (
+                            <ul className="space-y-1.5 mt-1">
+                              {val.map((item: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {item}</li>)}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">{val}</p>
+                          )}
                         </div>
                       );
                     }

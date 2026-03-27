@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { callGemini } from "@/lib/workshop-store";
+import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, ArrowLeft } from "lucide-react";
@@ -9,12 +10,13 @@ import { Copy, Check, ArrowLeft } from "lucide-react";
 interface Step4Props {
   data: any;
   icpData: any;
+  profileData: any;
   onSave: (data: any) => void;
   onNext: () => void;
   onBack?: () => void;
 }
 
-export function Step4ValueProp({ data, icpData, onSave, onNext, onBack }: Step4Props) {
+export function Step4ValueProp({ data, icpData, profileData, onSave, onNext, onBack }: Step4Props) {
   const [result, setResult] = useState<any[]>(data?.result || []);
   const [positioning, setPositioning] = useState(data?.positioning || "");
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export function Step4ValueProp({ data, icpData, onSave, onNext, onBack }: Step4P
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const offer = icpData?.offer || "";
+  const offer = profileData?.coreOffer || icpData?.offer || "";
   const icps = icpData?.result || [];
 
   const copyText = (text: string, field: string) => {
@@ -62,6 +64,7 @@ For EACH ICP, provide:
 Rules:
 - Each ICP must feel fundamentally DIFFERENT.
 - Ban phrases like "increase growth", "improve results", "scale faster".
+- Do NOT use em-dashes or asterisks in any output.
 - Return ONLY a valid JSON array of 3 objects (no markdown, no code blocks).`;
 
     try {
@@ -72,10 +75,11 @@ Rules:
         const match = raw.match(/\[[\s\S]*\]/);
         parsed = JSON.parse(match ? match[0] : raw);
       } catch {
-        setError("Failed to parse response. Try again.");
+        setError("Something went wrong. Please try again.");
         setLoading(false);
         return;
       }
+      parsed = sanitizeAIOutput(parsed);
       setResult(parsed);
       const p = parsed[0];
       const pos = `We help ${p.icpName} to ${p.corePromise} using a proven system, unlike alternatives which ${p.whyOthersFail?.[0] || "have limited capabilities"}.`;
@@ -83,7 +87,7 @@ Rules:
       onSave({ result: parsed, positioning: pos });
       toast({ title: "✓ Saved", duration: 3000 });
     } catch (e: any) {
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : (e.message || "Failed"));
+      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -105,11 +109,11 @@ Rules:
 
       {!loading && result.length === 0 && (
         <Button onClick={generate} className="accent-bg hover:opacity-90 w-full h-11 font-semibold">
-          Generate Value Props
+          Generate Value Propositions
         </Button>
       )}
 
-      {loading && <LoadingSpinner text="Generating value propositions..." />}
+      {loading && <LoadingSpinner text="Generating Value Propositions..." />}
       {error && <p className="text-destructive text-sm mb-4">{error}</p>}
 
       {result.length > 0 && (

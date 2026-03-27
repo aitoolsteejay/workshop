@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { callGemini } from "@/lib/workshop-store";
+import { sanitizeAIText } from "@/lib/sanitize";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, ExternalLink, Upload, ArrowLeft, Image } from "lucide-react";
+import { Copy, ExternalLink, Upload, ArrowLeft } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -19,6 +20,7 @@ interface Step5Props {
   data: any;
   icpData: any;
   valuePropData: any;
+  profileData: any;
   onSave: (data: any) => void;
   onNext: () => void;
   onBack?: () => void;
@@ -46,11 +48,11 @@ const AI_STUDIO_FAQS = [
 
 const LOVABLE_FAQS = [
   { q: "Can I paste the prompt into Lovable?", a: "Yes. Lovable can interpret the prompt and generate a full React site with Tailwind CSS styling." },
-  { q: "How do I optimize credits?", a: "Use specific, detailed prompts. Avoid regenerating the entire site — use follow-up prompts to refine individual sections." },
+  { q: "How do I optimize credits?", a: "Use specific, detailed prompts. Avoid regenerating the entire site, use follow-up prompts to refine individual sections." },
   { q: "What's the best iteration strategy?", a: "Generate once, then iterate section by section. Fix layout first, then copy, then design polish." },
 ];
 
-export function Step5Website({ data, icpData, valuePropData, onSave, onNext, onBack }: Step5Props) {
+export function Step5Website({ data, icpData, valuePropData, profileData, onSave, onNext, onBack }: Step5Props) {
   const [form, setForm] = useState({
     brandName: data?.brandName || "",
     primaryColor: data?.primaryColor || "#FFC947",
@@ -83,7 +85,7 @@ export function Step5Website({ data, icpData, valuePropData, onSave, onNext, onB
 
     const icps = icpData?.result || [];
     const vps = valuePropData?.result || [];
-    const offer = icpData?.offer || "";
+    const offer = profileData?.coreOffer || icpData?.offer || "";
     const icpSummary = icps.map((icp: any, i: number) =>
       `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, 3).join(", ")}`
     ).join("\n");
@@ -92,6 +94,8 @@ export function Step5Website({ data, icpData, valuePropData, onSave, onNext, onB
     const designInstruction = designRef
       ? "\n\nIMPORTANT: A design reference image has been provided. Use it for STRUCTURE and LAYOUT only. Do NOT copy colors from the reference. Use ONLY the brand colors specified above."
       : "";
+
+    const colorRule = `\n\nCRITICAL COLOUR RULE: Use EXACTLY, Primary: ${form.primaryColor}, Secondary: ${form.secondaryColor}. Apply primary to CTA buttons, hero accents, highlights. Apply secondary to backgrounds and cards. Do NOT default to dark mode unless the secondary colour is dark. CSS variables: --primary: ${form.primaryColor}; --secondary: ${form.secondaryColor};`;
 
     const prompt = `You are a world-class conversion rate optimisation expert and B2B web designer.
 
@@ -106,6 +110,7 @@ Inputs:
 - Target ICPs and Pain Points:
 ${icpSummary}
 ${designInstruction}
+${colorRule}
 
 The generated website must have EXACTLY these 8 sections in this order:
 1. Hero Section
@@ -128,11 +133,12 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
     try {
       const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 60000));
       const raw = await Promise.race([callGemini(prompt), timeoutP]) as string;
-      setGeneratedPrompt(raw);
-      onSave({ ...form, generatedPrompt: raw, designRef });
+      const sanitized = sanitizeAIText(raw);
+      setGeneratedPrompt(sanitized);
+      onSave({ ...form, generatedPrompt: sanitized, designRef });
       toast({ title: "✓ Saved", duration: 3000 });
     } catch (e: any) {
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : (e.message || "Failed"));
+      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -190,15 +196,21 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
           </div>
         </div>
 
-        {/* Pinterest Link */}
+        {/* Pinterest Link with Logo */}
         <a
-          href="https://www.pinterest.com/search/pins/?q=website%20design%20inspiration"
+          href="https://www.pinterest.com/search/pins/?q=website+design+inspiration"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+          className="flex items-center gap-3 p-3 rounded-md bg-secondary border border-border hover:border-muted-foreground transition-colors"
         >
-          <Image className="w-4 h-4" />
-          Explore design inspiration on Pinterest →
+          <svg viewBox="0 0 24 24" className="w-6 h-6 shrink-0" fill="#E60023">
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/>
+          </svg>
+          <div>
+            <span className="text-sm font-medium text-foreground">Get design inspiration on Pinterest</span>
+            <p className="text-xs text-muted-foreground">Browse website layouts and styles</p>
+          </div>
+          <ExternalLink className="w-4 h-4 text-muted-foreground ml-auto" />
         </a>
       </div>
 

@@ -5,11 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { callGemini } from "@/lib/workshop-store";
+import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion } from "framer-motion";
-import { Info, ArrowLeft } from "lucide-react";
+import { Info, ArrowLeft, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const TONES = ["Bold", "Professional", "Casual", "Witty", "Direct", "Empathetic", "Data-driven", "Other"];
+const TONE_OPTIONS = ["Bold", "Professional", "Casual", "Witty", "Direct", "Empathetic", "Data-driven"];
+const MAX_TONES = 3;
 
 const TIERS = [
   { range: "0–40", name: "Needs Rebuild", desc: "Bottom 60%" },
@@ -42,8 +44,7 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
     about: data?.about || "",
     targetAudience: data?.targetAudience || "",
     coreOffer: data?.coreOffer || "",
-    tone: data?.tone || "",
-    toneOther: data?.toneOther || "",
+    tones: data?.tones || (data?.tone ? [data.tone] : []) as string[],
   });
   const [result, setResult] = useState<any>(data?.result || null);
   const [loading, setLoading] = useState(false);
@@ -52,28 +53,39 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   const [showKeywordTip, setShowKeywordTip] = useState(false);
   const { toast } = useToast();
 
-  const update = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
+  const update = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+
+  const toggleTone = (t: string) => {
+    setForm(p => {
+      if (p.tones.includes(t)) return { ...p, tones: p.tones.filter((x: string) => x !== t) };
+      if (p.tones.length >= MAX_TONES) return p;
+      return { ...p, tones: [...p.tones, t] };
+    });
+  };
 
   const generate = async () => {
-    if (!form.role || !form.company || !form.headline || !form.targetAudience || !form.coreOffer || !form.tone) {
+    if (!form.role || !form.company || !form.headline || !form.targetAudience || !form.coreOffer || form.tones.length === 0) {
       setError("Please fill in all required fields");
+      return;
+    }
+    if (!form.about.trim()) {
+      setError("Please fill in your About section to get an accurate score.");
       return;
     }
     setError("");
     setLoading(true);
     setResult(null);
 
-    const tone = form.tone === "Other" ? form.toneOther : form.tone;
     const prompt = `You are an expert LinkedIn Profile Strategist specialising in B2B Lead Generation.
 
 Analyse and optimise this LinkedIn profile:
 - Current Headline: ${form.headline}
-- About Section: ${form.about || "Not provided"}
+- About Section: ${form.about}
 - Role: ${form.role}
 - Company: ${form.company}
 - Target Audience (ICP): ${form.targetAudience}
 - Core Offer: ${form.coreOffer}
-- Preferred Tone: ${tone}
+- Preferred Tones: ${form.tones.join(", ")}
 
 SCORING (0 to 100 total):
 Score the profile on 5 criteria, 20 points each:
@@ -83,7 +95,7 @@ Score the profile on 5 criteria, 20 points each:
 4. Proof (0-20): Are there credible markers, results, or experience mentioned?
 5. Execution (0-20): Is the structure, tone, and flow professional?
 
-Final Score = sum of all 5. Do NOT cap the score artificially. Strong profiles can reach 90+.
+Final Score = sum of all 5. Maximum possible = 100. Do NOT exceed 100.
 
 Keyword Score (separate 0-100 score):
 - Exact match B2B power keywords found: up to 40 points
@@ -100,6 +112,8 @@ Structure:
 - Paragraph 2: Differentiation + strengths + outcomes delivered
 - Paragraph 3: Positioning + credibility + authority tone
 Rules: No fluff. No repetition. No generic statements. Must feel LinkedIn-ready and website-ready.
+
+IMPORTANT: Do NOT use em-dashes or asterisks in any output.
 
 Return ONLY a valid JSON object (no markdown, no code blocks) with:
 {
@@ -130,8 +144,15 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
         parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
       } catch {
-        parsed = { raw: raw, finalScore: 0, scoreMeaning: "Could not parse — see raw output below" };
+        setError("Something went wrong. Please try again.");
+        setLoading(false);
+        return;
       }
+      // Sanitize and cap score
+      parsed = sanitizeAIOutput(parsed);
+      parsed.finalScore = Math.min(parsed.finalScore || 0, 100);
+      parsed.clarityScore = Math.min(parsed.clarityScore || 0, 100);
+      parsed.keywordScore = Math.min(parsed.keywordScore || 0, 100);
       setResult(parsed);
       onSave({ ...form, result: parsed });
       toast({ title: "✓ Saved", description: "Profile analysis saved", duration: 3000 });
@@ -139,7 +160,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
       if (e.message === "timeout") {
         setError("This is taking too long. Please try again.");
       } else {
-        setError(e.message || "Generation failed");
+        setError("Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -174,7 +195,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
           <Input value={form.headline} onChange={e => update("headline", e.target.value)} placeholder="Reduce hiring time → for Talent Leaders → using automation" className="mt-1 bg-secondary border-border focus:border-primary" />
         </div>
         <div>
-          <Label className="text-sm text-muted-foreground">About Section (optional)</Label>
+          <Label className="text-sm text-muted-foreground">About Section *</Label>
           <Textarea value={form.about} onChange={e => update("about", e.target.value)} placeholder="Your LinkedIn about section..." className="mt-1 bg-secondary border-border focus:border-primary min-h-[80px]" />
         </div>
         <div>
@@ -186,14 +207,25 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
           <Input value={form.coreOffer} onChange={e => update("coreOffer", e.target.value)} placeholder="e.g. LinkedIn outreach + cold email for B2B lead gen" className="mt-1 bg-secondary border-border focus:border-primary" />
         </div>
         <div>
-          <Label className="text-sm text-muted-foreground">Preferred Tone *</Label>
-          <select value={form.tone} onChange={e => update("tone", e.target.value)} className="w-full mt-1 h-10 px-3 rounded-md bg-secondary border border-border text-foreground text-sm focus:border-primary focus:outline-none">
-            <option value="">Select...</option>
-            {TONES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-          {form.tone === "Other" && (
-            <Input value={form.toneOther} onChange={e => update("toneOther", e.target.value)} placeholder="Please specify" className="mt-2 bg-secondary border-border focus:border-primary" />
-          )}
+          <Label className="text-sm text-muted-foreground">Preferred Tone * (select up to 3)</Label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {TONE_OPTIONS.map(t => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => toggleTone(t)}
+                className={`text-sm px-3 py-1.5 rounded-md border transition-all flex items-center gap-1.5 ${
+                  form.tones.includes(t)
+                    ? "tag-selected border-primary"
+                    : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
+                }`}
+              >
+                {t}
+                {form.tones.includes(t) && <X className="w-3 h-3" />}
+              </button>
+            ))}
+          </div>
+          {form.tones.length === 0 && <p className="text-xs text-muted-foreground mt-1">Select at least one tone</p>}
         </div>
 
         {error && <p className="text-destructive text-sm">{error}</p>}
@@ -207,7 +239,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
 
       {loading && <LoadingSpinner text="Analysing your LinkedIn profile... this takes ~20 seconds" />}
 
-      {result && !result.raw && (
+      {result && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-4">
           <div className="glass-card p-6 text-center">
             <div className="text-5xl font-extrabold accent-text">{result.finalScore}/100</div>
@@ -243,17 +275,17 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
               <div key={key} className="mb-3">
                 <div className="flex justify-between text-sm">
                   <span className="capitalize font-medium">{key}</span>
-                  <span className="text-primary font-semibold">{val.score}/20</span>
+                  <span className="text-primary font-semibold">{Math.min(val.score, 20)}/20</span>
                 </div>
                 <div className="h-1.5 bg-secondary rounded-full mt-1 overflow-hidden">
-                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(val.score / 20) * 100}%` }} />
+                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(Math.min(val.score, 20) / 20) * 100}%` }} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">{val.explanation}</p>
               </div>
             ))}
             <div className="mt-4 pt-3 border-t border-border">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Keyword Score: {result.keywordScore}/100</span>
+                <span className="text-sm font-medium">Keyword Score: {Math.min(result.keywordScore, 100)}/100</span>
                 <button onClick={() => setShowKeywordTip(!showKeywordTip)} className="text-muted-foreground hover:text-primary">
                   <Info className="w-3.5 h-3.5" />
                 </button>
@@ -312,14 +344,6 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
 
           <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground">Regenerate Analysis</Button>
         </motion.div>
-      )}
-
-      {result?.raw && (
-        <div className="glass-card p-6 mt-6">
-          <h3 className="font-semibold mb-3">Raw Output</h3>
-          <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{result.raw}</pre>
-          <Button onClick={generate} variant="ghost" className="mt-4 w-full">Try Again</Button>
-        </div>
       )}
 
       {result && (

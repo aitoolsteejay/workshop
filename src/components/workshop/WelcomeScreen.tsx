@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 
 interface WelcomeScreenProps {
-  onStart: (name: string, email: string) => void;
+  onStart: (name: string, email: string, phone: string) => void;
   resumeData?: { user_name: string; current_step: number } | null;
   onResume?: () => void;
   onStartFresh?: () => void;
@@ -14,6 +14,7 @@ interface WelcomeScreenProps {
 export function WelcomeScreen({ onStart, resumeData, onResume, onStartFresh }: WelcomeScreenProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,8 +23,10 @@ export function WelcomeScreen({ onStart, resumeData, onResume, onStartFresh }: W
     if (!name.trim()) errs.name = "Name is required";
     if (!email.trim()) errs.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Invalid email";
+    if (!phone.trim()) errs.phone = "Phone number is required";
+    else if (phone.replace(/\D/g, "").length < 10) errs.phone = "Minimum 10 digits required";
     if (Object.keys(errs).length) { setErrors(errs); return; }
-    onStart(name.trim(), email.trim());
+    onStart(name.trim(), email.trim(), phone.trim());
   };
 
   if (resumeData) {
@@ -85,6 +88,21 @@ export function WelcomeScreen({ onStart, resumeData, onResume, onStartFresh }: W
               className="mt-1.5 bg-secondary border-border focus:border-primary"
             />
             {errors.email && <p className="text-destructive text-xs mt-1">{errors.email}</p>}
+          </div>
+          <div>
+            <Label htmlFor="phone" className="text-sm text-muted-foreground">Phone Number</Label>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="text-sm text-muted-foreground bg-secondary border border-border rounded-md px-3 h-10 flex items-center shrink-0">+91</span>
+              <Input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => { setPhone(e.target.value); setErrors(p => ({ ...p, phone: "" })); }}
+                placeholder="9876543210"
+                className="bg-secondary border-border focus:border-primary"
+              />
+            </div>
+            {errors.phone && <p className="text-destructive text-xs mt-1">{errors.phone}</p>}
           </div>
           <Button type="submit" className="w-full accent-bg hover:opacity-90 font-semibold text-base h-12">
             Start Workshop →

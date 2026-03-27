@@ -2,16 +2,103 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { callGemini } from "@/lib/workshop-store";
+import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ChevronDown, AlertTriangle, Video, Clock } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { ArrowLeft, AlertTriangle, Video, Clock, ExternalLink, Wrench, ShieldAlert } from "lucide-react";
 
 const ANGLES = ["Authority", "ROI", "Pain-led", "Contrarian", "Curiosity", "Offer-led"];
+
+const TOUCHPOINTS = [
+  {
+    num: 1, title: "Warm Up",
+    action: "Like or comment genuinely on their recent post",
+    purpose: "Get on their radar before connecting",
+    timing: "1-3 days before sending connection request",
+    rule: "Comment must be specific to the post. Never generic.",
+  },
+  {
+    num: 2, title: "Connection Request",
+    action: "Send with a short personalised note under 300 characters",
+    purpose: "Start the relationship with context",
+    timing: "After warm-up engagement",
+    rule: "No pitch. No \"I'd love to connect.\" Reference something specific about them.",
+  },
+  {
+    num: 3, title: "Message 1",
+    action: "First DM, 3-4 lines maximum",
+    purpose: "Open conversation using selected angle",
+    timing: "Day 1-2 after accepted",
+    rule: "Super short. Not salesy. No offer mention. Personalise with name, company, and something specific.",
+  },
+  {
+    num: 4, title: "Warm Engagement",
+    action: "Comment on another of their posts",
+    purpose: "Stay visible without being pushy",
+    timing: "Day 3-5, if no reply",
+    rule: "Always specific. Never say \"great post.\"",
+  },
+  {
+    num: 5, title: "Message 2 with Loom / Voice Note",
+    action: "Send a Loom video or LinkedIn voice note",
+    purpose: "Break pattern and build trust with personalised content",
+    timing: "Day 6-8",
+    rule: "Mention their name. Get to the point in 20 seconds.",
+  },
+  {
+    num: 6, title: "Message 3 with Lead Magnet",
+    action: "Offer the most relevant lead magnet for this ICP",
+    purpose: "Deliver real value, lower resistance",
+    timing: "Day 10-14",
+    rule: "Frame as a gift, not a bait. If they engage, follow up quickly.",
+  },
+  {
+    num: 7, title: "Final Follow-Up",
+    action: "Close the loop with a new insight or graceful breakup",
+    purpose: "Give them a final reason or exit gracefully",
+    timing: "Day 16-20",
+    rule: "If not interested, let them go. Offer the lead magnet as a parting value piece.",
+  },
+  {
+    num: 8, title: "Email Fallback",
+    action: "Find work email via Apollo.io, send 2-3 short emails referencing LinkedIn outreach",
+    purpose: "Reach them on a different channel",
+    timing: "After LinkedIn sequence ends with no response",
+    rule: "Max 3 emails. 3-5 lines each. Do not spam.",
+  },
+];
+
+const TOOLS = [
+  {
+    name: "CLAY",
+    url: "https://clay.com",
+    desc: "Pulls live data about prospects: recent posts, job changes, company news. Use to personalise your first message.",
+    example: "\"Saw you just expanded your team, here's something useful for your outreach right now.\"",
+  },
+  {
+    name: "CALENDLY",
+    url: "https://calendly.com/founder-myntmore/30min",
+    desc: "Always include your booking link in any CTA message. Send a direct booking link. Never ask them to reply with their availability, it creates friction.",
+    example: null,
+  },
+  {
+    name: "APOLLO",
+    url: "https://apollo.io",
+    desc: "Use to find work emails when LinkedIn gets no response. Free tier available. Search by name + company name.",
+    example: null,
+  },
+];
+
+const MESSAGE_RULES = [
+  "Every message must be under 5 lines",
+  "No corporate jargon",
+  "No \"I hope this finds you well\"",
+  "No long service explanations",
+  "Always use their name and company name",
+  "End with a question or a clear next step",
+  "Do not use all 8 touchpoints with every prospect, test one sequence at a time",
+  "If someone says no, let them go",
+];
 
 const SEQUENCES = [
   {
@@ -63,7 +150,7 @@ export function Step7Outreach({ data, icpData, valuePropData, profileData, onboa
   const { toast } = useToast();
   const generationIdRef = useRef(0);
 
-  const offer = icpData?.offer || "";
+  const offer = profileData?.coreOffer || icpData?.offer || "";
   const icps = icpData?.result || [];
   const vps = valuePropData?.result || [];
   const userName = profileData?.role ? `${profileData.role} at ${profileData.company}` : "";
@@ -85,7 +172,7 @@ export function Step7Outreach({ data, icpData, valuePropData, profileData, onboa
 
 - Client: ${userName}
 - Offer: ${offer}
-- Value Prop: ${topVP}
+- Value Proposition: ${topVP}
 - Industry: ${Array.isArray(industry) ? industry.join(", ") : industry}
 - Selected Angle: ${angle}
 - ICPs:
@@ -112,6 +199,8 @@ For EACH of the 3 ICPs, generate a strategic playbook with these sections:
 
 6. "whatToAvoid": [4-5 specific mistakes for this ICP]
 
+IMPORTANT: Do NOT use em-dashes or asterisks in any output.
+
 Return ONLY valid JSON (no markdown):
 {
   "playbooks": [
@@ -130,16 +219,17 @@ Return ONLY valid JSON (no markdown):
         const match = raw.match(/\{[\s\S]*\}/);
         parsed = JSON.parse(match ? match[0] : raw);
       } catch {
-        setError("Failed to parse. Try again.");
+        setError("Something went wrong. Please try again.");
         setLoading(false);
         return;
       }
+      parsed = sanitizeAIOutput(parsed);
       setResult(parsed);
       onSave({ angle, result: parsed });
       toast({ title: "✓ Saved", duration: 3000 });
     } catch (e: any) {
       if (currentGenId !== generationIdRef.current) return;
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : (e.message || "Failed"));
+      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
     } finally {
       if (currentGenId === generationIdRef.current) setLoading(false);
     }
@@ -174,7 +264,12 @@ Return ONLY valid JSON (no markdown):
       </div>
 
       {loading && <LoadingSpinner text="Building your outreach playbook..." />}
-      {error && <p className="text-destructive text-sm mb-4">{error}</p>}
+      {error && (
+        <div className="glass-card p-5 mb-4 text-center">
+          <p className="text-destructive text-sm mb-3">{error}</p>
+          <Button onClick={generate} variant="ghost" className="text-muted-foreground">Retry</Button>
+        </div>
+      )}
 
       {playbooks.length > 0 && !loading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -209,7 +304,7 @@ Return ONLY valid JSON (no markdown):
                   <>
                     {/* ICP Context */}
                     <div className="glass-card p-5">
-                      <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">🎯 ICP Context — {pb.icpName}</h3>
+                      <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">🎯 ICP Context, {pb.icpName}</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <span className="text-xs text-muted-foreground">Who they are</span>
@@ -261,11 +356,9 @@ Return ONLY valid JSON (no markdown):
                       </div>
                     </div>
 
-                    {/* Touchpoint Strategy */}
+                    {/* Full 8-Step Outreach Flow */}
                     <div className="glass-card p-5">
-                      <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">💬 Touchpoint Strategy</h3>
-
-                      {/* Warning */}
+                      <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">📋 8-Step Outreach Flow</h3>
                       <div className="bg-primary/10 border border-primary/20 rounded-md p-3 mb-4 flex gap-2">
                         <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                         <div>
@@ -273,47 +366,71 @@ Return ONLY valid JSON (no markdown):
                           <p className="text-xs text-muted-foreground mt-0.5">Test combinations: Text only → Text + Loom → Text + case study. Too many elements = spam = lower replies.</p>
                         </div>
                       </div>
-
                       <div className="space-y-3">
-                        {pb.touchpointStrategy && Object.entries(pb.touchpointStrategy).map(([key, val]: [string, any]) => {
-                          if (!val) return null;
-                          const labels: Record<string, string> = {
-                            compliment: "When to Compliment",
-                            voiceNote: "Voice Note",
-                            loom: "Loom Video",
-                            caseStudy: "Case Study",
-                            leadMagnet: "Lead Magnet",
-                            curiosity: "Building Curiosity",
-                          };
-                          return (
-                            <Collapsible key={key}>
-                              <CollapsibleTrigger className="w-full">
-                                <div className="flex items-center justify-between bg-secondary p-3 rounded-md hover:bg-muted transition-colors">
-                                  <span className="text-sm font-medium">{labels[key] || key}</span>
-                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        {TOUCHPOINTS.map((tp) => (
+                          <div key={tp.num} className="bg-secondary p-4 rounded-md">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold accent-bg shrink-0">{tp.num}</span>
+                              <h4 className="text-sm font-semibold">{tp.title}</h4>
+                            </div>
+                            <div className="ml-10 space-y-1.5">
+                              <div><span className="text-xs text-muted-foreground">Action:</span> <span className="text-sm">{tp.action}</span></div>
+                              <div><span className="text-xs text-muted-foreground">Purpose:</span> <span className="text-sm">{tp.purpose}</span></div>
+                              <div><span className="text-xs text-muted-foreground">Timing:</span> <span className="text-sm">{tp.timing}</span></div>
+                              <div className="mt-1 pt-1 border-t border-border/50"><span className="text-xs text-primary">Rule:</span> <span className="text-xs text-muted-foreground">{tp.rule}</span></div>
+                            </div>
+                            {tp.num === 5 && (
+                              <div className="ml-10 mt-3 bg-card p-3 rounded-md border border-border">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Video className="w-3.5 h-3.5 text-primary" />
+                                  <span className="text-xs font-semibold text-primary">What is Loom?</span>
                                 </div>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <div className="p-3 space-y-2">
+                                <p className="text-xs text-muted-foreground">A 1-3 minute personalised screen recording (loom.com, free). Show something relevant to them: their website, a quick audit, a useful insight. Talk directly to them. Casual and direct. Not overproduced.</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Touchpoint Strategy (AI-generated) */}
+                    {pb.touchpointStrategy && (
+                      <div className="glass-card p-5">
+                        <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">💬 ICP-Specific Touchpoint Insights</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {Object.entries(pb.touchpointStrategy).map(([key, val]: [string, any]) => {
+                            if (!val) return null;
+                            const labels: Record<string, string> = {
+                              compliment: "Compliment Strategy",
+                              voiceNote: "Voice Note",
+                              loom: "Loom Video",
+                              caseStudy: "Case Study",
+                              leadMagnet: "Lead Magnet",
+                              curiosity: "Building Curiosity",
+                            };
+                            return (
+                              <div key={key} className="bg-secondary p-3 rounded-md">
+                                <span className="text-xs font-semibold text-primary">{labels[key] || key}</span>
+                                <div className="mt-1.5 space-y-1">
                                   {typeof val === "object" && !Array.isArray(val) && Object.entries(val).map(([k, v]: [string, any]) => (
                                     <div key={k}>
-                                      <span className="text-xs text-muted-foreground capitalize">{k.replace(/([A-Z])/g, ' $1')}</span>
+                                      <span className="text-[10px] text-muted-foreground capitalize">{k.replace(/([A-Z])/g, ' $1')}</span>
                                       {Array.isArray(v) ? (
-                                        <ul className="mt-0.5 space-y-0.5">
-                                          {v.map((item: string, i: number) => <li key={i} className="text-sm">• {item}</li>)}
+                                        <ul className="space-y-0.5">
+                                          {v.map((item: string, i: number) => <li key={i} className="text-xs">• {item}</li>)}
                                         </ul>
                                       ) : (
-                                        <p className="text-sm">{v}</p>
+                                        <p className="text-xs">{v}</p>
                                       )}
                                     </div>
                                   ))}
                                 </div>
-                              </CollapsibleContent>
-                            </Collapsible>
-                          );
-                        })}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Delay System */}
                     <div className="glass-card p-5">
@@ -322,68 +439,35 @@ Return ONLY valid JSON (no markdown):
                         Delay System
                       </h3>
                       <div className="bg-secondary p-3 rounded-md mb-3">
-                        <p className="text-sm font-medium">2–5 day gaps between messages</p>
+                        <p className="text-sm font-medium">2-5 day gaps between messages</p>
                         <p className="text-xs text-muted-foreground mt-1">Too fast → flagged as spam. Too slow → lose context.</p>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-secondary p-3 rounded-md">
                           <span className="text-xs text-muted-foreground">High-ticket deals</span>
-                          <p className="text-sm mt-0.5">Longer gaps (4–5 days)</p>
+                          <p className="text-sm mt-0.5">Longer gaps (4-5 days)</p>
                         </div>
                         <div className="bg-secondary p-3 rounded-md">
                           <span className="text-xs text-muted-foreground">Warm leads</span>
-                          <p className="text-sm mt-0.5">Shorter gaps (2–3 days)</p>
+                          <p className="text-sm mt-0.5">Shorter gaps (2-3 days)</p>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Loom Video Explanation */}
-                    <div className="glass-card p-5">
-                      <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">
-                        <Video className="w-3.5 h-3.5 inline mr-1" />
-                        Loom Video Guide
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="bg-secondary p-3 rounded-md">
-                          <span className="text-xs text-muted-foreground">What it is</span>
-                          <p className="text-sm mt-0.5">1–3 min personalized screen recording walkthrough</p>
-                        </div>
-                        <div className="bg-secondary p-3 rounded-md">
-                          <span className="text-xs text-muted-foreground">Why it works</span>
-                          <p className="text-sm mt-0.5">Breaks pattern. Builds trust. Feels personal.</p>
-                        </div>
-                        <div className="bg-secondary p-3 rounded-md">
-                          <span className="text-xs text-muted-foreground">When to use</span>
-                          <p className="text-sm mt-0.5">After engagement. When insight is strong.</p>
-                        </div>
-                        <div className="bg-secondary p-3 rounded-md">
-                          <span className="text-xs text-muted-foreground">Tone</span>
-                          <p className="text-sm mt-0.5">Casual. Direct. Not overproduced.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Follow-up System */}
-                    <div className="glass-card p-5">
-                      <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">🔁 Follow-up System</h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                        <div className="bg-secondary p-3 rounded-md text-center">
-                          <span className="text-2xl font-bold accent-text">{pb.followUpSystem?.totalTouches || "—"}</span>
-                          <p className="text-xs text-muted-foreground mt-1">Total Touches</p>
-                        </div>
-                        <div className="bg-secondary p-3 rounded-md col-span-1 sm:col-span-3">
-                          <span className="text-xs text-muted-foreground">Delay (days)</span>
-                          <div className="flex gap-1 mt-1 flex-wrap">
-                            {pb.followUpSystem?.delayDays?.map((d: number, i: number) => (
-                              <span key={i} className="text-xs px-2 py-0.5 rounded tag-selected border border-primary">Day {d}</span>
-                            ))}
+                      {pb.followUpSystem && (
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="bg-secondary p-3 rounded-md text-center">
+                            <span className="text-2xl font-bold accent-text">{pb.followUpSystem?.totalTouches || "5-8"}</span>
+                            <p className="text-xs text-muted-foreground mt-1">Total Touches</p>
+                          </div>
+                          <div className="bg-secondary p-3 rounded-md col-span-1 sm:col-span-3">
+                            <span className="text-xs text-muted-foreground">Delay (days)</span>
+                            <div className="flex gap-1 mt-1 flex-wrap">
+                              {pb.followUpSystem?.delayDays?.map((d: number, i: number) => (
+                                <span key={i} className="text-xs px-2 py-0.5 rounded tag-selected border border-primary">Day {d}</span>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div><span className="text-xs text-muted-foreground">Escalation</span><p className="text-sm">{pb.followUpSystem?.escalationLogic}</p></div>
-                        <div><span className="text-xs text-muted-foreground">Tone Evolution</span><p className="text-sm">{pb.followUpSystem?.toneEvolution}</p></div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Message Distribution */}
@@ -442,6 +526,45 @@ Return ONLY valid JSON (no markdown):
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Tools to Use */}
+          <div className="glass-card p-5">
+            <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-4">
+              <Wrench className="w-3.5 h-3.5 inline mr-1" />
+              Tools to Use
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {TOOLS.map((tool, idx) => (
+                <div key={idx} className="bg-secondary p-4 rounded-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-bold accent-text">{tool.name}</h4>
+                    <a href={tool.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{tool.desc}</p>
+                  {tool.example && (
+                    <p className="text-xs text-foreground mt-2 italic bg-card p-2 rounded">"{tool.example}"</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Message Rules */}
+          <div className="glass-card p-5">
+            <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">
+              <ShieldAlert className="w-3.5 h-3.5 inline mr-1" />
+              Message Rules
+            </h3>
+            <ul className="space-y-1.5">
+              {MESSAGE_RULES.map((rule, i) => (
+                <li key={i} className="text-sm text-muted-foreground flex gap-2">
+                  <span className="text-primary shrink-0">→</span>{rule}
+                </li>
+              ))}
+            </ul>
           </div>
         </motion.div>
       )}
