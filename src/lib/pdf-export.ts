@@ -1,7 +1,28 @@
 import jsPDF from "jspdf";
 import { sanitizeAIText } from "./sanitize";
 import { MYNTMORE_NOTION_LINK } from "./constants";
-import myntmoreLogo from "@/assets/myntmore-logo.png";
+import myntmoreLogo from "@/assets/myntmore-full-logo.png";
+
+let cachedLogoImg: HTMLImageElement | null = null;
+let cachedLogoRatio = 1;
+
+async function loadLogo(): Promise<boolean> {
+  if (cachedLogoImg) return true;
+  try {
+    const img = new Image();
+    img.src = myntmoreLogo;
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject();
+      setTimeout(reject, 3000);
+    });
+    cachedLogoImg = img;
+    cachedLogoRatio = img.height / img.width;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const LINKS = {
   linkedin: "https://www.linkedin.com/in/tejasjhaveri",
