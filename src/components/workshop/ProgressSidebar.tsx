@@ -9,6 +9,7 @@ const STEP_NAMES = [
   "Website Builder",
   "Growth Strategy",
   "Outreach Playbook",
+  "Final Summary",
 ];
 
 interface ProgressSidebarProps {
