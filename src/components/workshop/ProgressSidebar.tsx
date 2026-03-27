@@ -4,10 +4,10 @@ import { Check, ChevronLeft, ChevronRight, Menu, X, Lock } from "lucide-react";
 const STEP_NAMES = [
   "Basics",
   "Profile Optimiser",
-  "ICP Builder",
+  "Target Customers",
   "Value Proposition",
   "Website Builder",
-  "GTM Strategy",
+  "Growth Strategy",
   "Outreach Playbook",
 ];
 

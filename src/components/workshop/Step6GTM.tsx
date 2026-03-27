@@ -316,7 +316,7 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
                       strat.partners?.types && strat.partners.types.length > 0 ? (
                         <div className="space-y-3">
                           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                            Partner Outreach
+                            Partner-Led Growth
                             <InfoTooltip text="Strategy for growing through partnerships with complementary businesses" />
                           </h3>
                           {strat.partners.types.map((p: any, i: number) => (

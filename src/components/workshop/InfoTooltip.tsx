@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { Target } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -16,10 +16,10 @@ export function InfoTooltip({ text }: InfoTooltipProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <button type="button" className="text-muted-foreground hover:text-primary transition-colors ml-1 inline-flex">
-            <Info className="w-3.5 h-3.5" />
+            <Target className="w-3.5 h-3.5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-xs bg-card border-border text-muted-foreground">
+        <TooltipContent side="top" className="max-w-[260px] text-xs bg-card border-border text-muted-foreground">
           <p>{text}</p>
         </TooltipContent>
       </Tooltip>

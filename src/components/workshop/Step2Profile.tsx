@@ -89,7 +89,7 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
     setLoading(true);
     setResult(null);
 
-    const prompt = `You are an expert LinkedIn Profile Strategist specialising in B2B Lead Generation.
+    const prompt = `You are an expert LinkedIn Profile Strategist specialising in lead generation.
 
 ${NO_JARGON_RULE}
 

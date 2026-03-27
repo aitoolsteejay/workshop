@@ -45,7 +45,7 @@ export function Step4ValueProp({ data, icpData, profileData, onSave, onNext, onB
       `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).join(", ")}`
     ).join("\n");
 
-    const prompt = `You are a senior B2B strategist. Generate structured Value Propositions for each of these 3 target customer types:
+    const prompt = `You are a senior strategist. Generate structured Value Propositions for each of these 3 target customer types:
 
 ${NO_JARGON_RULE}
 
