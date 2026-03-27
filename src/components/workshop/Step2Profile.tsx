@@ -351,6 +351,15 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
                 <InfoTooltip text="A one-sentence power statement that defines your market position and differentiates you" />
               </h3>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.positioningAngles}</p>
+              <CopyBtn text={result.positioningAngles} id="positioning" />
+            </div>
+          )}
+
+          {result.scoreMeaning && (
+            <div className="glass-card p-6">
+              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Score Explanation</h3>
+              <p className="text-sm text-muted-foreground">{result.scoreMeaning}</p>
+              <CopyBtn text={result.scoreMeaning} id="score-explanation" />
             </div>
           )}
 

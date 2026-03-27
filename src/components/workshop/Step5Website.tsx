@@ -299,8 +299,17 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
             Open Google AI Studio <ExternalLink className="w-4 h-4" />
           </a>
 
+          <a href="https://lovable.dev/invite/4J88T9O" target="_blank" rel="noopener noreferrer"
+            className="glass-card p-4 flex items-center gap-3 hover:border-primary transition-colors">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Or build it with Lovable (no coding needed) →</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Paste the prompt into Lovable to get a fully deployable website without writing any code.</p>
+            </div>
+            <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+          </a>
+
           <div className="glass-card p-4">
-            <p className="text-sm text-muted-foreground">Paste the prompt into AI Studio. For best results, upload a screenshot of a website you love.</p>
+            <p className="text-sm text-muted-foreground">Paste the prompt into AI Studio or Lovable. For best results, upload a screenshot of a website you love.</p>
           </div>
 
           <div className="glass-card p-5">
