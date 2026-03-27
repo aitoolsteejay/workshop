@@ -1,5 +1,5 @@
 export const INDUSTRIES = [
-  "SaaS", "B2B SaaS", "Fintech", "Healthtech", "Edtech", "E-commerce", "D2C",
+  "Fintech", "Healthtech", "Edtech", "E-commerce", "D2C",
   "Agencies", "Consulting", "Coaching", "Real Estate", "Manufacturing", "Logistics",
   "HR Tech", "Martech", "Legal", "Finance", "Healthcare", "Recruitment", "IT Services",
   "AI / ML Startups", "B2B Services", "Cybersecurity", "DevTools", "Climate Tech",

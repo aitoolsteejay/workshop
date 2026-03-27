@@ -98,7 +98,7 @@ Core Offer: ${offer}
 ${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}`).join("\n")}
 
 For EACH ICP generate:
-1. ICP Name: Must be simple, immediately understandable, and professional. Use plain language. Good examples: "The Growth-Focused Founder", "The Busy Sales Director", "The Scaling Agency Owner". Bad examples: "Scaling SaaS Growth Leader", "B2B GTM Orchestrator", "Revenue-Driven Enterprise Executive". The name should describe who the person is in everyday language.
+1. ICP Name: Must be simple, immediately understandable, and professional. Use plain language. Good examples: "The Growth-Focused Founder", "The Busy Sales Director", "The Scaling Agency Owner". Bad examples: "The GTM Orchestrator", "Revenue-Driven Enterprise Executive". The name should describe who the person is in everyday language.
 2. Who They Are (3-4 bullet points)
 3. Core Responsibilities (as a list)
 4. Pain Points (at least 5 to 7 specific bullet points)

@@ -118,7 +118,7 @@ export function MultiSelect({
       {selected.includes("Other") && hasOther && (
         <div className="mt-2">
           <Input
-            placeholder="e.g. SaaS, Fintech, Healthcare — separate multiple values with a comma"
+            placeholder="e.g. Fintech, Healthcare, Logistics — separate multiple values with a comma"
             value={otherValue || ""}
             onChange={(e) => onOtherChange?.(e.target.value)}
             className="bg-secondary border-border focus:border-primary text-sm"

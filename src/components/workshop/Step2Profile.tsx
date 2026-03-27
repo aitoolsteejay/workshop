@@ -216,7 +216,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
         </div>
         <div>
           <Label className="text-sm text-muted-foreground">Target Audience *</Label>
-          <Input value={form.targetAudience} onChange={e => update("targetAudience", e.target.value)} placeholder="e.g. SaaS founders in India" className="mt-1 bg-secondary border-border focus:border-primary" />
+          <Input value={form.targetAudience} onChange={e => update("targetAudience", e.target.value)} placeholder="e.g. Startup founders in India" className="mt-1 bg-secondary border-border focus:border-primary" />
         </div>
         <div>
           <Label className="text-sm text-muted-foreground">Core Offer *</Label>
