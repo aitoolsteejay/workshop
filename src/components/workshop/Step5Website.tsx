@@ -36,21 +36,48 @@ const FOLLOW_UP_PROMPTS = [
 ];
 
 const GENERAL_FAQS = [
-  { q: "What is the Website Builder step?", a: "It generates a ready-to-paste prompt you can use in AI Studio to build a high-converting landing page based on your ICP and value prop data." },
-  { q: "Can I customise the output?", a: "Yes. Use the follow-up prompts below to refine specific sections like mobile layout, testimonials, or SEO." },
-  { q: "What if my brand has specific guidelines?", a: "Upload a design reference screenshot. The prompt will adapt the layout structure while using your defined colors." },
+  { q: "What does this tool generate?", a: "A complete, ready-to-paste prompt that builds a high-converting landing page using your ICP data, value proposition, and brand colors." },
+  { q: "Who should use this?", a: "Founders, marketers, and consultants who need a professional website without hiring a developer or agency." },
+  { q: "Do I need technical skills?", a: "No. You paste the prompt into AI Studio or Lovable, and it generates the code for you. No coding required." },
+  { q: "How accurate are the generated strategies?", a: "They are based on your specific inputs (ICP, pain points, value prop), so they are highly tailored, not generic templates." },
+  { q: "Can I customise the output?", a: "Yes. Use the follow-up prompts below to refine specific sections like mobile layout, testimonials, pricing, or SEO." },
+  { q: "How long does it take to see results?", a: "You can have a deployed landing page within 30 minutes of generating the prompt." },
+  { q: "Can I use this for multiple ICPs?", a: "Yes. Each generation uses your selected ICP data. Run it again with different ICP inputs for tailored pages." },
+  { q: "Is this suitable for early-stage startups?", a: "Absolutely. It is designed to help you launch fast with professional positioning, even pre-revenue." },
+  { q: "How is this different from ChatGPT tools?", a: "This uses your workshop data (ICP, value prop, offer) as context, so the output is specific to your business, not generic." },
+  { q: "Can I use this for outbound and inbound?", a: "Yes. The landing page works as an inbound asset. Pair it with the Outreach Playbook step for outbound." },
+  { q: "What should I do after getting results?", a: "Deploy the site, then iterate: refine copy, add testimonials, connect analytics, and start driving traffic." },
+  { q: "Can this replace an agency?", a: "For an MVP landing page, yes. For complex multi-page sites with custom integrations, consider an agency later." },
 ];
 
 const AI_STUDIO_FAQS = [
-  { q: "How do I use Google AI Studio?", a: "1. Open aistudio.google.com/apps\n2. Paste the generated prompt\n3. Optionally upload a design screenshot\n4. Click Generate" },
-  { q: "How do I deploy the generated site?", a: "1. Copy the generated code from AI Studio\n2. Create a new repo on GitHub\n3. Connect to Vercel or Netlify\n4. Deploy with one click" },
-  { q: "What model should I use?", a: "Use Gemini 2.0 Flash for speed, or Gemini Pro for higher quality output. Both work well for website generation." },
+  { q: "How do I use the generated prompt?", a: "1. Copy the prompt\n2. Open aistudio.google.com/apps\n3. Paste it in\n4. Click Generate" },
+  { q: "What if the output is not good?", a: "Use the follow-up prompts to refine specific sections. Do not regenerate the entire thing, tweak one part at a time." },
+  { q: "What model should I use in AI Studio?", a: "Gemini 2.0 Flash for speed, Gemini Pro for higher quality. Both work well for website generation." },
+  { q: "Can I upload a design reference?", a: "Yes. Upload a screenshot of a site you like. AI Studio will use its layout structure while applying your brand colors." },
+  { q: "What is a GitHub repository?", a: "A folder in the cloud that stores your code. Think of it as a save file for your website that you can update anytime." },
+  { q: "How do I push code to GitHub?", a: "1. Create a new repo on github.com\n2. Copy the generated code into it\n3. Commit and push, or use GitHub's upload feature" },
+  { q: "How do I deploy using Vercel?", a: "1. Push code to GitHub\n2. Go to vercel.com and connect your repo\n3. Click Deploy\n4. Your site is live" },
+  { q: "How do I connect GitHub to Vercel?", a: "Sign into Vercel with your GitHub account. It will show your repos. Select the one with your site code." },
+  { q: "How do I redeploy after changes?", a: "Push updated code to GitHub. Vercel auto-detects changes and redeploys within seconds." },
+  { q: "How do I fix deployment errors?", a: "Check the Vercel build log for the error message. Common fixes: missing dependencies, typos in imports, or wrong file paths." },
+  { q: "Can I use Netlify instead of Vercel?", a: "Yes. The process is nearly identical: connect GitHub, select repo, deploy. Both platforms work great." },
+  { q: "Do I need a custom domain?", a: "Not to start. Vercel and Netlify give you a free subdomain. Add a custom domain later when ready." },
 ];
 
 const LOVABLE_FAQS = [
-  { q: "Can I paste the prompt into Lovable?", a: "Yes. Lovable can interpret the prompt and generate a full React site with Tailwind CSS styling." },
-  { q: "How do I optimize credits?", a: "Use specific, detailed prompts. Avoid regenerating the entire site, use follow-up prompts to refine individual sections." },
-  { q: "What's the best iteration strategy?", a: "Generate once, then iterate section by section. Fix layout first, then copy, then design polish." },
+  { q: "What is Lovable?", a: "An AI-powered app builder. Paste your prompt and it generates a full React site with styling and interactions." },
+  { q: "Can I paste the prompt into Lovable?", a: "Yes. Lovable interprets the prompt and generates a complete, editable React site with Tailwind CSS." },
+  { q: "How do I use prompts effectively?", a: "Be specific. Instead of 'make it better', say 'change the hero headline to X and make the CTA button larger'." },
+  { q: "How do I avoid wasting credits?", a: "Do NOT regenerate the entire page. Use targeted prompts to modify specific sections only." },
+  { q: "Should I regenerate entire outputs?", a: "No. Modify specific sections instead. Full regeneration wastes credits and may lose good parts of the design." },
+  { q: "How do I update only one section?", a: "Reference the section by name: 'Update the FAQ section to include 2 more questions about pricing'." },
+  { q: "What is the best way to iterate UI?", a: "Generate once, then iterate: fix layout first, then copy, then design polish. One change per prompt." },
+  { q: "How do I fix broken outputs?", a: "Describe what is broken specifically: 'The testimonial cards overlap on mobile' rather than 'fix the layout'." },
+  { q: "How do I structure prompts?", a: "Use this format: What to change + Where it is + How it should look. Keep it under 3 sentences." },
+  { q: "How do I test multiple variations?", a: "Ask for 'version A and version B of the hero section' in one prompt. Compare and pick the best." },
+  { q: "When should I regenerate vs edit?", a: "Edit when 80%+ is good. Regenerate only if the entire output missed the mark. Editing saves credits." },
+  { q: "What are common mistakes to avoid?", a: "Vague prompts, regenerating everything, not specifying sections, and changing too many things at once." },
 ];
 
 export function Step5Website({ data, icpData, valuePropData, profileData, onSave, onNext, onBack }: Step5Props) {
