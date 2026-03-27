@@ -12,7 +12,7 @@ import { FinalScreen } from "@/components/workshop/FinalScreen";
 import { ProgressBar } from "@/components/workshop/ProgressBar";
 import { ProgressSidebar } from "@/components/workshop/ProgressSidebar";
 import { WorkshopFooter } from "@/components/workshop/WorkshopFooter";
-import { RestartButton } from "@/components/workshop/RestartButton";
+
 import {
   getSessionId, createSession, loadSession, saveProgress,
   clearSession, loadBackup
