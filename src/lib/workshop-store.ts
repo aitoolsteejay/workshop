@@ -34,19 +34,20 @@ export function loadBackup(): any | null {
   }
 }
 
-export async function createSession(name: string, email: string): Promise<string> {
+export async function createSession(name: string, email: string, phone?: string): Promise<string> {
   const sessionId = createSessionId();
-  const { error } = await supabase.from("workshop_sessions").insert({
+  const row: Record<string, any> = {
     session_id: sessionId,
     user_name: name,
     user_email: email,
     current_step: 0,
-  });
+  };
+  if (phone) row.user_phone = phone;
+  const { error } = await supabase.from("workshop_sessions").insert(row);
   if (error) {
     console.error("Failed to create session:", error);
-    // Still save locally
   }
-  saveBackup({ session_id: sessionId, user_name: name, user_email: email, current_step: 0 });
+  saveBackup({ ...row });
   return sessionId;
 }
 

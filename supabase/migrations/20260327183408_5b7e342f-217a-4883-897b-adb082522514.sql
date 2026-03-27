@@ -1,0 +1,1 @@
+ALTER TABLE public.workshop_sessions ADD COLUMN user_phone text;
