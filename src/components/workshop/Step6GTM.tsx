@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
@@ -6,7 +6,7 @@ import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Star, Calendar, Users, Presentation } from "lucide-react";
+import { ArrowLeft, Star, Calendar, Users, Presentation, RefreshCw, Zap, AlertTriangle } from "lucide-react";
 
 interface Step6Props {
   data: any;
@@ -25,6 +25,7 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
   const [error, setError] = useState("");
   const [activeIcpTab, setActiveIcpTab] = useState(0);
   const [activeModule, setActiveModule] = useState(0);
+  const isGenerating = useRef(false);
   const { toast } = useToast();
 
   const offer = profileData?.coreOffer || icpData?.offer || "";
@@ -32,20 +33,32 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
   const vps = valuePropData?.result || [];
   const industry = onboardingData?.industry || "";
 
-  const generate = async () => {
-    setError("");
-    setLoading(true);
-    setResult(null);
-
+  const buildPrompt = (lite = false) => {
     const icpDetail = icps.map((icp: any, i: number) =>
-      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).join(", ")}. Goals: ${Array.isArray(icp.goalsDesires) ? icp.goalsDesires.join(", ") : (icp.goalsDesires || "")}`
+      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, lite ? 2 : undefined).join(", ")}. Goals: ${Array.isArray(icp.goalsDesires) ? icp.goalsDesires.slice(0, lite ? 2 : undefined).join(", ") : (icp.goalsDesires || "")}`
     ).join("\n");
 
     const vpDetail = vps.map((vp: any, i: number) =>
       `ICP ${i + 1}: ${vp.icpName || vp.corePromise}. Method: ${vp.corePromise || vp.yourMethod}`
     ).join("\n");
 
-    const prompt = `You are an expert GTM Strategist. Generate a HIGHLY DETAILED, ACTIONABLE Go-To-Market strategy PER ICP.
+    if (lite) {
+      return `You are a GTM Strategist. Generate a concise Go-To-Market strategy per ICP.
+
+Inputs:
+- Core Offer: ${offer}
+- Industry: ${Array.isArray(industry) ? industry.join(", ") : industry}
+- ICPs:
+${icpDetail}
+- Value Propositions:
+${vpDetail}
+
+Return a JSON object with "icpStrategies" array. Each strategy has: icpName, channels (name, effort, roi, useCase, startHere, tips), timeline (phase, title, tasks), partners (types with type, angle, offer, snippet), leadMagnets (name, type, targetICP, includes, whyItWorks, whenToUse, effort, impact, bestStart), eventLedGrowth (onlineEvents, offlineEvents, eventFunnel with preEvent/duringEvent/postEvent, conversionStrategy).
+
+Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
+    }
+
+    return `You are an expert GTM Strategist. Generate a HIGHLY DETAILED, ACTIONABLE Go-To-Market strategy PER ICP.
 
 Inputs:
 - Core Offer: ${offer}
@@ -82,27 +95,42 @@ Rules:
 - Event-Led Growth: 3 online + 3 offline event formats, 3 specific topic ideas, pre/during/post funnel, conversion strategy.
 - Do NOT use em-dashes, asterisks, or hash signs.
 - Return ONLY valid JSON (no markdown, no code blocks).`;
+  };
+
+  const generate = async (lite = false) => {
+    if (isGenerating.current) return;
+    isGenerating.current = true;
+    setError("");
+    setLoading(true);
+
+    console.log("GTM API call started", lite ? "(lite)" : "(full)");
+
+    const prompt = buildPrompt(lite);
 
     try {
-      const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 60000));
+      const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 90000));
       const raw = await Promise.race([callGemini(prompt), timeoutP]) as string;
+      console.log("GTM API response received");
       let parsed;
       try {
         const match = raw.match(/\{[\s\S]*\}/);
         parsed = JSON.parse(match ? match[0] : raw);
       } catch {
-        setError("Something went wrong. Please try again.");
+        setError("parse_error");
         setLoading(false);
+        isGenerating.current = false;
         return;
       }
       parsed = sanitizeAIOutput(parsed);
       setResult(parsed);
       onSave({ result: parsed });
-      toast({ title: "✓ Saved", duration: 3000 });
+      toast({ title: "GTM Strategy generated", duration: 3000 });
     } catch (e: any) {
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
+      console.error("GTM generation failed:", e);
+      setError(e.message === "timeout" ? "timeout" : "failed");
     } finally {
       setLoading(false);
+      isGenerating.current = false;
     }
   };
 
@@ -114,14 +142,39 @@ Rules:
       <h2 className="text-2xl font-bold mb-1">Your <span className="accent-text">GTM Strategy</span></h2>
       <p className="text-muted-foreground mb-8 text-sm">A complete, actionable go-to-market plan per ICP</p>
 
-      {!loading && !result && (
-        <Button onClick={generate} className="accent-bg hover:opacity-90 w-full h-11 font-semibold">
+      {!loading && !result && !error && (
+        <Button onClick={() => generate(false)} disabled={loading} className="accent-bg hover:opacity-90 w-full h-11 font-semibold">
           Generate GTM Strategy
         </Button>
       )}
 
       {loading && <LoadingSpinner text="Generating your GTM strategy..." />}
-      {error && <p className="text-destructive text-sm mb-4">{error}</p>}
+
+      {error && !loading && !result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground mb-1">
+              {error === "timeout" ? "Generation timed out" : error === "parse_error" ? "Could not process the response" : "We could not generate your GTM strategy"}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {error === "timeout" ? "The request took too long. Try the Lite version for faster results." : "This can happen due to network or load issues. Please try again."}
+            </p>
+          </div>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => generate(false)} className="gap-2">
+              <RefreshCw className="w-4 h-4" /> Retry
+            </Button>
+            <Button onClick={() => generate(true)} variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/10">
+              <Zap className="w-4 h-4" /> Generate Lite Version
+            </Button>
+          </div>
+        </motion.div>
+      )}
 
       {strategies.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -336,7 +389,7 @@ Rules:
             </motion.div>
           </AnimatePresence>
 
-          <Button onClick={generate} variant="ghost" className="w-full mt-6 text-muted-foreground">Regenerate</Button>
+          <Button onClick={() => generate(false)} disabled={loading} variant="ghost" className="w-full mt-6 text-muted-foreground">Regenerate</Button>
         </motion.div>
       )}
 
