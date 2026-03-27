@@ -28,6 +28,7 @@ export type Database = {
           updated_at: string | null
           user_email: string | null
           user_name: string | null
+          user_phone: string | null
           value_prop_data: Json | null
           website_data: Json | null
         }
@@ -44,6 +45,7 @@ export type Database = {
           updated_at?: string | null
           user_email?: string | null
           user_name?: string | null
+          user_phone?: string | null
           value_prop_data?: Json | null
           website_data?: Json | null
         }
@@ -60,6 +62,7 @@ export type Database = {
           updated_at?: string | null
           user_email?: string | null
           user_name?: string | null
+          user_phone?: string | null
           value_prop_data?: Json | null
           website_data?: Json | null
         }
