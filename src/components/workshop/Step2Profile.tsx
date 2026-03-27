@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion } from "framer-motion";
-import { Info, ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const TONE_OPTIONS = ["Bold", "Professional", "Casual", "Witty", "Direct", "Empathetic", "Data-driven"];
@@ -49,8 +50,6 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   const [result, setResult] = useState<any>(data?.result || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showClarityTip, setShowClarityTip] = useState(false);
-  const [showKeywordTip, setShowKeywordTip] = useState(false);
   const { toast } = useToast();
 
   const update = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
@@ -113,7 +112,7 @@ Structure:
 - Paragraph 3: Positioning + credibility + authority tone
 Rules: No fluff. No repetition. No generic statements. Must feel LinkedIn-ready and website-ready.
 
-IMPORTANT: Do NOT use em-dashes or asterisks in any output.
+IMPORTANT: Do NOT use em-dashes, asterisks, or hash signs in any output.
 
 Return ONLY a valid JSON object (no markdown, no code blocks) with:
 {
@@ -148,7 +147,6 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
         setLoading(false);
         return;
       }
-      // Sanitize and cap score
       parsed = sanitizeAIOutput(parsed);
       parsed.finalScore = Math.min(parsed.finalScore || 0, 100);
       parsed.clarityScore = Math.min(parsed.clarityScore || 0, 100);
@@ -210,16 +208,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
           <Label className="text-sm text-muted-foreground">Preferred Tone * (select up to 3)</Label>
           <div className="mt-2 flex flex-wrap gap-2">
             {TONE_OPTIONS.map(t => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => toggleTone(t)}
+              <button key={t} type="button" onClick={() => toggleTone(t)}
                 className={`text-sm px-3 py-1.5 rounded-md border transition-all flex items-center gap-1.5 ${
-                  form.tones.includes(t)
-                    ? "tag-selected border-primary"
-                    : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
-                }`}
-              >
+                  form.tones.includes(t) ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
+                }`}>
                 {t}
                 {form.tones.includes(t) && <X className="w-3 h-3" />}
               </button>
@@ -260,17 +252,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm uppercase tracking-wider text-muted-foreground">
-              Score Breakdown
-              <button onClick={() => setShowClarityTip(!showClarityTip)} className="text-muted-foreground hover:text-primary">
-                <Info className="w-3.5 h-3.5" />
-              </button>
+            <h3 className="font-semibold mb-3 flex items-center gap-1 text-sm uppercase tracking-wider text-muted-foreground">
+              Clarity Score
+              <InfoTooltip text="Measures how clearly your headline tells people who you help, how, and what result they get" />
             </h3>
-            {showClarityTip && (
-              <p className="text-xs text-muted-foreground bg-secondary p-3 rounded-md mb-3">
-                Clarity Score measures how clearly your headline communicates WHO you help, HOW you help them, and WHAT result they get.
-              </p>
-            )}
             {result.scoreBreakdown && Object.entries(result.scoreBreakdown).map(([key, val]: any) => (
               <div key={key} className="mb-3">
                 <div className="flex justify-between text-sm">
@@ -284,23 +269,19 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
               </div>
             ))}
             <div className="mt-4 pt-3 border-t border-border">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <span className="text-sm font-medium">Keyword Score: {Math.min(result.keywordScore, 100)}/100</span>
-                <button onClick={() => setShowKeywordTip(!showKeywordTip)} className="text-muted-foreground hover:text-primary">
-                  <Info className="w-3.5 h-3.5" />
-                </button>
+                <InfoTooltip text="Measures the strength of B2B keywords in your profile across 4 criteria: exact match keywords, related terms, action verbs, and credibility markers" />
               </div>
-              {showKeywordTip && (
-                <p className="text-xs text-muted-foreground bg-secondary p-3 rounded-md mt-2">
-                  Keyword Score: Exact match power keywords = 40pts, Related terms = 30pts, Action verbs = 20pts, Credibility = 10pts.
-                </p>
-              )}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="glass-card p-6">
-              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-emerald-400">What's Working</h3>
+              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                What's Working
+                <InfoTooltip text="These are the strongest elements of your current profile that should be kept or enhanced" />
+              </h3>
               <ul className="space-y-2">
                 {result.whatsWorking?.map((w: string, i: number) => (
                   <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-emerald-400 shrink-0">✓</span>{w}</li>
@@ -308,7 +289,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
               </ul>
             </div>
             <div className="glass-card p-6">
-              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-primary">To Improve</h3>
+              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-primary flex items-center gap-1">
+                To Improve
+                <InfoTooltip text="Prioritised list of changes that will have the biggest impact on your profile score" />
+              </h3>
               <ul className="space-y-2">
                 {result.toImprove?.map((w: string, i: number) => (
                   <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-primary shrink-0">→</span>{w}</li>
@@ -318,7 +302,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Generated Headlines</h3>
+            <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+              Generated Headlines
+              <InfoTooltip text="AI-crafted headline alternatives using different frameworks: outcome-driven, authority-driven, and benefit-driven" />
+            </h3>
             {result.headlines?.map((h: string, i: number) => (
               <div key={i} className="bg-secondary p-3 rounded-md mb-2 text-sm font-medium">{i + 1}. {h}</div>
             ))}
@@ -337,7 +324,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
 
           {result.positioningAngles && (
             <div className="glass-card p-6">
-              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Positioning Angles</h3>
+              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                Positioning Angles
+                <InfoTooltip text="A one-sentence power statement that defines your market position and differentiates you" />
+              </h3>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.positioningAngles}</p>
             </div>
           )}

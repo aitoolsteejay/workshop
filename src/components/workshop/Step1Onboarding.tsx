@@ -5,13 +5,7 @@ import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { MultiSelect } from "./MultiSelect";
 import { ArrowLeft } from "lucide-react";
-
-const INDUSTRIES = [
-  "SaaS", "Fintech", "Healthtech", "Edtech", "E-commerce", "D2C", "Agencies",
-  "Consulting", "Coaching", "Real Estate", "Manufacturing", "Logistics", "HR Tech",
-  "Martech", "Legal", "Finance", "Healthcare", "Recruitment", "IT Services",
-  "AI / ML Startups", "B2B Services", "B2B SaaS",
-];
+import { INDUSTRIES, COUNTRIES } from "@/lib/constants";
 
 const BUSINESS_TYPES = ["Service-based", "Product-based", "Hybrid"];
 
@@ -26,8 +20,6 @@ const GOAL_OPTIONS = [
   { label: "Brand authority", desc: "Become the go-to in your space" },
   { label: "All of the above", desc: "Full-stack growth" },
 ];
-
-const GEO_OPTIONS = ["India", "US", "UK", "Europe", "Southeast Asia", "Global"];
 
 interface Step1Props {
   data: any;
@@ -103,18 +95,12 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         <div className="space-y-6">
-          {/* Business Basics */}
           <div className="glass-card p-6">
             <h3 className="text-sm font-semibold text-primary mb-4 uppercase tracking-wider">Business Basics</h3>
             <div className="space-y-4">
               <div>
                 <Label className="text-xs text-muted-foreground">LinkedIn Profile URL</Label>
-                <Input
-                  value={form.linkedinUrl}
-                  onChange={(e) => update("linkedinUrl", e.target.value)}
-                  placeholder="https://linkedin.com/in/yourprofile"
-                  className="mt-1.5 bg-secondary border-border focus:border-primary"
-                />
+                <Input value={form.linkedinUrl} onChange={(e) => update("linkedinUrl", e.target.value)} placeholder="https://linkedin.com/in/yourprofile" className="mt-1.5 bg-secondary border-border focus:border-primary" />
                 {errors.linkedinUrl && <p className="text-destructive text-xs mt-1">{errors.linkedinUrl}</p>}
               </div>
               <MultiSelect label="Industry" options={INDUSTRIES} selected={form.industry} onChange={v => update("industry", v)}
@@ -132,35 +118,19 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
             </div>
           </div>
 
-          {/* Growth Objective */}
           <div className="glass-card p-6">
             <h3 className="text-sm font-semibold text-primary mb-4 uppercase tracking-wider">Growth Objective</h3>
             <Label className="text-xs text-muted-foreground">Primary Goals</Label>
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {GOAL_OPTIONS.map(g => (
-                <button
-                  key={g.label}
-                  type="button"
-                  onClick={() => toggleGoal(g.label)}
-                  className={`text-left p-4 rounded-lg border transition-all ${
-                    form.goals.includes(g.label)
-                      ? "tag-selected border-primary"
-                      : "bg-secondary border-border hover:border-muted-foreground"
-                  }`}
-                >
+                <button key={g.label} type="button" onClick={() => toggleGoal(g.label)}
+                  className={`text-left p-4 rounded-lg border transition-all ${form.goals.includes(g.label) ? "tag-selected border-primary" : "bg-secondary border-border hover:border-muted-foreground"}`}>
                   <div className={`text-sm font-medium ${form.goals.includes(g.label) ? "text-primary" : "text-foreground"}`}>{g.label}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{g.desc}</div>
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => toggleGoal("Other")}
-                className={`text-left p-4 rounded-lg border transition-all ${
-                  form.goals.includes("Other")
-                    ? "tag-selected border-primary"
-                    : "bg-secondary border-border hover:border-muted-foreground"
-                }`}
-              >
+              <button type="button" onClick={() => toggleGoal("Other")}
+                className={`text-left p-4 rounded-lg border transition-all ${form.goals.includes("Other") ? "tag-selected border-primary" : "bg-secondary border-border hover:border-muted-foreground"}`}>
                 <div className={`text-sm font-medium ${form.goals.includes("Other") ? "text-primary" : "text-foreground"}`}>Other</div>
                 <div className="text-xs text-muted-foreground mt-0.5">Custom goal</div>
               </button>
@@ -174,16 +144,14 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
             )}
           </div>
 
-          {/* Market Focus */}
           <div className="glass-card p-6">
             <h3 className="text-sm font-semibold text-primary mb-4 uppercase tracking-wider">Market Focus</h3>
-            <MultiSelect label="Target Geography" options={GEO_OPTIONS} selected={form.geography} onChange={v => update("geography", v)}
-              hasOther otherValue={form.geographyOther} onOtherChange={v => update("geographyOther", v)} searchable={false} />
+            <MultiSelect label="Target Geography" options={COUNTRIES} selected={form.geography} onChange={v => update("geography", v)}
+              hasOther otherValue={form.geographyOther} onOtherChange={v => update("geographyOther", v)} />
             {errors.geography && <p className="text-destructive text-xs mt-2">{errors.geography}</p>}
           </div>
         </div>
 
-        {/* RIGHT — Summary Panel */}
         <div className="hidden lg:block">
           <div className="sticky top-24">
             <div className="glass-card p-6">

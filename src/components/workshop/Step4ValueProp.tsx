@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,7 +19,6 @@ interface Step4Props {
 
 export function Step4ValueProp({ data, icpData, profileData, onSave, onNext, onBack }: Step4Props) {
   const [result, setResult] = useState<any[]>(data?.result || []);
-  const [positioning, setPositioning] = useState(data?.positioning || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState(0);
@@ -60,11 +60,12 @@ For EACH ICP, provide:
 8. shortPitch: A 2-3 sentence elevator pitch
 9. cta: A clear call-to-action sentence
 10. icpName: The ICP name
+11. positioning: A unique core positioning statement for THIS specific ICP following exactly this format: "We help [specific ICP descriptor] to [their specific desired outcome] by [your specific method for this ICP]". Each ICP MUST have a DIFFERENT positioning statement. Use simple, easy-to-understand language. No jargon.
 
 Rules:
 - Each ICP must feel fundamentally DIFFERENT.
 - Ban phrases like "increase growth", "improve results", "scale faster".
-- Do NOT use em-dashes or asterisks in any output.
+- Do NOT use em-dashes, asterisks, or hash signs in any output.
 - Return ONLY a valid JSON array of 3 objects (no markdown, no code blocks).`;
 
     try {
@@ -81,10 +82,7 @@ Rules:
       }
       parsed = sanitizeAIOutput(parsed);
       setResult(parsed);
-      const p = parsed[0];
-      const pos = `We help ${p.icpName} to ${p.corePromise} using a proven system, unlike alternatives which ${p.whyOthersFail?.[0] || "have limited capabilities"}.`;
-      setPositioning(pos);
-      onSave({ result: parsed, positioning: pos });
+      onSave({ result: parsed });
       toast({ title: "✓ Saved", duration: 3000 });
     } catch (e: any) {
       setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
@@ -94,10 +92,7 @@ Rules:
   };
 
   const CopyBtn = ({ text, id }: { text: string; id: string }) => (
-    <button
-      onClick={() => copyText(text, id)}
-      className="ml-2 p-1 rounded hover:bg-secondary text-muted-foreground hover:text-primary transition-colors"
-    >
+    <button onClick={() => copyText(text, id)} className="ml-2 p-1 rounded hover:bg-secondary text-muted-foreground hover:text-primary transition-colors">
       {copiedField === id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
     </button>
   );
@@ -119,28 +114,16 @@ Rules:
       {result.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="flex gap-1 mb-6">
-            {result.map((vp: any, idx: number) => (
-              <button
-                key={idx}
-                onClick={() => setActiveTab(idx)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
+            {result.map((_: any, idx: number) => (
+              <button key={idx} onClick={() => setActiveTab(idx)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                 ICP {idx + 1}
               </button>
             ))}
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="space-y-4"
-            >
+            <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-4">
               <div className="glass-card p-6 text-center">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Core Promise</p>
                 <p className="text-xl font-bold accent-text">{result[activeTab]?.corePromise}</p>
@@ -226,15 +209,16 @@ Rules:
                   </div>
                 </div>
               </div>
+
+              {/* Per-ICP Positioning */}
+              {result[activeTab]?.positioning && (
+                <div className="glass-card p-5 border-primary">
+                  <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Core Positioning Statement</h3>
+                  <p className="text-sm italic text-muted-foreground">"{result[activeTab].positioning}"</p>
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
-
-          {positioning && (
-            <div className="glass-card p-5 mt-6 border-primary">
-              <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Core Positioning Statement</h3>
-              <p className="text-sm italic text-muted-foreground">"{positioning}"</p>
-            </div>
-          )}
 
           <Button onClick={generate} variant="ghost" className="w-full mt-4 text-muted-foreground">Regenerate</Button>
         </motion.div>
@@ -247,7 +231,7 @@ Rules:
               <ArrowLeft className="w-4 h-4 mr-1" /> Back
             </Button>
           ) : <div />}
-          <Button onClick={() => { onSave({ result, positioning }); onNext(); }} className="accent-bg hover:opacity-90 h-12 px-8 font-semibold">
+          <Button onClick={() => { onSave({ result }); onNext(); }} className="accent-bg hover:opacity-90 h-12 px-8 font-semibold">
             Next Step →
           </Button>
         </div>

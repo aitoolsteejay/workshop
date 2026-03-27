@@ -8,6 +8,7 @@ import { sanitizeAIText } from "@/lib/sanitize";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, ExternalLink, Upload, ArrowLeft } from "lucide-react";
+import { MYNTMORE_NOTION_LINK } from "@/lib/constants";
 import {
   Accordion,
   AccordionContent,
@@ -81,7 +82,7 @@ export function Step5Website({ data, icpData, valuePropData, profileData, onSave
     if (!form.brandName.trim()) { setError("Brand name is required"); return; }
     setError("");
     setLoading(true);
-    setGeneratedPrompt("");
+    // Don't clear generatedPrompt to preserve until new one is ready
 
     const icps = icpData?.result || [];
     const vps = valuePropData?.result || [];
@@ -95,11 +96,15 @@ export function Step5Website({ data, icpData, valuePropData, profileData, onSave
       ? "\n\nIMPORTANT: A design reference image has been provided. Use it for STRUCTURE and LAYOUT only. Do NOT copy colors from the reference. Use ONLY the brand colors specified above."
       : "";
 
-    const colorRule = `\n\nCRITICAL COLOUR RULE: Use EXACTLY, Primary: ${form.primaryColor}, Secondary: ${form.secondaryColor}. Apply primary to CTA buttons, hero accents, highlights. Apply secondary to backgrounds and cards. Do NOT default to dark mode unless the secondary colour is dark. CSS variables: --primary: ${form.primaryColor}; --secondary: ${form.secondaryColor};`;
-
     const prompt = `You are a world-class conversion rate optimisation expert and B2B web designer.
 
+COLOUR RULE: Use EXACTLY, Primary colour: ${form.primaryColor}, Secondary colour: ${form.secondaryColor}. Do NOT use any other colour scheme.
+
+IMPORTANT: The website MUST include a sticky navigation header at the top of every page. The header must contain: the brand logo or name on the left, navigation links in the centre (e.g. About, Services, Results, FAQ, Contact), and a CTA button on the right (e.g. 'Book a Call'). The header must be visible at all times as the user scrolls.
+
 Generate a comprehensive, ready-to-paste prompt for building a high-converting landing page.
+
+CRITICAL COLOUR RULE: Use EXACTLY, Primary: ${form.primaryColor}, Secondary: ${form.secondaryColor}. Apply primary to CTA buttons, hero accents, highlights. Apply secondary to backgrounds and cards. Do NOT default to dark mode unless the secondary colour is dark. CSS variables: --primary: ${form.primaryColor}; --secondary: ${form.secondaryColor};
 
 Inputs:
 - Brand Name: ${form.brandName}
@@ -110,17 +115,17 @@ Inputs:
 - Target ICPs and Pain Points:
 ${icpSummary}
 ${designInstruction}
-${colorRule}
 
-The generated website must have EXACTLY these 8 sections in this order:
+The generated website must have EXACTLY these 9 sections in this order:
 1. Hero Section
 2. Problem Section
 3. Solution Section
 4. Value Proposition Section
 5. Free Resource Section (MANDATORY): 3 interactive tool-based resources (NOT ebooks/PDFs)
-6. CTA Section
-7. FAQ Section: 8 questions
-8. Footer: TJ's LinkedIn, Instagram, Newsletter, Calendly, Myntmore Notion
+6. ROI Calculator Section: An interactive ROI Calculator. The user inputs: current monthly leads, average deal size, and current close rate. The calculator shows: potential monthly revenue, revenue gap, and estimated improvement with ${form.brandName}'s service. Make it interactive with real-time calculation.
+7. CTA Section
+8. FAQ Section: 10-12 questions covering: trust, process, timeline, effort, who it is NOT for, vs alternatives, risk, pricing, onboarding, and results guarantee
+9. Footer: TJ's LinkedIn, Instagram, Newsletter, Calendly, Myntmore Services: ${MYNTMORE_NOTION_LINK}
 
 Design rules:
 - Dark theme with given colours
@@ -176,7 +181,6 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
           </div>
         </div>
 
-        {/* Design Reference Upload */}
         <div>
           <Label className="text-sm text-muted-foreground">Design Reference (optional)</Label>
           <p className="text-xs text-muted-foreground mb-2">Upload a screenshot of a site you like. We'll use its structure, not its colors.</p>
@@ -196,13 +200,8 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
           </div>
         </div>
 
-        {/* Pinterest Link with Logo */}
-        <a
-          href="https://www.pinterest.com/search/pins/?q=website+design+inspiration"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 p-3 rounded-md bg-secondary border border-border hover:border-muted-foreground transition-colors"
-        >
+        <a href="https://www.pinterest.com/search/pins/?q=website+design+inspiration" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-3 p-3 rounded-md bg-secondary border border-border hover:border-muted-foreground transition-colors">
           <svg viewBox="0 0 24 24" className="w-6 h-6 shrink-0" fill="#E60023">
             <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/>
           </svg>
@@ -236,12 +235,8 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
             <pre className="text-xs text-muted-foreground bg-secondary p-4 rounded-md overflow-auto max-h-80 whitespace-pre-wrap">{generatedPrompt}</pre>
           </div>
 
-          <a
-            href="https://aistudio.google.com/apps"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full h-11 rounded-md border border-primary text-primary hover:bg-primary/10 transition-colors font-medium text-sm"
-          >
+          <a href="https://aistudio.google.com/apps" target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full h-11 rounded-md border border-primary text-primary hover:bg-primary/10 transition-colors font-medium text-sm">
             Open Google AI Studio <ExternalLink className="w-4 h-4" />
           </a>
 
@@ -262,6 +257,9 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
               ))}
             </div>
           </div>
+
+          {/* Regenerate button ABOVE FAQ */}
+          <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground">Regenerate</Button>
 
           {/* FAQ Section */}
           <div className="glass-card p-5">
@@ -304,8 +302,6 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
               </TabsContent>
             </Tabs>
           </div>
-
-          <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground">Regenerate</Button>
         </motion.div>
       )}
 

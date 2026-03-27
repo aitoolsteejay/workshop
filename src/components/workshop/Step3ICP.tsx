@@ -1,26 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { InfoTooltip } from "./InfoTooltip";
 import { MultiSelect } from "./MultiSelect";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown, ArrowLeft } from "lucide-react";
+import { INDUSTRIES } from "@/lib/constants";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-
-const INDUSTRIES = [
-  "SaaS", "Fintech", "Healthtech", "Edtech", "E-commerce", "D2C", "Agencies",
-  "Consulting", "Coaching", "Real Estate", "Manufacturing", "Logistics", "HR Tech",
-  "Martech", "Legal", "Finance", "Healthcare", "Recruitment", "IT Services",
-  "AI / ML Startups", "B2B Services", "B2B SaaS",
-];
 
 const ROLES = [
   "Founder / Co-Founder", "CEO / CXO", "Head of Growth", "Head of Sales",
@@ -54,12 +47,10 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
   });
   const [openIcp, setOpenIcp] = useState(0);
   const [result, setResult] = useState<any[]>(data?.result || []);
-  const [niche, setNiche] = useState(data?.niche || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
 
-  // Core offer comes from profile data (Step 2) — never re-ask
   const offer = profileData?.coreOffer || data?.offer || "";
 
   const updateIcp = (idx: number, field: keyof IcpInput, value: any) => {
@@ -92,7 +83,7 @@ Core Offer: ${offer}
 ${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${icps[i].roles.filter(x => x !== "Other").join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}`).join("\n")}
 
 For EACH ICP generate:
-1. ICP Name (descriptive)
+1. ICP Name: Must be simple, immediately understandable, and professional. Use plain language. Good examples: "The Growth-Focused Founder", "The Busy Sales Director", "The Scaling Agency Owner". Bad examples: "Scaling SaaS Growth Leader", "B2B GTM Orchestrator". The name should describe who the person is in everyday language.
 2. Who They Are (3-4 bullet points)
 3. Core Responsibilities (as a list)
 4. Pain Points (at least 5 to 7 specific bullet points)
@@ -107,7 +98,7 @@ Rules:
 - Make each ICP DISTINCT.
 - Use specific, believable insights. No generic text.
 - Pain Points for all 3 ICPs MUST be filled.
-- Do NOT use em-dashes or asterisks in any output.
+- Do NOT use em-dashes, asterisks, or hash signs in any output.
 
 Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string).`;
 
@@ -125,7 +116,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
       }
       parsed = sanitizeAIOutput(parsed);
       setResult(parsed);
-      onSave({ inputs: icps, offer, result: parsed, niche });
+      onSave({ inputs: icps, offer, result: parsed });
       toast({ title: "✓ Saved", description: "ICPs generated and saved", duration: 3000 });
     } catch (e: any) {
       setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
@@ -136,6 +127,18 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
 
   const [activeTab, setActiveTab] = useState(0);
 
+  const TOOLTIPS: Record<string, string> = {
+    whoTheyAre: "A detailed description of this ideal customer's role, company type, and context",
+    coreResponsibilities: "The daily tasks and KPIs this person owns, useful for tailoring your messaging",
+    painPoints: "The real problems they face. Use these directly in your outreach messaging",
+    goalsDesires: "The specific outcomes and results this ICP is actively trying to achieve",
+    buyingTriggers: "Specific events or situations that make them actively look for a solution like yours",
+    objections: "Why they might hesitate to buy. Address these proactively in your outreach",
+    psychology: "How they think and make decisions, use this to choose the right tone and angle",
+    whereTheyHangOut: "Platforms and content they consume, use this to choose your outreach channel",
+    howToPosition: "The messaging angle and emphasis that works best for this specific ICP",
+  };
+
   const sections = [
     { key: "whoTheyAre", label: "Who They Are", icon: "👤" },
     { key: "coreResponsibilities", label: "Responsibilities", icon: "📋" },
@@ -143,6 +146,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     { key: "goalsDesires", label: "Goals", icon: "🎯" },
     { key: "buyingTriggers", label: "Buying Triggers", icon: "⚡" },
     { key: "objections", label: "Objections", icon: "🛡️" },
+    { key: "psychology", label: "Psychology", icon: "🧠" },
     { key: "whereTheyHangOut", label: "Where to Reach", icon: "📍" },
     { key: "howToPosition", label: "Positioning", icon: "💎" },
   ];
@@ -204,26 +208,15 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8">
           <div className="flex gap-1 mb-4">
             {result.map((icp: any, idx: number) => (
-              <button
-                key={idx}
-                onClick={() => setActiveTab(idx)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
+              <button key={idx} onClick={() => setActiveTab(idx)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                 ICP {idx + 1}
               </button>
             ))}
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-            >
+            <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
               <div className="glass-card p-6">
                 <h3 className="text-lg font-bold accent-text mb-6">{result[activeTab]?.name}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -231,10 +224,18 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                     const val = result[activeTab]?.[s.key];
                     if (!val) return null;
 
+                    const tooltip = TOOLTIPS[s.key];
+                    const header = (
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                        {s.icon} {s.label}
+                        {tooltip && <InfoTooltip text={tooltip} />}
+                      </h4>
+                    );
+
                     if (s.key === "painPoints" && Array.isArray(val)) {
                       return (
                         <div key={s.key} className="md:col-span-2">
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{s.icon} {s.label}</h4>
+                          {header}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {val.map((item: string, i: number) => (
                               <div key={i} className="bg-secondary p-3 rounded-md text-sm text-foreground border-l-2 border-primary">{item}</div>
@@ -244,26 +245,10 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                       );
                     }
 
-                    // Objections: OPEN by default
-                    if (s.key === "objections") {
-                      return (
-                        <div key={s.key} className="md:col-span-2">
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{s.icon} {s.label}</h4>
-                          {Array.isArray(val) ? (
-                            <ul className="space-y-1.5 mt-1">
-                              {val.map((item: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {item}</li>)}
-                            </ul>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">{val}</p>
-                          )}
-                        </div>
-                      );
-                    }
-
                     if (s.key === "whereTheyHangOut" && Array.isArray(val)) {
                       return (
                         <div key={s.key}>
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{s.icon} {s.label}</h4>
+                          {header}
                           <div className="flex flex-wrap gap-1.5">
                             {val.map((item: string, i: number) => (
                               <span key={i} className="text-xs px-2 py-1 rounded tag-selected border border-primary">{item}</span>
@@ -276,15 +261,15 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                     if (s.key === "howToPosition") {
                       return (
                         <div key={s.key} className="md:col-span-2">
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{s.icon} {s.label}</h4>
+                          {header}
                           <div className="bg-primary/10 border border-primary/30 p-4 rounded-md text-sm text-foreground">{val}</div>
                         </div>
                       );
                     }
 
                     return (
-                      <div key={s.key}>
-                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{s.icon} {s.label}</h4>
+                      <div key={s.key} className={s.key === "objections" ? "md:col-span-2" : ""}>
+                        {header}
                         {Array.isArray(val) ? (
                           <ul className="space-y-1">
                             {val.map((item: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {item}</li>)}
@@ -304,12 +289,6 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
             </motion.div>
           </AnimatePresence>
 
-          <div className="glass-card p-5 mt-4">
-            <Label className="text-sm text-muted-foreground">Niche Refinement (optional)</Label>
-            <p className="text-xs text-muted-foreground mb-2">Narrow your niche for the Website Builder step.</p>
-            <Input value={niche} onChange={e => setNiche(e.target.value)} placeholder="e.g. AI-powered SaaS for HR teams" className="bg-secondary border-border focus:border-primary" />
-          </div>
-
           <Button onClick={generate} variant="ghost" className="w-full mt-4 text-muted-foreground">Regenerate ICPs</Button>
         </motion.div>
       )}
@@ -321,7 +300,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
               <ArrowLeft className="w-4 h-4 mr-1" /> Back
             </Button>
           ) : <div />}
-          <Button onClick={() => { onSave({ inputs: icps, offer, result, niche }); onNext(); }} className="accent-bg hover:opacity-90 h-12 px-8 font-semibold">
+          <Button onClick={() => { onSave({ inputs: icps, offer, result }); onNext(); }} className="accent-bg hover:opacity-90 h-12 px-8 font-semibold">
             Next Step →
           </Button>
         </div>

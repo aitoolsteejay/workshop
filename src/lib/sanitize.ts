@@ -1,11 +1,12 @@
 /**
- * Sanitize AI-generated text: remove em-dashes and asterisks.
+ * Sanitize AI-generated text: remove em-dashes, asterisks, and hash signs.
  */
 export function sanitizeAIText(text: string): string {
   if (!text) return text;
   return text
     .replace(/—/g, ",")
-    .replace(/\*/g, "");
+    .replace(/\*/g, "")
+    .replace(/#/g, "");
 }
 
 /**

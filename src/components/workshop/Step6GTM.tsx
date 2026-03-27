@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, Star, Calendar, Users, Presentation } from "lucide-react";
 
 interface Step6Props {
   data: any;
@@ -63,7 +64,13 @@ Generate a separate GTM strategy for EACH of the 3 ICPs. Return a JSON object:
       "channels": [{ "name": string, "effort": "Low"|"Medium"|"High", "roi": "Low"|"Medium"|"High", "useCase": string, "startHere": boolean, "tips": [3 strings] }],
       "timeline": [{ "phase": string, "title": string, "tasks": [strings] }],
       "partners": { "types": [{ "type": string, "angle": string, "offer": string, "snippet": string }] },
-      "leadMagnets": [{ "name": string, "type": "Audit"|"Report"|"Workshop"|"Calculator"|"Diagnostic", "targetICP": string, "includes": [2-3 strings], "whyItWorks": string, "whenToUse": string, "effort": "Low"|"Medium"|"High", "impact": "Low"|"Medium"|"High", "bestStart": boolean }]
+      "leadMagnets": [{ "name": string, "type": "Audit"|"Report"|"Workshop"|"Calculator"|"Diagnostic", "targetICP": string, "includes": [2-3 strings], "whyItWorks": string, "whenToUse": string, "effort": "Low"|"Medium"|"High", "impact": "Low"|"Medium"|"High", "bestStart": boolean }],
+      "eventLedGrowth": {
+        "onlineEvents": [{ "format": string, "topic": string }],
+        "offlineEvents": [{ "format": string, "topic": string }],
+        "eventFunnel": { "preEvent": string, "duringEvent": string, "postEvent": string },
+        "conversionStrategy": string
+      }
     }
   ]
 }
@@ -72,7 +79,8 @@ Rules:
 - Use "LinkedIn Connection Request", "LinkedIn DM", "Cold Email" terminology.
 - Each ICP strategy must be DISTINCT.
 - Lead magnets: interactive/results-oriented (NOT ebooks/PDFs). Each must clearly state which ICP it targets.
-- Do NOT use em-dashes or asterisks.
+- Event-Led Growth: 3 online + 3 offline event formats, 3 specific topic ideas, pre/during/post funnel, conversion strategy.
+- Do NOT use em-dashes, asterisks, or hash signs.
 - Return ONLY valid JSON (no markdown, no code blocks).`;
 
     try {
@@ -98,7 +106,7 @@ Rules:
     }
   };
 
-  const modules = ["Channels", "Timeline", "Partners", "Lead Magnets"];
+  const modules = ["Channels", "Timeline", "Partners", "Lead Magnets", "Event-Led Growth"];
   const strategies = result?.icpStrategies || (result?.channels ? [result] : []);
 
   return (
@@ -117,16 +125,10 @@ Rules:
 
       {strategies.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          {/* ICP Tabs */}
           <div className="flex gap-1 mb-4">
             {strategies.map((s: any, idx: number) => (
-              <button
-                key={idx}
-                onClick={() => { setActiveIcpTab(idx); setActiveModule(0); }}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  activeIcpTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
+              <button key={idx} onClick={() => { setActiveIcpTab(idx); setActiveModule(0); }}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeIcpTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                 ICP {idx + 1} {s.icpName ? `— ${s.icpName}` : ""}
               </button>
             ))}
@@ -134,16 +136,10 @@ Rules:
 
           <AnimatePresence mode="wait">
             <motion.div key={activeIcpTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              {/* Module Tabs */}
               <div className="flex gap-1 mb-6 overflow-x-auto">
                 {modules.map((m, idx) => (
-                  <button
-                    key={m}
-                    onClick={() => setActiveModule(idx)}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                      activeModule === idx ? "bg-secondary text-foreground border border-primary" : "bg-secondary text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
+                  <button key={m} onClick={() => setActiveModule(idx)}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${activeModule === idx ? "bg-secondary text-foreground border border-primary" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                     {m}
                   </button>
                 ))}
@@ -159,9 +155,7 @@ Rules:
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {strat.channels.map((ch: any, i: number) => (
                           <div key={i} className={`glass-card p-5 ${ch.startHere ? "border-primary" : ""}`}>
-                            {ch.startHere && (
-                              <span className="text-[10px] font-bold accent-bg px-2 py-0.5 rounded mb-2 inline-block">START HERE</span>
-                            )}
+                            {ch.startHere && <span className="text-[10px] font-bold accent-bg px-2 py-0.5 rounded mb-2 inline-block">START HERE</span>}
                             <h4 className="font-semibold text-sm mb-2">{ch.name}</h4>
                             <div className="flex gap-3 mb-3">
                               <span className="text-xs text-muted-foreground">Effort: <span className="text-foreground">{ch.effort}</span></span>
@@ -170,9 +164,7 @@ Rules:
                             <p className="text-xs text-muted-foreground mb-3">{ch.useCase}</p>
                             {ch.tips && (
                               <ul className="space-y-1">
-                                {ch.tips.map((t: string, j: number) => (
-                                  <li key={j} className="text-xs text-muted-foreground">→ {t}</li>
-                                ))}
+                                {ch.tips.map((t: string, j: number) => <li key={j} className="text-xs text-muted-foreground">→ {t}</li>)}
                               </ul>
                             )}
                           </div>
@@ -193,9 +185,7 @@ Rules:
                             </div>
                             <ul className="space-y-1.5 ml-11">
                               {phase.tasks?.map((task: string, j: number) => (
-                                <li key={j} className="text-sm text-muted-foreground flex gap-2">
-                                  <span className="text-muted-foreground/50">•</span>{task}
-                                </li>
+                                <li key={j} className="text-sm text-muted-foreground flex gap-2"><span className="text-muted-foreground/50">•</span>{task}</li>
                               ))}
                             </ul>
                           </div>
@@ -205,6 +195,10 @@ Rules:
 
                     {activeModule === 2 && strat.partners?.types && (
                       <div className="space-y-3">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                          Partner Outreach
+                          <InfoTooltip text="Strategy for growing through partnerships with complementary businesses" />
+                        </h3>
                         {strat.partners.types.map((p: any, i: number) => (
                           <div key={i} className="glass-card p-5">
                             <h4 className="font-semibold text-sm mb-1">{p.type}</h4>
@@ -224,48 +218,116 @@ Rules:
                     )}
 
                     {activeModule === 3 && strat.leadMagnets && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {strat.leadMagnets.map((lm: any, i: number) => (
-                          <div key={i} className={`glass-card p-5 relative ${lm.bestStart ? "border-primary" : ""}`}>
-                            {lm.bestStart && (
-                              <div className="absolute -top-2 left-4 flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded">
-                                <Star className="w-3 h-3" /> Best Starting Point
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mb-3">
+                          Lead Magnets
+                          <InfoTooltip text="High-value free resources used to attract prospects and start conversations without cold pitching" />
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {strat.leadMagnets.map((lm: any, i: number) => (
+                            <div key={i} className={`glass-card p-5 relative ${lm.bestStart ? "border-primary" : ""}`}>
+                              {lm.bestStart && (
+                                <div className="absolute -top-2 left-4 flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded">
+                                  <Star className="w-3 h-3" /> Best Starting Point
+                                </div>
+                              )}
+                              <span className="text-[10px] font-medium text-primary uppercase">{lm.type || lm.format}</span>
+                              <h4 className="font-semibold text-sm mt-1 mb-2">{lm.name}</h4>
+                              <p className="text-xs text-muted-foreground mb-2 accent-text">For {strat.icpName || `ICP ${activeIcpTab + 1}`}</p>
+                              {lm.includes && (
+                                <ul className="space-y-1 mb-3">
+                                  {lm.includes.map((item: string, j: number) => (
+                                    <li key={j} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-primary">•</span>{item}</li>
+                                  ))}
+                                </ul>
+                              )}
+                              {lm.whyItWorks && (
+                                <div className="mb-2">
+                                  <span className="text-[10px] text-muted-foreground uppercase">Why it works</span>
+                                  <p className="text-xs text-muted-foreground">{lm.whyItWorks}</p>
+                                </div>
+                              )}
+                              {lm.whenToUse && (
+                                <div className="mb-2">
+                                  <span className="text-[10px] text-muted-foreground uppercase">When to use</span>
+                                  <p className="text-xs text-muted-foreground">{lm.whenToUse}</p>
+                                </div>
+                              )}
+                              <div className="flex gap-3 mt-3 pt-2 border-t border-border">
+                                <span className="text-xs text-muted-foreground">Effort: <span className="text-foreground">{lm.effort || "Medium"}</span></span>
+                                <span className="text-xs text-muted-foreground">Impact: <span className="text-foreground">{lm.impact || "High"}</span></span>
                               </div>
-                            )}
-                            <span className="text-[10px] font-medium text-primary uppercase">{lm.type || lm.format}</span>
-                            <h4 className="font-semibold text-sm mt-1 mb-2">{lm.name}</h4>
-                            <p className="text-xs text-muted-foreground mb-2 accent-text">For {strat.icpName || `ICP ${activeIcpTab + 1}`}</p>
-
-                            {lm.includes && (
-                              <ul className="space-y-1 mb-3">
-                                {lm.includes.map((item: string, j: number) => (
-                                  <li key={j} className="text-xs text-muted-foreground flex gap-1.5">
-                                    <span className="text-primary">•</span>{item}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-
-                            {lm.whyItWorks && (
-                              <div className="mb-2">
-                                <span className="text-[10px] text-muted-foreground uppercase">Why it works</span>
-                                <p className="text-xs text-muted-foreground">{lm.whyItWorks}</p>
-                              </div>
-                            )}
-
-                            {lm.whenToUse && (
-                              <div className="mb-2">
-                                <span className="text-[10px] text-muted-foreground uppercase">When to use</span>
-                                <p className="text-xs text-muted-foreground">{lm.whenToUse}</p>
-                              </div>
-                            )}
-
-                            <div className="flex gap-3 mt-3 pt-2 border-t border-border">
-                              <span className="text-xs text-muted-foreground">Effort: <span className="text-foreground">{lm.effort || "Medium"}</span></span>
-                              <span className="text-xs text-muted-foreground">Impact: <span className="text-foreground">{lm.impact || "High"}</span></span>
                             </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeModule === 4 && (
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                          Event-Led Growth
+                          <InfoTooltip text="Using events (online or offline) to attract, warm up, and convert your ICPs" />
+                        </h3>
+
+                        {strat.eventLedGrowth ? (
+                          <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="glass-card p-5">
+                                <h4 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
+                                  <Presentation className="w-3.5 h-3.5" /> Online Events
+                                </h4>
+                                {strat.eventLedGrowth.onlineEvents?.map((ev: any, i: number) => (
+                                  <div key={i} className="bg-secondary p-3 rounded-md mb-2">
+                                    <span className="text-[10px] text-primary font-medium uppercase">{ev.format}</span>
+                                    <p className="text-sm mt-0.5">{ev.topic}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="glass-card p-5">
+                                <h4 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
+                                  <Users className="w-3.5 h-3.5" /> Offline Events
+                                </h4>
+                                {strat.eventLedGrowth.offlineEvents?.map((ev: any, i: number) => (
+                                  <div key={i} className="bg-secondary p-3 rounded-md mb-2">
+                                    <span className="text-[10px] text-primary font-medium uppercase">{ev.format}</span>
+                                    <p className="text-sm mt-0.5">{ev.topic}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {strat.eventLedGrowth.eventFunnel && (
+                              <div className="glass-card p-5">
+                                <h4 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
+                                  <Calendar className="w-3.5 h-3.5" /> Event Funnel
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  {["preEvent", "duringEvent", "postEvent"].map((phase, i) => (
+                                    <div key={phase} className="bg-secondary p-4 rounded-md">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <span className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold accent-bg">{i + 1}</span>
+                                        <span className="text-xs font-semibold capitalize">{phase === "preEvent" ? "Pre-Event" : phase === "duringEvent" ? "During Event" : "Post-Event"}</span>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground">{strat.eventLedGrowth.eventFunnel[phase]}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {strat.eventLedGrowth.conversionStrategy && (
+                              <div className="glass-card p-5">
+                                <h4 className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Conversion Strategy</h4>
+                                <p className="text-sm text-muted-foreground">{strat.eventLedGrowth.conversionStrategy}</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="glass-card p-5 text-center">
+                            <p className="text-sm text-muted-foreground">Event-Led Growth data not available. Try regenerating.</p>
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
                   </>
