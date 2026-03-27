@@ -12,14 +12,14 @@ import { FinalScreen } from "@/components/workshop/FinalScreen";
 import { ProgressBar } from "@/components/workshop/ProgressBar";
 import { ProgressSidebar } from "@/components/workshop/ProgressSidebar";
 import { WorkshopFooter } from "@/components/workshop/WorkshopFooter";
-import { RestartButton } from "@/components/workshop/RestartButton";
+
 import {
   getSessionId, createSession, loadSession, saveProgress,
   clearSession, loadBackup
 } from "@/lib/workshop-store";
 import { generatePDF } from "@/lib/pdf-export";
 import { useToast } from "@/hooks/use-toast";
-import { Save } from "lucide-react";
+
 
 const TOTAL_STEPS = 7;
 
@@ -121,16 +121,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen pb-8">
-      <ProgressBar currentStep={step > 0 ? step : 0} totalSteps={TOTAL_STEPS} />
-
-      {step > 0 && step <= TOTAL_STEPS && (
-        <div className="fixed top-12 right-4 z-50 flex items-center gap-2">
-          <button onClick={handleManualSave} className="p-2 rounded-md bg-secondary border border-border text-muted-foreground hover:text-primary transition-colors" title="Save Progress">
-            <Save className="w-4 h-4" />
-          </button>
-          <RestartButton onRestart={handleStartFresh} />
-        </div>
-      )}
+      <ProgressBar currentStep={step > 0 ? step : 0} totalSteps={TOTAL_STEPS} onSave={step > 0 && step <= TOTAL_STEPS ? handleManualSave : undefined} onRestart={step > 0 && step <= TOTAL_STEPS ? handleStartFresh : undefined} />
 
       <div className={step > 0 ? "flex" : ""}>
         {showSidebar && (
