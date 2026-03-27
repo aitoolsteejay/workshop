@@ -6,7 +6,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIText } from "@/lib/sanitize";
-import { NO_JARGON_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, ExternalLink, Upload, ArrowLeft } from "lucide-react";
