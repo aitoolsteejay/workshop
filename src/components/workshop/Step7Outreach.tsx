@@ -27,7 +27,7 @@ const PRACTICE_STEPS = [
         step: 1,
         action: "Send Connection Request",
         detail: "You can add a personalised note or try without one. If adding a note: keep it friendly, lead with a genuine compliment about their work or a specific post. Never pitch in the connection request. If they do not see value in connecting, they will not accept, and you have lost that prospect.",
-        tip: "Use their first name. Reference something specific about them, a post, a company milestone, or a recent achievement. Tools like Clay (clay.com) can pull recent activity like funding rounds, hiring sprees, or company news to help you personalise at scale.",
+        tip: "Use their first name. Reference something specific about them, a post, a company milestone, or a recent achievement. Tools like Clay (https://clay.com/?via=23e526) can pull recent activity like funding rounds, hiring sprees, or company news to help you personalise at scale. Use Apollo (https://apollo.partnerlinks.io/7gvq2nugzjir) to find verified contact details and build targeted prospect lists.",
         timing: "Day 1",
       },
       {

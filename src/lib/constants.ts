@@ -22,3 +22,8 @@ export const COUNTRIES = [
 ];
 
 export const MYNTMORE_NOTION_LINK = "https://www.notion.so/Myntmore-Core-Services-19d522641d38809d94bae2cad1b5c957?pvs=74";
+
+export const AFFILIATE_LINKS = {
+  clay: "https://clay.com/?via=23e526",
+  apollo: "https://apollo.partnerlinks.io/7gvq2nugzjir",
+};

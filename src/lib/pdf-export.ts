@@ -348,5 +348,29 @@ export async function generatePDF(sessionData: any) {
     }
   }
 
+  // Thank You page
+  y = newSection(doc, "Thank You");
+  y += 10;
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
+  const thankYouLines = [
+    `Thank you for completing the B2B Growth Workshop, ${userName}.`,
+    "Your strategy is built. Now it is time to execute.",
+    "Start with one sequence, test it, and iterate. Consistency beats perfection.",
+  ];
+  for (const line of thankYouLines) {
+    const wrapped = doc.splitTextToSize(line, maxW);
+    for (const wl of wrapped) {
+      doc.text(wl, PAGE_MARGIN, y);
+      y += 7;
+    }
+    y += 3;
+  }
+  y += 10;
+  doc.setFontSize(11);
+  doc.setTextColor(120, 120, 120);
+  doc.text("Powered by Myntmore", w / 2, y, { align: "center" });
+
   doc.save(`B2B_Growth_Strategy_${userName.replace(/\s+/g, "_")}.pdf`);
 }
