@@ -25,6 +25,7 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
   const [error, setError] = useState("");
   const [activeIcpTab, setActiveIcpTab] = useState(0);
   const [activeModule, setActiveModule] = useState(0);
+  const isGenerating = useRef(false);
   const { toast } = useToast();
 
   const offer = profileData?.coreOffer || icpData?.offer || "";
