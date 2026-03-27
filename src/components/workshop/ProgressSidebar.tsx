@@ -21,7 +21,7 @@ export function ProgressSidebar({ currentStep, onNavigate }: ProgressSidebarProp
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  if (currentStep < 1 || currentStep > 7) return null;
+  if (currentStep < 1 || currentStep > 8) return null;
 
   const stepIcons = ["1", "2", "3", "4", "5", "6", "7"];
 
