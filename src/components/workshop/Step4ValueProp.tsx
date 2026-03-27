@@ -4,6 +4,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
+import { NO_JARGON_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, ArrowLeft } from "lucide-react";
@@ -44,26 +45,29 @@ export function Step4ValueProp({ data, icpData, profileData, onSave, onNext, onB
       `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).join(", ")}`
     ).join("\n");
 
-    const prompt = `You are a senior B2B strategist. Generate structured Value Propositions for each of these 3 ICPs:
+    const prompt = `You are a senior B2B strategist. Generate structured Value Propositions for each of these 3 target customer types:
+
+${NO_JARGON_RULE}
 
 Core Offer: ${offer}
 ${icpSummary}
 
-For EACH ICP, provide:
+For EACH target customer type, provide:
 1. corePromise: One powerful sentence that captures the transformation (max 15 words)
 2. beforeState: What life looks like BEFORE using this solution (3 bullet points)
 3. afterState: What life looks like AFTER (3 bullet points)
 4. threeStepSystem: Array of 3 steps, each with "step" (name) and "description"
 5. whyOthersFail: Why current alternatives fail (2-3 bullet points)
 6. whyYouWin: Why this specific approach wins (2-3 bullet points)
-7. oneLiner: A ready-to-use one-liner for outreach (max 20 words)
+7. contentStrategy: A short, clear paragraph (2-3 sentences) explaining the content strategy angle for reaching this customer type. What kind of content to create, what platform to post it on, and what outcome to drive. Not a tagline.
 8. shortPitch: A 2-3 sentence elevator pitch
 9. cta: A clear call-to-action sentence
-10. icpName: The ICP name
-11. positioning: A unique core positioning statement for THIS specific ICP following exactly this format: "We help [specific ICP descriptor] to [their specific desired outcome] by [your specific method for this ICP]". Each ICP MUST have a DIFFERENT positioning statement. Use simple, easy-to-understand language. No jargon.
+10. icpName: The customer type name
+11. positioning: A unique core positioning statement for THIS specific customer type following exactly this format: "We help [specific customer descriptor] to [their specific desired outcome] by [your specific method for this customer type]". Each customer type MUST have a DIFFERENT positioning statement. Use simple, easy-to-understand language. No jargon.
+12. coreAngle: The single strongest hook to lead with when talking to this customer type. Must be one of: "Authority", "ROI", "Speed", or "Trust". Include a one-line explanation of why this angle works best for them.
 
 Rules:
-- Each ICP must feel fundamentally DIFFERENT.
+- Each customer type must feel fundamentally DIFFERENT.
 - Ban phrases like "increase growth", "improve results", "scale faster".
 - Do NOT use em-dashes, asterisks, or hash signs in any output.
 - Return ONLY a valid JSON array of 3 objects (no markdown, no code blocks).`;
@@ -99,16 +103,16 @@ Rules:
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-1">Your <span className="accent-text">Value Propositions</span></h2>
-      <p className="text-muted-foreground mb-8 text-sm">Auto-generated from your ICP data</p>
+      <h2 className="text-[20px] font-bold mb-1">Your <span className="accent-text">Value Proposition</span></h2>
+      <p className="text-muted-foreground mb-8 text-sm">Auto-generated from your customer profile data</p>
 
       {!loading && result.length === 0 && (
         <Button onClick={generate} className="accent-bg hover:opacity-90 w-full h-11 font-semibold">
-          Generate Value Propositions
+          Generate Value Proposition
         </Button>
       )}
 
-      {loading && <LoadingSpinner text="Generating Value Propositions..." />}
+      {loading && <LoadingSpinner text="Generating Value Proposition..." />}
       {error && <p className="text-destructive text-sm mb-4">{error}</p>}
 
       {result.length > 0 && (
@@ -132,7 +136,7 @@ Rules:
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="glass-card p-5">
-                  <h4 className="text-xs font-semibold text-destructive uppercase tracking-wider mb-3">Before</h4>
+                  <h4 className="text-xs font-medium text-destructive uppercase tracking-wider mb-3">Before</h4>
                   <ul className="space-y-2">
                     {result[activeTab]?.beforeState?.map((b: string, i: number) => (
                       <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-destructive">✗</span>{b}</li>
@@ -140,7 +144,7 @@ Rules:
                   </ul>
                 </div>
                 <div className="glass-card p-5">
-                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3">After</h4>
+                  <h4 className="text-xs font-medium text-emerald-400 uppercase tracking-wider mb-3">After</h4>
                   <ul className="space-y-2">
                     {result[activeTab]?.afterState?.map((a: string, i: number) => (
                       <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-emerald-400">✓</span>{a}</li>
@@ -150,7 +154,10 @@ Rules:
               </div>
 
               <div className="glass-card p-5">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">3-Step System</h4>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-1">
+                  3-Step System
+                  <InfoTooltip text="The three steps that make your solution work for this specific customer type" />
+                </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {result[activeTab]?.threeStepSystem?.map((step: any, i: number) => (
                     <div key={i} className="bg-secondary p-4 rounded-md">
@@ -166,7 +173,10 @@ Rules:
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="glass-card p-5">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Why Others Fail</h4>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1">
+                    Why Others Fail
+                    <InfoTooltip text="Common reasons why other solutions don't solve this customer's problem the way yours does" />
+                  </h4>
                   <ul className="space-y-2">
                     {result[activeTab]?.whyOthersFail?.map((f: string, i: number) => (
                       <li key={i} className="text-sm text-muted-foreground">• {f}</li>
@@ -174,7 +184,10 @@ Rules:
                   </ul>
                 </div>
                 <div className="glass-card p-5">
-                  <h4 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Why You Win</h4>
+                  <h4 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
+                    Why You Win
+                    <InfoTooltip text="The specific advantage your approach has over alternatives for this customer" />
+                  </h4>
                   <ul className="space-y-2">
                     {result[activeTab]?.whyYouWin?.map((w: string, i: number) => (
                       <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-primary">→</span>{w}</li>
@@ -183,15 +196,29 @@ Rules:
                 </div>
               </div>
 
+              {/* Core Angle */}
+              {result[activeTab]?.coreAngle && (
+                <div className="glass-card p-5">
+                  <h4 className="text-xs font-medium text-primary uppercase tracking-wider mb-2 flex items-center gap-1">
+                    Core Angle
+                    <InfoTooltip text="The single strongest hook to lead with when talking to this customer type: Authority, ROI, Speed, or Trust" />
+                  </h4>
+                  <p className="text-sm text-muted-foreground">{result[activeTab].coreAngle}</p>
+                </div>
+              )}
+
               <div className="glass-card p-5">
-                <h4 className="text-xs font-semibold text-primary uppercase tracking-wider mb-4">Ready-to-Use Copy</h4>
+                <h4 className="text-xs font-medium text-primary uppercase tracking-wider mb-4">Ready-to-Use Copy</h4>
                 <div className="space-y-3">
                   <div className="bg-secondary p-3 rounded-md flex items-start justify-between">
                     <div>
-                      <span className="text-xs text-muted-foreground">One-liner</span>
-                      <p className="text-sm font-medium mt-0.5">{result[activeTab]?.oneLiner}</p>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        Strategy Behind Your Content Creation
+                        <InfoTooltip text="How to position your content so it attracts this specific type of customer" />
+                      </span>
+                      <p className="text-sm mt-0.5">{result[activeTab]?.contentStrategy || result[activeTab]?.oneLiner}</p>
                     </div>
-                    <CopyBtn text={result[activeTab]?.oneLiner || ""} id={`oneliner-${activeTab}`} />
+                    <CopyBtn text={result[activeTab]?.contentStrategy || result[activeTab]?.oneLiner || ""} id={`contentstrat-${activeTab}`} />
                   </div>
                   <div className="bg-secondary p-3 rounded-md flex items-start justify-between">
                     <div>
@@ -213,7 +240,7 @@ Rules:
               {/* Per-ICP Positioning */}
               {result[activeTab]?.positioning && (
                 <div className="glass-card p-5 border-primary">
-                  <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Core Positioning Statement</h3>
+                  <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-2">Core Positioning Statement</h3>
                   <p className="text-sm italic text-muted-foreground">"{result[activeTab].positioning}"</p>
                 </div>
               )}

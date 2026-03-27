@@ -13,11 +13,13 @@ interface MultiSelectProps {
   hasOther?: boolean;
   otherValue?: string;
   onOtherChange?: (v: string) => void;
+  maxItems?: number;
 }
 
 export function MultiSelect({
   label, options, selected, onChange, placeholder,
   searchable = true, hasOther = true, otherValue = "", onOtherChange,
+  maxItems,
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -34,14 +36,25 @@ export function MultiSelect({
   const allOptions = hasOther && !options.includes("Other") ? [...options, "Other"] : options;
   const filtered = allOptions.filter(o => o.toLowerCase().includes(search.toLowerCase()));
 
+  const nonOtherSelected = selected.filter(x => x !== "Other");
+  const atMax = maxItems ? nonOtherSelected.length >= maxItems : false;
+
   const toggle = (o: string) => {
-    onChange(selected.includes(o) ? selected.filter(x => x !== o) : [...selected, o]);
+    if (selected.includes(o)) {
+      onChange(selected.filter(x => x !== o));
+    } else {
+      if (o !== "Other" && atMax) return;
+      onChange([...selected, o]);
+    }
   };
   const remove = (o: string) => onChange(selected.filter(x => x !== o));
 
   return (
     <div ref={ref} className="relative">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <div className="flex items-center gap-1">
+        <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+        {atMax && <span className="text-[10px] text-primary font-medium">Max {maxItems} selected</span>}
+      </div>
       <div
         onClick={() => setOpen(true)}
         className="mt-1 min-h-[40px] flex flex-wrap gap-1.5 items-center p-2 rounded-md bg-secondary border border-border cursor-pointer hover:border-muted-foreground transition-colors"
@@ -77,32 +90,37 @@ export function MultiSelect({
             </div>
           )}
           <div className="overflow-y-auto max-h-44">
-            {filtered.map(o => (
-              <button
-                key={o}
-                type="button"
-                onClick={() => toggle(o)}
-                className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${
-                  selected.includes(o) ? "text-primary bg-primary/10" : "text-foreground hover:bg-secondary"
-                }`}
-              >
-                <span className={`w-4 h-4 rounded border flex items-center justify-center text-xs ${
-                  selected.includes(o) ? "bg-primary border-primary text-primary-foreground" : "border-border"
-                }`}>
-                  {selected.includes(o) && "✓"}
-                </span>
-                {o}
-              </button>
-            ))}
+            {filtered.map(o => {
+              const isSelected = selected.includes(o);
+              const isDisabled = !isSelected && o !== "Other" && atMax;
+              return (
+                <button
+                  key={o}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => toggle(o)}
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${
+                    isSelected ? "text-primary bg-primary/10" : isDisabled ? "text-muted-foreground/30 cursor-not-allowed" : "text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <span className={`w-4 h-4 rounded border flex items-center justify-center text-xs ${
+                    isSelected ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                  }`}>
+                    {isSelected && "✓"}
+                  </span>
+                  {o}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
-      {selected.includes("Other") && hasOther && onOtherChange && (
+      {selected.includes("Other") && hasOther && (
         <div className="mt-2">
           <Input
-            placeholder="Enter custom values (comma separated)"
-            value={otherValue}
-            onChange={(e) => onOtherChange(e.target.value)}
+            placeholder="e.g. SaaS, Fintech, Healthcare — separate multiple values with a comma"
+            value={otherValue || ""}
+            onChange={(e) => onOtherChange?.(e.target.value)}
             className="bg-secondary border-border focus:border-primary text-sm"
           />
         </div>

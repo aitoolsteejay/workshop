@@ -5,6 +5,7 @@ import { InfoTooltip } from "./InfoTooltip";
 import { MultiSelect } from "./MultiSelect";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
+import { NO_JARGON_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown, ArrowLeft } from "lucide-react";
@@ -18,7 +19,7 @@ import {
 const ROLES = [
   "Founder / Co-Founder", "CEO / CXO", "Head of Growth", "Head of Sales",
   "Head of Marketing", "SDR / BDR Manager", "Enterprise Sales Leader",
-  "Partnerships Manager", "Operations Head", "Strategy Lead",
+  "Partnerships Manager", "Operations Head", "Strategy Lead", "Other",
 ];
 
 const SIZES = ["1–10", "10–50", "50–200", "200–500", "500–1000", "1000+"];
@@ -28,6 +29,7 @@ interface IcpInput {
   sizes: string[];
   industries: string[];
   industryOther: string;
+  roleOther: string;
 }
 
 interface Step3Props {
@@ -39,7 +41,7 @@ interface Step3Props {
 }
 
 export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Props) {
-  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "" });
+  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "", roleOther: "" });
   const [icps, setIcps] = useState<IcpInput[]>(() => {
     const inputs = data?.inputs || [];
     while (inputs.length < 3) inputs.push(emptyIcp());
@@ -66,6 +68,15 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
     return selected;
   };
 
+  const getRoles = (icp: IcpInput) => {
+    const selected = icp.roles.filter(x => x !== "Other");
+    if (icp.roles.includes("Other") && icp.roleOther) {
+      const custom = icp.roleOther.split(",").map(s => s.trim()).filter(Boolean);
+      return [...selected, ...custom];
+    }
+    return selected;
+  };
+
   const generate = async () => {
     if (!offer.trim()) { setError("Core offer is missing. Please complete Step 2 first."); return; }
     for (let i = 0; i < 3; i++) {
@@ -77,13 +88,15 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
     setLoading(true);
     setResult([]);
 
-    const prompt = `You are an expert B2B Growth Strategist. Generate 3 deep, strategic Ideal Customer Profiles (ICPs).
+    const prompt = `You are an expert B2B Growth Strategist. Generate 3 deep, strategic Ideal Customer Profiles.
+
+${NO_JARGON_RULE}
 
 Core Offer: ${offer}
-${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${icps[i].roles.filter(x => x !== "Other").join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}`).join("\n")}
+${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}`).join("\n")}
 
 For EACH ICP generate:
-1. ICP Name: Must be simple, immediately understandable, and professional. Use plain language. Good examples: "The Growth-Focused Founder", "The Busy Sales Director", "The Scaling Agency Owner". Bad examples: "Scaling SaaS Growth Leader", "B2B GTM Orchestrator". The name should describe who the person is in everyday language.
+1. ICP Name: Must be simple, immediately understandable, and professional. Use plain language. Good examples: "The Growth-Focused Founder", "The Busy Sales Director", "The Scaling Agency Owner". Bad examples: "Scaling SaaS Growth Leader", "B2B GTM Orchestrator", "Revenue-Driven Enterprise Executive". The name should describe who the person is in everyday language.
 2. Who They Are (3-4 bullet points)
 3. Core Responsibilities (as a list)
 4. Pain Points (at least 5 to 7 specific bullet points)
@@ -153,8 +166,8 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-1">Define Your <span className="accent-text">Ideal Customers</span></h2>
-      <p className="text-muted-foreground mb-8 text-sm">Build 3 detailed ICPs for your business</p>
+      <h2 className="text-[20px] font-bold mb-1">Define Your <span className="accent-text">Ideal Customers</span></h2>
+      <p className="text-muted-foreground mb-8 text-sm">Build 3 detailed customer profiles for your business</p>
 
       <div className="space-y-3 mb-6">
         {Array.from({ length: 3 }, (_, idx) => (
@@ -165,7 +178,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                   <span className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold ${openIcp === idx ? "accent-bg" : "bg-secondary text-muted-foreground"}`}>
                     {idx + 1}
                   </span>
-                  <span className="font-medium text-sm">ICP {idx + 1}</span>
+                  <span className="font-semibold text-sm">ICP {idx + 1}</span>
                   {icps[idx].roles.length > 0 && (
                     <span className="text-xs text-muted-foreground">
                       ({icps[idx].roles.length} roles, {icps[idx].sizes.length} sizes, {icps[idx].industries.length} industries)
@@ -177,7 +190,15 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="glass-card p-5 mt-1 space-y-4 border-primary">
-                <MultiSelect label="Roles" options={ROLES} selected={icps[idx].roles} onChange={v => updateIcp(idx, "roles", v)} hasOther />
+                <MultiSelect
+                  label="Roles"
+                  options={ROLES}
+                  selected={icps[idx].roles}
+                  onChange={v => updateIcp(idx, "roles", v)}
+                  hasOther
+                  otherValue={icps[idx].roleOther}
+                  onOtherChange={v => updateIcp(idx, "roleOther", v)}
+                />
                 <MultiSelect label="Company Size" options={SIZES} selected={icps[idx].sizes} onChange={v => updateIcp(idx, "sizes", v)} hasOther searchable={false} />
                 <MultiSelect
                   label="Industries"
@@ -187,6 +208,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                   hasOther
                   otherValue={icps[idx].industryOther}
                   onOtherChange={v => updateIcp(idx, "industryOther", v)}
+                  maxItems={3}
                 />
               </div>
             </CollapsibleContent>
@@ -218,7 +240,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
               <div className="glass-card p-6">
-                <h3 className="text-lg font-bold accent-text mb-6">{result[activeTab]?.name}</h3>
+                <h3 className="text-base font-semibold accent-text mb-6">{result[activeTab]?.name}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {sections.map(s => {
                     const val = result[activeTab]?.[s.key];
@@ -226,7 +248,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
 
                     const tooltip = TOOLTIPS[s.key];
                     const header = (
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                         {s.icon} {s.label}
                         {tooltip && <InfoTooltip text={tooltip} />}
                       </h4>
@@ -283,7 +305,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                 </div>
 
                 {(!result[activeTab]?.painPoints || result[activeTab].painPoints.length === 0) && (
-                  <p className="text-destructive text-sm mt-4">⚠️ Pain points missing for this ICP</p>
+                  <p className="text-destructive text-sm mt-4">Warning: Pain points missing for this ICP</p>
                 )}
               </div>
             </motion.div>
