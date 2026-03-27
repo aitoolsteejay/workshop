@@ -6,7 +6,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIText } from "@/lib/sanitize";
-import { NO_JARGON_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, ExternalLink, Upload, ArrowLeft } from "lucide-react";
@@ -158,6 +158,8 @@ export function Step5Website({ data, icpData, valuePropData, profileData, onSave
 
 ${NO_JARGON_RULE}
 
+${PERSONALISATION_RULE}
+
 COLOUR OVERRIDE (MANDATORY): The ONLY colours to use in this website are: Primary: ${form.primaryColor}, Secondary: ${form.secondaryColor}. Do not use yellow (#FFC947) or black (#000000) unless those are the user's selected colours. Apply primary colour to: CTA buttons, headings, highlighted text. Apply secondary colour to: background, cards, section fills. CSS variables must be: --primary: ${form.primaryColor}; --secondary: ${form.secondaryColor};
 
 IMPORTANT: The website MUST include a sticky navigation header at the top of every page. The header must contain: the brand logo or name on the left, navigation links in the centre (e.g. About, Services, Results, FAQ, Contact), and a CTA button on the right (e.g. 'Book a Call'). The header must be visible at all times as the user scrolls.
@@ -297,8 +299,17 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
             Open Google AI Studio <ExternalLink className="w-4 h-4" />
           </a>
 
+          <a href="https://lovable.dev/invite/4J88T9O" target="_blank" rel="noopener noreferrer"
+            className="glass-card p-4 flex items-center gap-3 hover:border-primary transition-colors">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Or build it with Lovable (no coding needed) →</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Paste the prompt into Lovable to get a fully deployable website without writing any code.</p>
+            </div>
+            <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+          </a>
+
           <div className="glass-card p-4">
-            <p className="text-sm text-muted-foreground">Paste the prompt into AI Studio. For best results, upload a screenshot of a website you love.</p>
+            <p className="text-sm text-muted-foreground">Paste the prompt into AI Studio or Lovable. For best results, upload a screenshot of a website you love.</p>
           </div>
 
           <div className="glass-card p-5">

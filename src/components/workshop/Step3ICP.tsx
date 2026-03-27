@@ -5,7 +5,7 @@ import { InfoTooltip } from "./InfoTooltip";
 import { MultiSelect } from "./MultiSelect";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown, ArrowLeft } from "lucide-react";
@@ -91,6 +91,8 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
     const prompt = `You are an expert B2B Growth Strategist. Generate 3 deep, strategic Ideal Customer Profiles.
 
 ${NO_JARGON_RULE}
+
+${PERSONALISATION_RULE}
 
 Core Offer: ${offer}
 ${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}`).join("\n")}

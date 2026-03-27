@@ -4,10 +4,10 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, AlertTriangle, Video, Clock, ExternalLink, Wrench, ShieldAlert, X, Lightbulb } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Video, Clock, ShieldAlert, X, Lightbulb } from "lucide-react";
 
 const ANGLES = ["Authority", "ROI", "Pain-led", "Contrarian", "Curiosity", "Offer-led"];
 const MAX_ANGLES = 2;
@@ -106,11 +106,6 @@ const SEQUENCES = [
   },
 ];
 
-const TOOLS = [
-  { name: "CLAY", url: "https://clay.com", desc: "Pulls live data about prospects: recent posts, job changes, company news. Use to personalise your first message.", example: "\"Saw you just expanded your team, here is something useful for your outreach right now.\"" },
-  { name: "CALENDLY", url: "https://calendly.com/founder-myntmore/30min", desc: "Always include your booking link in any CTA message. Send a direct booking link. Never ask them to reply with their availability, it creates friction.", example: null },
-  { name: "APOLLO", url: "https://apollo.io", desc: "Use to find work emails when LinkedIn gets no response. Free tier available. Search by name + company name.", example: null },
-];
 
 const MESSAGE_RULES = [
   "Every message must be under 5 lines",
@@ -173,6 +168,8 @@ export function Step7Outreach({ data, icpData, valuePropData, profileData, onboa
 
 ${NO_JARGON_RULE}
 
+${PERSONALISATION_RULE}
+
 - Client: ${userName}
 - Offer: ${offer}
 - Value Proposition: ${topVP}
@@ -185,7 +182,7 @@ For EACH of the 3 target customer types, generate a strategic playbook with thes
 
 1. "icpContext": { "who": string, "mindset": string, "careAbout": [3 strings], "ignore": [3 strings] }
 
-2. "strategicApproach": { "bestAngle": string, "positioningStyle": one of "Peer"|"Expert"|"Challenger"|"Insider", "whatNotToDo": [3 strings] }
+2. "strategicApproach": { "bestAngle": string, "positioningStyle": one of "Peer"|"Expert"|"Challenger"|"Insider", "positioningDetail": { "whatItMeans": string (2 sentences explaining the style in plain English), "howToShowUp": [2-3 strings, specific behaviours or tactics], "whatToAvoid": [1-2 strings], "exampleOpener": string (example opening line showing this style in action) }, "whatNotToDo": [3 strings] }
 
 3. "personalisationTips": [3 strings, each a specific tip on how to make messages feel personally written for each person rather than generic]
 
@@ -323,7 +320,7 @@ Return ONLY valid JSON (no markdown):
                       </div>
                     </div>
 
-                    {/* Positioning Style - 2x2 Card Grid */}
+                    {/* Positioning Style - Detailed Card */}
                     <div className="glass-card p-5">
                       <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
                         Positioning Style
@@ -332,15 +329,48 @@ Return ONLY valid JSON (no markdown):
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {POSITIONING_STYLES.map(ps => {
                           const isRecommended = recommendedStyle?.toLowerCase() === ps.name.toLowerCase();
+                          const detail = isRecommended ? pb.strategicApproach?.positioningDetail : null;
                           return (
-                            <div key={ps.name} className={`bg-secondary p-4 rounded-md border ${isRecommended ? "border-primary" : "border-border"}`}>
+                            <div key={ps.name} className={`bg-secondary p-4 rounded-md ${isRecommended ? "border-l-4 border-[#FFC947]" : "border border-border"}`}>
                               <div className="flex items-center justify-between mb-1">
                                 <h4 className="text-sm font-semibold">{ps.name}</h4>
                                 {isRecommended && (
-                                  <span className="text-[10px] font-bold accent-bg px-2 py-0.5 rounded">Recommended for you</span>
+                                  <span className="text-[10px] font-bold bg-[#FFC947] text-black px-2 py-0.5 rounded">Recommended for you</span>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground">{ps.desc}</p>
+                              <p className="text-xs text-muted-foreground mb-2">{ps.desc}</p>
+                              {isRecommended && detail && (
+                                <div className="space-y-2 mt-3 pt-3 border-t border-border">
+                                  {detail.whatItMeans && (
+                                    <div>
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">What it means</span>
+                                      <p className="text-xs text-foreground mt-0.5">{detail.whatItMeans}</p>
+                                    </div>
+                                  )}
+                                  {detail.howToShowUp && (
+                                    <div>
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">How to show up</span>
+                                      <ul className="mt-0.5 space-y-0.5">
+                                        {detail.howToShowUp.map((h: string, i: number) => <li key={i} className="text-xs text-foreground">→ {h}</li>)}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {detail.whatToAvoid && (
+                                    <div>
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">What to avoid</span>
+                                      <ul className="mt-0.5 space-y-0.5">
+                                        {detail.whatToAvoid.map((a: string, i: number) => <li key={i} className="text-xs text-destructive">✗ {a}</li>)}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {detail.exampleOpener && (
+                                    <div>
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Example opener</span>
+                                      <p className="text-xs text-foreground italic mt-0.5">"{detail.exampleOpener}"</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -507,26 +537,6 @@ Return ONLY valid JSON (no markdown):
             </div>
           </div>
 
-          {/* Tools to Use */}
-          <div className="glass-card p-5">
-            <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-4">
-              <Wrench className="w-3.5 h-3.5 inline mr-1" /> Tools to Use
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {TOOLS.map((tool, idx) => (
-                <div key={idx} className="bg-secondary p-4 rounded-md">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-bold accent-text">{tool.name}</h4>
-                    <a href={tool.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{tool.desc}</p>
-                  {tool.example && <p className="text-xs text-foreground mt-2 italic bg-card p-2 rounded">"{tool.example}"</p>}
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Message Rules */}
           <div className="glass-card p-5">

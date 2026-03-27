@@ -7,9 +7,9 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const TONE_OPTIONS = ["Bold", "Professional", "Casual", "Witty", "Direct", "Empathetic", "Data-driven"];
@@ -51,7 +51,20 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   const [result, setResult] = useState<any>(data?.result || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const copyText = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const CopyBtn = ({ text, id, label }: { text: string; id: string; label?: string }) => (
+    <button onClick={() => copyText(text, id)} className="mt-2 flex items-center gap-1 text-xs px-2 py-1 rounded border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+      {copiedField === id ? <><Check className="w-3 h-3 text-emerald-400" /> Copied!</> : <><Copy className="w-3 h-3" /> {label || "Copy"}</>}
+    </button>
+  );
 
   const update = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
@@ -79,6 +92,8 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
     const prompt = `You are an expert LinkedIn Profile Strategist specialising in B2B Lead Generation.
 
 ${NO_JARGON_RULE}
+
+${PERSONALISATION_RULE}
 
 Analyse and optimise this LinkedIn profile:
 - Current Headline: ${form.headline}
@@ -310,7 +325,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
               <InfoTooltip text="AI-crafted headline alternatives using different frameworks: outcome-driven, authority-driven, and benefit-driven" />
             </h3>
             {result.headlines?.map((h: string, i: number) => (
-              <div key={i} className="bg-secondary p-3 rounded-md mb-2 text-sm font-medium">{i + 1}. {h}</div>
+              <div key={i} className="bg-secondary p-3 rounded-md mb-2">
+                <p className="text-sm font-medium">{i + 1}. {h}</p>
+                <CopyBtn text={h} id={`headline-${i}`} />
+              </div>
             ))}
           </div>
 
@@ -322,6 +340,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
                   <p key={i}>{para}</p>
                 ))}
               </div>
+              <CopyBtn text={result.aboutSection} id="about-section" label="Copy About Section" />
             </div>
           )}
 
@@ -332,6 +351,15 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
                 <InfoTooltip text="A one-sentence power statement that defines your market position and differentiates you" />
               </h3>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.positioningAngles}</p>
+              <CopyBtn text={result.positioningAngles} id="positioning" />
+            </div>
+          )}
+
+          {result.scoreMeaning && (
+            <div className="glass-card p-6">
+              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Score Explanation</h3>
+              <p className="text-sm text-muted-foreground">{result.scoreMeaning}</p>
+              <CopyBtn text={result.scoreMeaning} id="score-explanation" />
             </div>
           )}
 

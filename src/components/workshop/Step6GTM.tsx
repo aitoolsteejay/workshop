@@ -4,7 +4,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Star, Calendar, Users, Presentation, RefreshCw, Zap, AlertTriangle } from "lucide-react";
@@ -75,6 +75,8 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
 
 ${NO_JARGON_RULE}
 
+${PERSONALISATION_RULE}
+
 ${inputBlock(lite)}
 
 Return JSON: { "icpStrategies": [{ "icpName": string, "channels": [{ "name": string, "effort": "Low"|"Medium"|"High", "roi": "Low"|"Medium"|"High", "useCase": string, "startHere": boolean, "tips": [${lite ? "2" : "3"} strings] }], "partners": { "types": [{ "type": string, "angle": string, "offer": string, "snippet": string }] } }] }
@@ -84,6 +86,8 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
 
 ${NO_JARGON_RULE}
 
+${PERSONALISATION_RULE}
+
 ${inputBlock(lite)}
 
 Return JSON: { "icpStrategies": [{ "icpName": string, "timeline": [{ "phase": string, "title": string, "tasks": [${lite ? "2-3" : "3-5"} strings] }] }] }
@@ -92,6 +96,8 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
   const buildMagnetsPrompt = (lite: boolean) => `You are a Growth Strategist. Generate lead magnets and event-led growth strategies per target customer type.
 
 ${NO_JARGON_RULE}
+
+${PERSONALISATION_RULE}
 
 ${inputBlock(lite)}
 
