@@ -325,7 +325,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
               <InfoTooltip text="AI-crafted headline alternatives using different frameworks: outcome-driven, authority-driven, and benefit-driven" />
             </h3>
             {result.headlines?.map((h: string, i: number) => (
-              <div key={i} className="bg-secondary p-3 rounded-md mb-2 text-sm font-medium">{i + 1}. {h}</div>
+              <div key={i} className="bg-secondary p-3 rounded-md mb-2">
+                <p className="text-sm font-medium">{i + 1}. {h}</p>
+                <CopyBtn text={h} id={`headline-${i}`} />
+              </div>
             ))}
           </div>
 
