@@ -10,13 +10,14 @@ interface ProgressBarProps {
 
 const stepLabels = [
   "Welcome",
-  "Onboarding",
+  "Basics",
   "Profile Optimiser",
   "ICP Builder",
   "Value Proposition",
   "Website Builder",
   "GTM Strategy",
   "Outreach Playbook",
+  "Final Summary",
 ];
 
 export function ProgressBar({ currentStep, totalSteps, onSave, onRestart }: ProgressBarProps) {
