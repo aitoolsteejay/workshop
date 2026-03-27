@@ -46,6 +46,12 @@ const PX_TO_PT = 0.75;
 const PAGE_MARGIN = MARGIN * PX_TO_PT; // ~30pt
 
 function addHeader(doc: jsPDF) {
+  // Add logo top-left on every page
+  if (cachedLogoImg) {
+    const logoW = 28;
+    const logoH = cachedLogoRatio * logoW;
+    doc.addImage(cachedLogoImg, "PNG", PAGE_MARGIN, 6, logoW, logoH);
+  }
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
   const w = doc.internal.pageSize.getWidth();
