@@ -1,6 +1,11 @@
+import { Save, RotateCcw } from "lucide-react";
+import { RestartButton } from "./RestartButton";
+
 interface ProgressBarProps {
   currentStep: number;
   totalSteps: number;
+  onSave?: () => void;
+  onRestart?: () => void;
 }
 
 const stepLabels = [
@@ -14,40 +19,64 @@ const stepLabels = [
   "Outreach Playbook",
 ];
 
-export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
+export function ProgressBar({ currentStep, totalSteps, onSave, onRestart }: ProgressBarProps) {
   if (currentStep === 0) return null;
   const pct = (currentStep / totalSteps) * 100;
+  const label = stepLabels[currentStep] || "";
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
+      {/* Progress line */}
       <div className="h-0.5 bg-border w-full">
         <div
           className="h-full bg-primary transition-all duration-500 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="bg-background/90 backdrop-blur-md border-b border-border px-4 py-2">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+
+      {/* Header bar */}
+      <div className="bg-background/95 backdrop-blur-md border-b border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
+          {/* LEFT: Logo + Step */}
+          <div className="flex items-center gap-3 min-w-0">
             <img
               src="/myntmore-logo.png"
               alt="Myntmore"
-              className="h-12 sm:h-14"
+              className="h-8 sm:h-9 shrink-0"
               onError={(e) => {
-                const target = e.currentTarget;
-                target.style.display = "none";
-                const fallback = target.nextElementSibling as HTMLElement;
-                if (fallback) fallback.style.display = "block";
+                e.currentTarget.style.display = "none";
               }}
             />
-            <span className="text-sm font-bold accent-text hidden" style={{ display: "none" }}>Myntmore</span>
+            <div className="h-5 w-px bg-border hidden sm:block shrink-0" />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              Step <span className="text-primary font-semibold">{currentStep}</span>
+              <span className="text-muted-foreground"> / {totalSteps}</span>
+            </span>
           </div>
-          <span className="text-sm text-muted-foreground">
-            Step <span className="text-primary font-semibold">{currentStep}</span> of {totalSteps}
-          </span>
-          <span className="text-xs text-muted-foreground hidden sm:block">
-            {stepLabels[currentStep] || ""}
-          </span>
+
+          {/* CENTER: Section name */}
+          <div className="flex-1 text-center min-w-0">
+            <span className="text-sm sm:text-base font-semibold text-foreground tracking-tight truncate block">
+              {label}
+            </span>
+          </div>
+
+          {/* RIGHT: Actions */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onSave && (
+              <button
+                onClick={onSave}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-muted-foreground hover:text-primary hover:bg-secondary border border-transparent hover:border-border transition-all"
+                title="Save Progress"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Save</span>
+              </button>
+            )}
+            {onRestart && (
+              <RestartButton onRestart={onRestart} />
+            )}
+          </div>
         </div>
       </div>
     </div>
