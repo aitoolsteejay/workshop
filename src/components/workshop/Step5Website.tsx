@@ -337,8 +337,9 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
           <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated Prompt</h3>
-              <Button variant="ghost" size="sm" onClick={() => copyToClipboard(generatedPrompt)} className="text-muted-foreground hover:text-primary">
-                <Copy className="w-4 h-4 mr-1" /> Copy
+              <Button variant="ghost" size="sm" onClick={() => copyToClipboard(generatedPrompt, -1)} className="text-muted-foreground hover:text-primary">
+                {copiedIndex === -1 ? <Check className="w-4 h-4 mr-1 text-emerald-400" /> : <Copy className="w-4 h-4 mr-1" />}
+                {copiedIndex === -1 ? "Copied!" : "Copy"}
               </Button>
             </div>
             <pre className="text-xs text-muted-foreground bg-secondary p-4 rounded-md overflow-auto max-h-80 whitespace-pre-wrap">{generatedPrompt}</pre>
