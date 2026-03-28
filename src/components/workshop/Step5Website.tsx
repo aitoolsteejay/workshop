@@ -9,7 +9,7 @@ import { sanitizeAIText } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, ExternalLink, Upload, ArrowLeft } from "lucide-react";
+import { Copy, Check, ExternalLink, Upload, ArrowLeft } from "lucide-react";
 import { MYNTMORE_NOTION_LINK } from "@/lib/constants";
 import {
   Accordion,
