@@ -135,7 +135,7 @@ Rules:
 - Adapt all outputs to reflect the target geography's market context, tone, and behavior.
 - Do NOT use em-dashes, asterisks, or hash signs in any output.
 
-Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string).`;
+Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string), geographyContext (string).`;
 
     try {
       const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 60000));
