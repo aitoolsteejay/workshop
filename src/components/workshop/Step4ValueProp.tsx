@@ -42,7 +42,7 @@ export function Step4ValueProp({ data, icpData, profileData, onSave, onNext, onB
     setResult([]);
 
     const icpSummary = icps.map((icp: any, i: number) =>
-      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).join(", ")}`
+      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).join(", ")}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
 
     const prompt = `You are a senior strategist. Generate structured Value Propositions for each of these 3 target customer types:
