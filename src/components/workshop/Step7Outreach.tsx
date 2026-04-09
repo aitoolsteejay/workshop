@@ -4,7 +4,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, AlertTriangle, Video, Clock, ShieldAlert, X, Lightbulb } from "lucide-react";
@@ -159,7 +159,7 @@ export function Step7Outreach({ data, icpData, valuePropData, profileData, onboa
     setResult(null);
 
     const icpSummary = icps.map((icp: any, i: number) =>
-      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, 4).join(", ")}. Psychology: ${icp.psychology || ""}. Where: ${Array.isArray(icp.whereTheyHangOut) ? icp.whereTheyHangOut.join(", ") : ""}`
+      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, 4).join(", ")}. Psychology: ${icp.psychology || ""}. Where: ${Array.isArray(icp.whereTheyHangOut) ? icp.whereTheyHangOut.join(", ") : ""}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
 
     const topVP = vps[0] ? `${vps[0].corePromise || vps[0].desiredOutcome}` : offer;
@@ -169,6 +169,8 @@ export function Step7Outreach({ data, icpData, valuePropData, profileData, onboa
 ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
+
+${GEO_AWARENESS_RULE}
 
 - Client: ${userName}
 - Offer: ${offer}

@@ -4,7 +4,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Star, Calendar, Users, Presentation, RefreshCw, Zap, AlertTriangle } from "lucide-react";
@@ -63,7 +63,7 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
 
   const inputBlock = useCallback((lite: boolean) => {
     const icpDetail = icps.map((icp: any, i: number) =>
-      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, lite ? 2 : undefined).join(", ")}. Goals: ${Array.isArray(icp.goalsDesires) ? icp.goalsDesires.slice(0, lite ? 2 : undefined).join(", ") : (icp.goalsDesires || "")}`
+      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, lite ? 2 : undefined).join(", ")}. Goals: ${Array.isArray(icp.goalsDesires) ? icp.goalsDesires.slice(0, lite ? 2 : undefined).join(", ") : (icp.goalsDesires || "")}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
     const vpDetail = vps.map((vp: any, i: number) =>
       `ICP ${i + 1}: ${vp.icpName || vp.corePromise}. Method: ${vp.corePromise || vp.yourMethod}`
@@ -77,6 +77,8 @@ ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
 
+${GEO_AWARENESS_RULE}
+
 ${inputBlock(lite)}
 
 Return JSON: { "icpStrategies": [{ "icpName": string, "channels": [{ "name": string, "effort": "Low"|"Medium"|"High", "roi": "Low"|"Medium"|"High", "useCase": string, "startHere": boolean, "tips": [${lite ? "2" : "3"} strings] }], "partners": { "types": [{ "type": string, "angle": string, "offer": string, "snippet": string }] } }] }
@@ -88,6 +90,8 @@ ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
 
+${GEO_AWARENESS_RULE}
+
 ${inputBlock(lite)}
 
 Return JSON: { "icpStrategies": [{ "icpName": string, "timeline": [{ "phase": string, "title": string, "tasks": [${lite ? "2-3" : "3-5"} strings] }] }] }
@@ -98,6 +102,8 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
 ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
+
+${GEO_AWARENESS_RULE}
 
 ${inputBlock(lite)}
 

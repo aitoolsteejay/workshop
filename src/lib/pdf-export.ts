@@ -232,6 +232,7 @@ export async function generatePDF(sessionData: any) {
       { key: "psychology", label: "Psychology" },
       { key: "whereTheyHangOut", label: "Where They Hang Out" },
       { key: "howToPosition", label: "How to Position" },
+      { key: "geographyContext", label: "Target Geography Context" },
     ];
     for (const f of fields) {
       const val = icp[f.key];

@@ -5,7 +5,7 @@ import { InfoTooltip } from "./InfoTooltip";
 import { MultiSelect } from "./MultiSelect";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown, ArrowLeft } from "lucide-react";
@@ -24,12 +24,19 @@ const ROLES = [
 
 const SIZES = ["1–10", "10–50", "50–200", "200–500", "500–1000", "1000+"];
 
+const ICP_GEOGRAPHIES = [
+  "India", "USA", "UK", "Europe", "Middle East",
+  "Southeast Asia", "Australia", "Global", "Other",
+];
+
 interface IcpInput {
   roles: string[];
   sizes: string[];
   industries: string[];
   industryOther: string;
   roleOther: string;
+  geography: string[];
+  geographyOther: string;
 }
 
 interface Step3Props {
@@ -41,7 +48,7 @@ interface Step3Props {
 }
 
 export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Props) {
-  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "", roleOther: "" });
+  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "", roleOther: "", geography: [], geographyOther: "" });
   const [icps, setIcps] = useState<IcpInput[]>(() => {
     const inputs = data?.inputs || [];
     while (inputs.length < 3) inputs.push(emptyIcp());
@@ -63,6 +70,15 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
     const selected = icp.industries.filter(x => x !== "Other");
     if (icp.industries.includes("Other") && icp.industryOther) {
       const custom = icp.industryOther.split(",").map(s => s.trim()).filter(Boolean);
+      return [...selected, ...custom];
+    }
+    return selected;
+  };
+
+  const getGeographies = (icp: IcpInput) => {
+    const selected = icp.geography.filter(x => x !== "Other");
+    if (icp.geography.includes("Other") && icp.geographyOther) {
+      const custom = icp.geographyOther.split(",").map(s => s.trim()).filter(Boolean);
       return [...selected, ...custom];
     }
     return selected;
@@ -94,8 +110,10 @@ ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
 
+${GEO_AWARENESS_RULE}
+
 Core Offer: ${offer}
-${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}`).join("\n")}
+${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}, Target Geography: ${getGeographies(icps[i]).join(", ") || "Not specified"}`).join("\n")}
 
 For EACH ICP generate:
 1. ICP Name: Must be simple, immediately understandable, and professional. Use plain language. Good examples: "The Growth-Focused Founder", "The Busy Sales Director", "The Scaling Agency Owner". Bad examples: "The GTM Orchestrator", "Revenue-Driven Enterprise Executive". The name should describe who the person is in everyday language.
@@ -108,14 +126,16 @@ For EACH ICP generate:
 8. Psychology (brief)
 9. Where They Hang Out (as a list of platforms)
 10. How to Position (messaging angle)
+11. Geography Context: How the target geography influences buying behavior, communication style, and platform preferences for this ICP
 
 Rules:
 - Make each ICP DISTINCT.
 - Use specific, believable insights. No generic text.
 - Pain Points for all 3 ICPs MUST be filled.
+- Adapt all outputs to reflect the target geography's market context, tone, and behavior.
 - Do NOT use em-dashes, asterisks, or hash signs in any output.
 
-Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string).`;
+Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string), geographyContext (string).`;
 
     try {
       const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 60000));
@@ -164,6 +184,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     { key: "psychology", label: "Psychology", icon: "🧠" },
     { key: "whereTheyHangOut", label: "Where to Reach", icon: "📍" },
     { key: "howToPosition", label: "Positioning", icon: "💎" },
+    { key: "geographyContext", label: "Geography Context", icon: "🌍" },
   ];
 
   return (
@@ -211,6 +232,16 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                   otherValue={icps[idx].industryOther}
                   onOtherChange={v => updateIcp(idx, "industryOther", v)}
                   maxItems={3}
+                />
+                <MultiSelect
+                  label="Target Geography"
+                  options={ICP_GEOGRAPHIES}
+                  selected={icps[idx].geography}
+                  onChange={v => updateIcp(idx, "geography", v)}
+                  hasOther
+                  otherValue={icps[idx].geographyOther}
+                  onOtherChange={v => updateIcp(idx, "geographyOther", v)}
+                  searchable={false}
                 />
               </div>
             </CollapsibleContent>

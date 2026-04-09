@@ -130,6 +130,12 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
               <div key={i} className="glass-card p-6">
                 <h4 className="text-sm font-semibold accent-text mb-4">{icp.name}</h4>
                 <div className="space-y-3">
+                  {icp.geographyContext && (
+                    <div>
+                      <span className="text-[11px] text-muted-foreground uppercase font-medium">🌍 Geography</span>
+                      <p className="text-sm text-foreground mt-1 leading-relaxed">{icp.geographyContext}</p>
+                    </div>
+                  )}
                   <div>
                     <span className="text-[11px] text-muted-foreground uppercase font-medium">Key Pain</span>
                     <p className="text-sm text-foreground mt-1 leading-relaxed">{icp.painPoints?.[0] || "—"}</p>

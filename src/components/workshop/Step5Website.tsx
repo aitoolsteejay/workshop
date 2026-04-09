@@ -6,7 +6,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIText } from "@/lib/sanitize";
-import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, ExternalLink, Upload, ArrowLeft } from "lucide-react";
@@ -166,7 +166,7 @@ export function Step5Website({ data, icpData, valuePropData, profileData, onSave
     const vps = valuePropData?.result || [];
     const offer = profileData?.coreOffer || icpData?.offer || "";
     const icpSummary = icps.map((icp: any, i: number) =>
-      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, 3).join(", ")}`
+      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, 3).join(", ")}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
     const topVP = vps[0] ? `${vps[0].corePromise || vps[0].desiredOutcome}` : offer;
 
@@ -185,6 +185,8 @@ export function Step5Website({ data, icpData, valuePropData, profileData, onSave
 ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
+
+${GEO_AWARENESS_RULE}
 
 COLOUR OVERRIDE (MANDATORY): The ONLY colours to use in this website are: Primary: ${form.primaryColor}, Secondary: ${form.secondaryColor}. Do not use yellow (#FFC947) or black (#000000) unless those are the user's selected colours. Apply primary colour to: CTA buttons, headings, highlighted text, links, and accent elements. Apply secondary colour to: background, cards, section fills, and supporting areas. CSS variables must be: --primary: ${form.primaryColor}; --secondary: ${form.secondaryColor}; Strictly use the provided colour palette. Do not introduce new colours. Ensure contrast is maintained and visual hierarchy is clear across all sections.
 
