@@ -170,6 +170,8 @@ ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
 
+${GEO_AWARENESS_RULE}
+
 - Client: ${userName}
 - Offer: ${offer}
 - Value Proposition: ${topVP}

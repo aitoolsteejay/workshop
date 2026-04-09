@@ -51,6 +51,8 @@ ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
 
+${GEO_AWARENESS_RULE}
+
 Core Offer: ${offer}
 ${icpSummary}
 
