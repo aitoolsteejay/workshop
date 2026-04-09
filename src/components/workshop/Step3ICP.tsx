@@ -184,6 +184,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     { key: "psychology", label: "Psychology", icon: "🧠" },
     { key: "whereTheyHangOut", label: "Where to Reach", icon: "📍" },
     { key: "howToPosition", label: "Positioning", icon: "💎" },
+    { key: "geographyContext", label: "Geography Context", icon: "🌍" },
   ];
 
   return (
