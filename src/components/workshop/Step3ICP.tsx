@@ -126,11 +126,13 @@ For EACH ICP generate:
 8. Psychology (brief)
 9. Where They Hang Out (as a list of platforms)
 10. How to Position (messaging angle)
+11. Geography Context: How the target geography influences buying behavior, communication style, and platform preferences for this ICP
 
 Rules:
 - Make each ICP DISTINCT.
 - Use specific, believable insights. No generic text.
 - Pain Points for all 3 ICPs MUST be filled.
+- Adapt all outputs to reflect the target geography's market context, tone, and behavior.
 - Do NOT use em-dashes, asterisks, or hash signs in any output.
 
 Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string).`;
