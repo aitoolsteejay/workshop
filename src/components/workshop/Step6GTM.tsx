@@ -77,6 +77,8 @@ ${NO_JARGON_RULE}
 
 ${PERSONALISATION_RULE}
 
+${GEO_AWARENESS_RULE}
+
 ${inputBlock(lite)}
 
 Return JSON: { "icpStrategies": [{ "icpName": string, "channels": [{ "name": string, "effort": "Low"|"Medium"|"High", "roi": "Low"|"Medium"|"High", "useCase": string, "startHere": boolean, "tips": [${lite ? "2" : "3"} strings] }], "partners": { "types": [{ "type": string, "angle": string, "offer": string, "snippet": string }] } }] }
