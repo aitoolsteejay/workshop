@@ -75,7 +75,15 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
     return selected;
   };
 
-  const getRoles = (icp: IcpInput) => {
+  const getGeographies = (icp: IcpInput) => {
+    const selected = icp.geography.filter(x => x !== "Other");
+    if (icp.geography.includes("Other") && icp.geographyOther) {
+      const custom = icp.geographyOther.split(",").map(s => s.trim()).filter(Boolean);
+      return [...selected, ...custom];
+    }
+    return selected;
+  };
+
     const selected = icp.roles.filter(x => x !== "Other");
     if (icp.roles.includes("Other") && icp.roleOther) {
       const custom = icp.roleOther.split(",").map(s => s.trim()).filter(Boolean);
