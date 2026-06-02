@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Linkedin, Target, Rocket, Globe, Send, ArrowRight } from "lucide-react";
+import tejasPhoto from "@/assets/tejas.png.asset.json";
 
 const outcomes = [
   { icon: Linkedin, title: "Optimized LinkedIn", desc: "A sharp headline & About section that positions you as the go-to." },
@@ -99,8 +100,8 @@ export default function Landing() {
       {/* About */}
       <section className="max-w-5xl mx-auto px-6 py-20 border-t border-black/10">
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-10 items-start">
-          <div className="w-48 h-48 bg-black/5 border-2 border-black flex items-center justify-center">
-            <span className="text-sm text-black/40">Photo</span>
+          <div className="w-48 h-48 border-2 border-black bg-[#FFC947] overflow-hidden flex items-end justify-center">
+            <img src={tejasPhoto.url} alt="Tejas Jhaveri" className="w-full h-full object-cover object-top" />
           </div>
           <div>
             <span className="text-xs font-semibold tracking-widest uppercase text-black/60">About the facilitator</span>
