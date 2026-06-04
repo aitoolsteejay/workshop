@@ -22,7 +22,12 @@ const steps = [
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-tr from-[#ffe4d6] via-[#fbf1eb] to-[#e6dfff] text-black font-sans selection:bg-[#FFC947]/30">
-
+      {/* Top Logo */}
+      <div className="absolute top-0 left-0 right-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <img src="/myntmore-logo.png" alt="MyntMore" className="h-16 w-auto" onError={(e) => (e.currentTarget.style.display = "none")} />
+        </div>
+      </div>
 
       {/* Hero */}
       <section className="relative max-w-5xl mx-auto px-6 pt-40 pb-32 text-center">
