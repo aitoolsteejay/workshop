@@ -4,7 +4,7 @@ import { Linkedin, Target, Rocket, Globe, Send, ArrowRight, Users, TrendingUp, M
 import tejasPhoto from "@/assets/tejas.png.asset.json";
 
 const outcomes = [
-  { icon: Linkedin, title: "LinkedIn That Converts", desc: "A rewritten headline and About section that positions you as the authority — so the right people reach out to you." },
+  { icon: Linkedin, title: "LinkedIn That Converts", desc: "A rewritten headline and About section that positions you as the authority, so the right people reach out to you." },
   { icon: Target, title: "Crystal-Clear ICP", desc: "Know exactly who you're selling to, what keeps them up at night, and what triggers them to buy." },
   { icon: TrendingUp, title: "Your Value Proposition", desc: "A sharp, tailored pitch for each customer segment — no more generic messaging that gets ignored." },
   { icon: Rocket, title: "GTM Strategy + Lead Magnets", desc: "A go-to-market plan with lead magnet ideas you can actually ship this week to start building pipeline." },
