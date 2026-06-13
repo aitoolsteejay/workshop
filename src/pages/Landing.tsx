@@ -167,7 +167,7 @@ export default function Landing() {
                 So far, I've worked with <span className="font-bold text-black">300+ clients</span> and helped drive <span className="font-bold text-black">$80M+ in revenue</span>, using a mix of clear ICPs, sharp messaging, and AI agents that do the heavy lifting so your calendar fills with the right people.
               </p>
               <p>
-                Before this, I built and exited <span className="font-bold text-black">Flintstop</span> after scaling it to 8000+ daily orders and $6M ARR — but even that journey pointed me back to one truth: growth never comes from a great product alone. It comes from distribution, positioning, and the ability to get in front of the right people, at the right time, with the right message.
+                Before this, I built and exited <span className="font-bold text-black">Flintstop</span> after scaling it to 8000+ daily orders and $6M ARR, but even that journey pointed me back to one truth: growth never comes from a great product alone. It comes from distribution, positioning, and the ability to get in front of the right people, at the right time, with the right message.
               </p>
               <p>
                 Over the years, I've also taught growth and GTM to <span className="font-bold text-black">100,000+ students</span> as a Growth Marketing professor, spoken at TEDx and IIMs, and invested in founders solving real problems. But everything I teach comes from operating, experimenting, and running outbound systems at scale myself.
