@@ -53,7 +53,7 @@ export default function Landing() {
             Build a System That <span className="italic font-serif font-light text-black/80">Brings Them.</span>
           </h1>
           <p className="mt-8 text-lg sm:text-xl text-black/60 max-w-2xl mx-auto leading-relaxed font-medium">
-            A hands-on AI-powered workshop by <span className="font-bold text-black">Tejas Jhaveri</span> — sharpen your positioning, define your ICP, and walk away with a complete outbound strategy in one session.
+            A hands-on AI-powered workshop by <span className="font-bold text-black">Tejas Jhaveri</span> to sharpen your positioning, define your ICP, and walk away with a complete outbound strategy in one session.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link
