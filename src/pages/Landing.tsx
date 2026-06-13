@@ -1,22 +1,29 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Linkedin, Target, Rocket, Globe, Send, ArrowRight } from "lucide-react";
+import { Linkedin, Target, Rocket, Globe, Send, ArrowRight, Users, TrendingUp, MessageSquare, FileText } from "lucide-react";
 import tejasPhoto from "@/assets/tejas.png.asset.json";
 
 const outcomes = [
-  { icon: Linkedin, title: "Optimized LinkedIn", desc: "A sharp headline & About section that positions you as the go-to." },
-  { icon: Target, title: "Clear ICP & Value Prop", desc: "Know exactly who you serve and why they should pick you." },
-  { icon: Rocket, title: "GTM Strategy", desc: "A go-to-market plan with lead magnet ideas you can ship this week." },
-  { icon: Globe, title: "Your Business Website", desc: "A complete website prompt — built live during the workshop." },
-  { icon: Send, title: "Outreach That Works", desc: "Personalized outreach ideas tailored to each of your ICPs." },
+  { icon: Linkedin, title: "LinkedIn That Converts", desc: "A rewritten headline and About section that positions you as the authority — so the right people reach out to you." },
+  { icon: Target, title: "Crystal-Clear ICP", desc: "Know exactly who you're selling to, what keeps them up at night, and what triggers them to buy." },
+  { icon: TrendingUp, title: "Your Value Proposition", desc: "A sharp, tailored pitch for each customer segment — no more generic messaging that gets ignored." },
+  { icon: Rocket, title: "GTM Strategy + Lead Magnets", desc: "A go-to-market plan with lead magnet ideas you can actually ship this week to start building pipeline." },
+  { icon: Globe, title: "Website Copy, Done", desc: "A complete, AI-generated website prompt built live during the workshop — ready to hand off and publish." },
+  { icon: Send, title: "Outreach Playbook", desc: "Personalized outreach sequences for each ICP, so you can start real conversations that lead to revenue." },
 ];
 
 const steps = [
-  { n: "01", title: "Tell us what you do", desc: "Share what you do and who you serve." },
-  { n: "02", title: "Optimize your LinkedIn", desc: "We rewrite your headline and About section." },
-  { n: "03", title: "Define ICP & Value Prop", desc: "Get razor-sharp on customer and offer." },
-  { n: "04", title: "GTM & Lead Magnets", desc: "Your go-to-market plan with ideas to ship." },
-  { n: "05", title: "Website & Outreach", desc: "Build your site and outreach playbook." },
+  { n: "01", title: "Tell us about your business", desc: "Share what you do, who you serve, your revenue stage, and where you want to grow." },
+  { n: "02", title: "Optimize your LinkedIn", desc: "We rewrite your headline and About section to attract your ideal clients — not just connections." },
+  { n: "03", title: "Define your ICP & Value Prop", desc: "Get razor-sharp on your customer profile and craft messaging that actually resonates." },
+  { n: "04", title: "Build your GTM & Lead Magnets", desc: "Map out your go-to-market approach with lead magnet ideas you can ship immediately." },
+  { n: "05", title: "Generate your website & outreach", desc: "Walk away with a complete website prompt and a personalized outreach playbook for each ICP." },
+];
+
+const stats = [
+  { value: "300+", label: "Clients Served" },
+  { value: "$80M+", label: "Revenue Driven" },
+  { value: "100K+", label: "Students Taught" },
 ];
 
 export default function Landing() {
@@ -36,28 +43,38 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-black/5 shadow-sm">
               <div className="w-2 h-2 rounded-full bg-amber-400"></div>
               <span className="text-sm font-semibold text-black/80">
-                Trusted by <span className="text-black">120+</span> Companies Worldwide
+                Trusted by <span className="text-black">300+</span> Founders & CXOs Worldwide
               </span>
             </div>
           </div>
-          
+
           <h1 className="text-6xl sm:text-7xl md:text-[5.5rem] font-black tracking-tighter leading-[1.05] text-[#111]">
-            Turn Your Expertise Into <br className="hidden sm:block" />
-            a Business That <span className="italic font-serif font-light text-black/80">Sells Itself.</span>
+            Stop Waiting for Leads. <br className="hidden sm:block" />
+            Build a System That <span className="italic font-serif font-light text-black/80">Brings Them.</span>
           </h1>
           <p className="mt-8 text-lg sm:text-xl text-black/60 max-w-2xl mx-auto leading-relaxed font-medium">
-            A hands-on workshop by <span className="font-bold text-black">Tejas Jhaveri</span> — optimize your LinkedIn, define your ICP, and launch your GTM strategy in one session.
+            A hands-on AI-powered workshop by <span className="font-bold text-black">Tejas Jhaveri</span> — sharpen your positioning, define your ICP, and walk away with a complete outbound strategy in one session.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link
               to="/workshop"
-              className="inline-flex items-center justify-center gap-2 text-base font-bold px-8 py-4 rounded-full bg-white border border-black/10 text-black hover:shadow-lg transition-all w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 text-base font-bold px-8 py-4 rounded-full bg-[#111] text-white hover:shadow-xl hover:bg-black transition-all w-full sm:w-auto"
             >
-              Book Your Free Strategy Call <ArrowRight className="w-5 h-5" />
+              Start the Free Workshop <ArrowRight className="w-5 h-5" />
             </Link>
             <Link to="#results" className="text-base font-bold text-black/80 hover:text-black transition">
-              See Our Results
+              See What You'll Build →
             </Link>
+          </div>
+
+          {/* Stats row */}
+          <div className="mt-20 flex flex-col sm:flex-row items-center justify-center gap-10 sm:gap-16">
+            {stats.map((s) => (
+              <div key={s.label} className="text-center">
+                <div className="text-4xl font-black text-[#111]">{s.value}</div>
+                <div className="text-sm font-semibold text-black/50 mt-1">{s.label}</div>
+              </div>
+            ))}
           </div>
         </motion.div>
       </section>
@@ -65,7 +82,11 @@ export default function Landing() {
       {/* Outcomes */}
       <section id="results" className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111]">What you'll walk away with</h2>
+          <p className="text-sm font-bold tracking-widest uppercase text-amber-600 mb-4">What you'll walk away with</p>
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111]">Six assets. One session. Zero fluff.</h2>
+          <p className="mt-4 text-black/60 text-lg max-w-xl mx-auto font-medium">
+            Every output is AI-generated specifically for your business, your audience, and your goals.
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {outcomes.map((o) => (
@@ -81,9 +102,13 @@ export default function Landing() {
       </section>
 
       {/* How it works */}
-      <section id="services" className="max-w-4xl mx-auto px-6 py-24">
+      <section id="how-it-works" className="max-w-4xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111]">Five steps to a complete strategy</h2>
+          <p className="text-sm font-bold tracking-widest uppercase text-amber-600 mb-4">How it works</p>
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111]">Five steps to a complete growth strategy</h2>
+          <p className="mt-4 text-black/60 text-lg max-w-xl mx-auto font-medium">
+            Answer a few questions about your business and let the AI do the heavy lifting.
+          </p>
         </div>
         <div className="space-y-4">
           {steps.map((s) => (
@@ -100,16 +125,57 @@ export default function Landing() {
 
       {/* About */}
       <section id="about" className="max-w-5xl mx-auto px-6 py-24">
-        <div className="flex flex-col md:flex-row gap-12 items-center bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-12 border border-white/50 shadow-lg">
-          <div className="w-48 h-48 sm:w-64 sm:h-64 rounded-full overflow-hidden shrink-0 border-4 border-white shadow-xl bg-gradient-to-br from-amber-100 to-orange-50">
-            <img src={tejasPhoto.url} alt="Tejas Jhaveri" className="w-full h-full object-cover object-top" />
+        <div className="flex flex-col md:flex-row gap-12 items-start bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-12 border border-white/50 shadow-lg">
+          <div className="shrink-0 flex flex-col items-center gap-6 md:w-64">
+            <div className="w-48 h-48 sm:w-64 sm:h-64 rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-gradient-to-br from-amber-100 to-orange-50">
+              <img src={tejasPhoto.url} alt="Tejas Jhaveri" className="w-full h-full object-cover object-top" />
+            </div>
+            <div className="flex flex-col gap-2 w-full">
+              {[
+                { icon: Users, label: "300+ Clients" },
+                { icon: TrendingUp, label: "$80M+ Revenue Driven" },
+                { icon: MessageSquare, label: "100K+ Students Taught" },
+                { icon: FileText, label: "TEDx & IIM Speaker" },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-2 text-sm font-semibold text-black/60">
+                  <Icon className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <span className="inline-block px-3 py-1 rounded-full bg-white/60 border border-black/5 text-xs font-bold tracking-wide uppercase text-black/60 mb-4">About the facilitator</span>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111]">Tejas Jhaveri</h2>
-            <p className="mt-6 text-black/70 leading-relaxed text-lg font-medium">
-              Founder of <span className="font-bold text-black">MyntMore</span>, Tejas helps founders and operators turn their expertise into businesses that actually sell. This workshop, facilitated for <span className="font-bold text-black">TiE Chennai</span>, distills years of B2B growth experience into a single, hands-on session.
-            </p>
+
+          <div className="flex-1">
+            <span className="inline-block px-3 py-1 rounded-full bg-white/60 border border-black/5 text-xs font-bold tracking-wide uppercase text-black/60 mb-4">About Tejas</span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#111]">Tejas Jhaveri</h2>
+            <p className="text-black/50 font-semibold text-sm mt-1 mb-6">4x Entrepreneur · AI-led B2B Lead-Gen · Founder, Myntmore</p>
+
+            <div className="space-y-4 text-black/70 leading-relaxed font-medium">
+              <p>
+                I spend my days building AI-powered outbound systems that create a predictable, qualified B2B pipeline for founders and CXOs. That's the work I'm known for, and honestly, the work I love.
+              </p>
+              <p>
+                I'm a 4x entrepreneur and AI-led B2B lead-gen nerd who's spent the last decade figuring out one thing: how to turn cold strangers into warm conversations, and warm conversations into revenue.
+              </p>
+              <p>
+                Today, I run <span className="font-bold text-black">Myntmore</span>, a B2B lead-gen and outbound agency built for one mission: helping founders stop depending on luck, referrals, or random spikes, and instead build outbound systems that run (and bring leads) every single day.
+              </p>
+              <p>
+                I've built these engines for founders, CXOs, consultants, and B2B teams across SaaS, tech, consulting, manufacturing, recruitment, and pretty much every industry that relies on conversations to close deals.
+              </p>
+              <p>
+                So far, I've worked with <span className="font-bold text-black">300+ clients</span> and helped drive <span className="font-bold text-black">$80M+ in revenue</span>, using a mix of clear ICPs, sharp messaging, and AI agents that do the heavy lifting so your calendar fills with the right people.
+              </p>
+              <p>
+                Before this, I built and exited <span className="font-bold text-black">Flintstop</span> after scaling it to 8000+ daily orders and $6M ARR — but even that journey pointed me back to one truth: growth never comes from a great product alone. It comes from distribution, positioning, and the ability to get in front of the right people, at the right time, with the right message.
+              </p>
+              <p>
+                Over the years, I've also taught growth and GTM to <span className="font-bold text-black">100,000+ students</span> as a Growth Marketing professor, spoken at TEDx and IIMs, and invested in founders solving real problems. But everything I teach comes from operating, experimenting, and running outbound systems at scale myself.
+              </p>
+              <p>
+                And when I'm not deep in lead-gen models or AI workflows, I'm probably gaming, making music, or trying to win at badminton or pool.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -120,25 +186,26 @@ export default function Landing() {
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-amber-500/10"></div>
           <div className="relative z-10">
             <h2 className="text-4xl sm:text-6xl font-black tracking-tighter leading-tight">
-              Ready to build your <br className="hidden sm:block"/> <span className="italic font-serif font-light text-amber-200">brand and business?</span>
+              Ready to build a pipeline <br className="hidden sm:block" /> <span className="italic font-serif font-light text-amber-200">that works every day?</span>
             </h2>
             <p className="mt-6 text-white/70 text-lg sm:text-xl max-w-xl mx-auto font-medium">
-              Walk in with an idea. Walk out with a strategy, a website, and an outreach plan.
+              Walk in with your business. Walk out with your ICP, your messaging, your website copy, and an outreach playbook — all built for you by AI.
             </p>
-            <div className="mt-12">
+            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to="/workshop"
                 className="inline-flex items-center gap-2 text-base font-bold px-8 py-4 rounded-full bg-amber-400 text-black hover:bg-amber-300 hover:shadow-[0_0_30px_rgba(251,191,36,0.3)] transition-all"
               >
-                Let's Get Started <ArrowRight className="w-5 h-5" />
+                Start the Free Workshop <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
+            <p className="mt-6 text-white/40 text-sm font-medium">Free · No credit card · Takes about 15 minutes</p>
           </div>
         </div>
       </section>
 
       <footer className="py-12 text-center text-sm font-medium text-black/40">
-        © {new Date().getFullYear()} MyntMore · Workshop for TiE Chennai
+        © {new Date().getFullYear()} MyntMore · All rights reserved
       </footer>
     </div>
   );
