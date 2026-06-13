@@ -4,17 +4,17 @@ import { Linkedin, Target, Rocket, Globe, Send, ArrowRight, Users, TrendingUp, M
 import tejasPhoto from "@/assets/tejas.png.asset.json";
 
 const outcomes = [
-  { icon: Linkedin, title: "LinkedIn That Converts", desc: "A rewritten headline and About section that positions you as the authority — so the right people reach out to you." },
+  { icon: Linkedin, title: "LinkedIn That Converts", desc: "A rewritten headline and About section that positions you as the authority, so the right people reach out to you." },
   { icon: Target, title: "Crystal-Clear ICP", desc: "Know exactly who you're selling to, what keeps them up at night, and what triggers them to buy." },
-  { icon: TrendingUp, title: "Your Value Proposition", desc: "A sharp, tailored pitch for each customer segment — no more generic messaging that gets ignored." },
+  { icon: TrendingUp, title: "Your Value Proposition", desc: "A sharp, tailored pitch for each customer segment. No more generic messaging that gets ignored." },
   { icon: Rocket, title: "GTM Strategy + Lead Magnets", desc: "A go-to-market plan with lead magnet ideas you can actually ship this week to start building pipeline." },
-  { icon: Globe, title: "Website Copy, Done", desc: "A complete, AI-generated website prompt built live during the workshop — ready to hand off and publish." },
+  { icon: Globe, title: "Website Copy, Done", desc: "A complete, AI-generated website prompt built live during the workshop, ready to hand off and publish." },
   { icon: Send, title: "Outreach Playbook", desc: "Personalized outreach sequences for each ICP, so you can start real conversations that lead to revenue." },
 ];
 
 const steps = [
   { n: "01", title: "Tell us about your business", desc: "Share what you do, who you serve, your revenue stage, and where you want to grow." },
-  { n: "02", title: "Optimize your LinkedIn", desc: "We rewrite your headline and About section to attract your ideal clients — not just connections." },
+  { n: "02", title: "Optimize your LinkedIn", desc: "We rewrite your headline and About section to attract your ideal clients, not just connections." },
   { n: "03", title: "Define your ICP & Value Prop", desc: "Get razor-sharp on your customer profile and craft messaging that actually resonates." },
   { n: "04", title: "Build your GTM & Lead Magnets", desc: "Map out your go-to-market approach with lead magnet ideas you can ship immediately." },
   { n: "05", title: "Generate your website & outreach", desc: "Walk away with a complete website prompt and a personalized outreach playbook for each ICP." },
@@ -53,7 +53,7 @@ export default function Landing() {
             Build a System That <span className="italic font-serif font-light text-black/80">Brings Them.</span>
           </h1>
           <p className="mt-8 text-lg sm:text-xl text-black/60 max-w-2xl mx-auto leading-relaxed font-medium">
-            A hands-on AI-powered workshop by <span className="font-bold text-black">Tejas Jhaveri</span> — sharpen your positioning, define your ICP, and walk away with a complete outbound strategy in one session.
+            A hands-on AI-powered workshop by <span className="font-bold text-black">Tejas Jhaveri</span> to sharpen your positioning, define your ICP, and walk away with a complete outbound strategy in one session.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link
@@ -167,7 +167,7 @@ export default function Landing() {
                 So far, I've worked with <span className="font-bold text-black">300+ clients</span> and helped drive <span className="font-bold text-black">$80M+ in revenue</span>, using a mix of clear ICPs, sharp messaging, and AI agents that do the heavy lifting so your calendar fills with the right people.
               </p>
               <p>
-                Before this, I built and exited <span className="font-bold text-black">Flintstop</span> after scaling it to 8000+ daily orders and $6M ARR — but even that journey pointed me back to one truth: growth never comes from a great product alone. It comes from distribution, positioning, and the ability to get in front of the right people, at the right time, with the right message.
+                Before this, I built and exited <span className="font-bold text-black">Flintstop</span> after scaling it to 8000+ daily orders and $6M ARR, but even that journey pointed me back to one truth: growth never comes from a great product alone. It comes from distribution, positioning, and the ability to get in front of the right people, at the right time, with the right message.
               </p>
               <p>
                 Over the years, I've also taught growth and GTM to <span className="font-bold text-black">100,000+ students</span> as a Growth Marketing professor, spoken at TEDx and IIMs, and invested in founders solving real problems. But everything I teach comes from operating, experimenting, and running outbound systems at scale myself.
@@ -189,7 +189,7 @@ export default function Landing() {
               Ready to build a pipeline <br className="hidden sm:block" /> <span className="italic font-serif font-light text-amber-200">that works every day?</span>
             </h2>
             <p className="mt-6 text-white/70 text-lg sm:text-xl max-w-xl mx-auto font-medium">
-              Walk in with your business. Walk out with your ICP, your messaging, your website copy, and an outreach playbook — all built for you by AI.
+              Walk in with your business. Walk out with your ICP, your messaging, your website copy, and an outreach playbook. All built for you by AI.
             </p>
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
