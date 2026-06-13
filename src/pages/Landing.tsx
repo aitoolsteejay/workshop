@@ -189,7 +189,7 @@ export default function Landing() {
               Ready to build a pipeline <br className="hidden sm:block" /> <span className="italic font-serif font-light text-amber-200">that works every day?</span>
             </h2>
             <p className="mt-6 text-white/70 text-lg sm:text-xl max-w-xl mx-auto font-medium">
-              Walk in with your business. Walk out with your ICP, your messaging, your website copy, and an outreach playbook — all built for you by AI.
+              Walk in with your business. Walk out with your ICP, your messaging, your website copy, and an outreach playbook. All built for you by AI.
             </p>
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
