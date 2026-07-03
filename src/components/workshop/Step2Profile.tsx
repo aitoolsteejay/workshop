@@ -45,14 +45,21 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
     headline: data?.headline || "",
     about: data?.about || "",
     targetAudience: data?.targetAudience || "",
-    coreOffer: data?.coreOffer || "",
+    offerProblem: data?.offerProblem || "",
+    offerAudience: data?.offerAudience || "",
+    offerMethod: data?.offerMethod || "",
     tones: data?.tones || (data?.tone ? [data.tone] : []) as string[],
+    noLinkedin: data?.noLinkedin || false,
   });
   const [result, setResult] = useState<any>(data?.result || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const coreOffer = form.offerProblem.trim() && form.offerAudience.trim() && form.offerMethod.trim()
+    ? `We solve ${form.offerProblem.trim()} for ${form.offerAudience.trim()} through ${form.offerMethod.trim()}.`
+    : "";
 
   const copyText = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -77,7 +84,7 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   };
 
   const generate = async () => {
-    if (!form.role || !form.company || !form.headline || !form.targetAudience || !form.coreOffer || form.tones.length === 0) {
+    if (!form.role || !form.company || !form.headline || !form.targetAudience || !coreOffer || form.tones.length === 0) {
       setError("Please fill in all required fields");
       return;
     }
@@ -101,7 +108,7 @@ Analyse and optimise this LinkedIn profile:
 - Role: ${form.role}
 - Company: ${form.company}
 - Target Audience (ICP): ${form.targetAudience}
-- Core Offer: ${form.coreOffer}
+- Core Offer: ${coreOffer}
 - Preferred Tones: ${form.tones.join(", ")}
 
 SCORING (0 to 100 total):
@@ -170,7 +177,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
       parsed.clarityScore = Math.min(parsed.clarityScore || 0, 100);
       parsed.keywordScore = Math.min(parsed.keywordScore || 0, 100);
       setResult(parsed);
-      onSave({ ...form, result: parsed });
+      onSave({ ...form, coreOffer, result: parsed });
       toast({ title: "✓ Saved", description: "Profile analysis saved", duration: 3000 });
     } catch (e: any) {
       if (e.message === "timeout") {
@@ -184,7 +191,17 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
   };
 
   const handleNext = () => {
-    onSave({ ...form, result });
+    onSave({ ...form, coreOffer, result });
+    onNext();
+  };
+
+  const handleContinueWithoutLinkedin = () => {
+    if (!form.role || !form.company || !form.targetAudience || !coreOffer || form.tones.length === 0) {
+      setError("Please fill in all required fields");
+      return;
+    }
+    setError("");
+    onSave({ ...form, coreOffer, result: null });
     onNext();
   };
 
@@ -196,6 +213,16 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
       <p className="text-muted-foreground mb-8 text-sm">Get a detailed analysis and optimised suggestions</p>
 
       <div className="glass-card p-6 space-y-4">
+        <label className="flex items-center gap-2 p-3 rounded-md bg-secondary border border-border cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.noLinkedin}
+            onChange={e => update("noLinkedin", e.target.checked)}
+            className="accent-primary w-4 h-4"
+          />
+          <span className="text-sm text-foreground">I don't have a LinkedIn profile yet</span>
+        </label>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label className="text-sm text-muted-foreground">Role / Job Title *</Label>
@@ -206,21 +233,34 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
             <Input value={form.company} onChange={e => update("company", e.target.value)} placeholder="Acme Inc" className="mt-1 bg-secondary border-border focus:border-primary" />
           </div>
         </div>
-        <div>
-          <Label className="text-sm text-muted-foreground">Current LinkedIn Headline *</Label>
-          <Input value={form.headline} onChange={e => update("headline", e.target.value)} placeholder="Reduce hiring time → for Talent Leaders → using automation" className="mt-1 bg-secondary border-border focus:border-primary" />
-        </div>
-        <div>
-          <Label className="text-sm text-muted-foreground">About Section *</Label>
-          <Textarea value={form.about} onChange={e => update("about", e.target.value)} placeholder="Your LinkedIn about section..." className="mt-1 bg-secondary border-border focus:border-primary min-h-[80px]" />
-        </div>
+        {!form.noLinkedin && (
+          <>
+            <div>
+              <Label className="text-sm text-muted-foreground">Current LinkedIn Headline *</Label>
+              <Input value={form.headline} onChange={e => update("headline", e.target.value)} placeholder="Reduce hiring time → for Talent Leaders → using automation" className="mt-1 bg-secondary border-border focus:border-primary" />
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">About Section *</Label>
+              <Textarea value={form.about} onChange={e => update("about", e.target.value)} placeholder="Your LinkedIn about section..." className="mt-1 bg-secondary border-border focus:border-primary min-h-[80px]" />
+            </div>
+          </>
+        )}
         <div>
           <Label className="text-sm text-muted-foreground">Target Audience *</Label>
           <Input value={form.targetAudience} onChange={e => update("targetAudience", e.target.value)} placeholder="e.g. Startup founders in India" className="mt-1 bg-secondary border-border focus:border-primary" />
         </div>
         <div>
-          <Label className="text-sm text-muted-foreground">Core Offer *</Label>
-          <Input value={form.coreOffer} onChange={e => update("coreOffer", e.target.value)} placeholder="e.g. LinkedIn outreach + cold email for B2B lead gen" className="mt-1 bg-secondary border-border focus:border-primary" />
+          <Label className="text-sm text-muted-foreground">Your Offer, In One Line *</Label>
+          <div className="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <Input value={form.offerProblem} onChange={e => update("offerProblem", e.target.value)} placeholder="What problem you solve" className="bg-secondary border-border focus:border-primary" />
+            <Input value={form.offerAudience} onChange={e => update("offerAudience", e.target.value)} placeholder="Who it's for" className="bg-secondary border-border focus:border-primary" />
+            <Input value={form.offerMethod} onChange={e => update("offerMethod", e.target.value)} placeholder="How you solve it" className="bg-secondary border-border focus:border-primary" />
+          </div>
+          <div className="mt-2 bg-secondary p-3 rounded-md">
+            <p className="text-sm italic text-muted-foreground">
+              {coreOffer || `We solve ${form.offerProblem || "[problem]"} for ${form.offerAudience || "[audience]"} through ${form.offerMethod || "[method]"}.`}
+            </p>
+          </div>
         </div>
         <div>
           <Label className="text-sm text-muted-foreground">Preferred Tone * (select up to 3)</Label>
@@ -240,7 +280,12 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
 
         {error && <p className="text-destructive text-sm">{error}</p>}
 
-        {!loading && !result && (
+        {!loading && !result && form.noLinkedin && (
+          <Button onClick={handleContinueWithoutLinkedin} className="accent-bg hover:opacity-90 w-full h-11 font-semibold">
+            Continue →
+          </Button>
+        )}
+        {!loading && !result && !form.noLinkedin && (
           <Button onClick={generate} className="accent-bg hover:opacity-90 w-full h-11 font-semibold">
             Generate Profile Analysis
           </Button>

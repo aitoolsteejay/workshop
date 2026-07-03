@@ -9,7 +9,7 @@ import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown, ArrowLeft } from "lucide-react";
-import { INDUSTRIES } from "@/lib/constants";
+import { INDUSTRIES, COUNTRIES } from "@/lib/constants";
 import {
   Collapsible,
   CollapsibleContent,
@@ -23,11 +23,6 @@ const ROLES = [
 ];
 
 const SIZES = ["1–10", "10–50", "50–200", "200–500", "500–1000", "1000+"];
-
-const ICP_GEOGRAPHIES = [
-  "India", "USA", "UK", "Europe", "Middle East",
-  "Southeast Asia", "Australia", "Global", "Other",
-];
 
 interface IcpInput {
   roles: string[];
@@ -174,23 +169,35 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     howToPosition: "The messaging angle and emphasis that works best for this specific ICP",
   };
 
-  const sections = [
-    { key: "whoTheyAre", label: "Who They Are", icon: "👤" },
-    { key: "coreResponsibilities", label: "Responsibilities", icon: "📋" },
-    { key: "painPoints", label: "Pain Points", icon: "🔥" },
-    { key: "goalsDesires", label: "Goals", icon: "🎯" },
-    { key: "buyingTriggers", label: "Buying Triggers", icon: "⚡" },
-    { key: "objections", label: "Objections", icon: "🛡️" },
-    { key: "psychology", label: "Psychology", icon: "🧠" },
-    { key: "whereTheyHangOut", label: "Where to Reach", icon: "📍" },
-    { key: "howToPosition", label: "Positioning", icon: "💎" },
-    { key: "geographyContext", label: "Geography Context", icon: "🌍" },
+  const SECTION_LABELS: Record<string, string> = {
+    whoTheyAre: "Who They Are",
+    coreResponsibilities: "Core Responsibilities",
+    painPoints: "Pain Points",
+    goalsDesires: "Goals & Desires",
+    buyingTriggers: "Buying Triggers",
+    objections: "Objections",
+    psychology: "Psychology",
+    whereTheyHangOut: "Where To Reach Them",
+    howToPosition: "How To Position",
+    geographyContext: "Geography Context",
+  };
+
+  const SECTION_GROUPS = [
+    { title: "Who They Are", keys: ["whoTheyAre", "coreResponsibilities", "psychology"] },
+    { title: "What Drives Them", keys: ["painPoints", "goalsDesires", "buyingTriggers"] },
+    { title: "How To Win Them", keys: ["objections", "howToPosition", "whereTheyHangOut", "geographyContext"] },
   ];
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-4xl mx-auto">
       <h2 className="text-[20px] font-bold mb-1">Define Your <span className="accent-text">Ideal Customers</span></h2>
-      <p className="text-muted-foreground mb-8 text-sm">Build 3 detailed customer profiles for your business</p>
+      <p className="text-muted-foreground mb-6 text-sm">Build 3 detailed customer profiles for your business</p>
+
+      <div className="glass-card p-4 mb-6 border-primary/30">
+        <p className="text-sm text-muted-foreground">
+          Fill in who buys from you for each of the 3 profiles below. Role, company size, industry, and geography together decide the pain points, messaging, and outreach channels we generate for that customer type.
+        </p>
+      </div>
 
       <div className="space-y-3 mb-6">
         {Array.from({ length: 3 }, (_, idx) => (
@@ -204,7 +211,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                   <span className="font-semibold text-sm">ICP {idx + 1}</span>
                   {icps[idx].roles.length > 0 && (
                     <span className="text-xs text-muted-foreground">
-                      ({icps[idx].roles.length} roles, {icps[idx].sizes.length} sizes, {icps[idx].industries.length} industries)
+                      ({icps[idx].roles.length} roles, {icps[idx].sizes.length} sizes, {icps[idx].industries.length} industries, {icps[idx].geography.length} geographies)
                     </span>
                   )}
                 </div>
@@ -212,7 +219,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="glass-card p-5 mt-1 space-y-4 border-primary">
+              <div className="glass-card p-5 mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4 border-primary">
                 <MultiSelect
                   label="Roles"
                   options={ROLES}
@@ -235,13 +242,12 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                 />
                 <MultiSelect
                   label="Target Geography"
-                  options={ICP_GEOGRAPHIES}
+                  options={COUNTRIES}
                   selected={icps[idx].geography}
                   onChange={v => updateIcp(idx, "geography", v)}
                   hasOther
                   otherValue={icps[idx].geographyOther}
                   onOtherChange={v => updateIcp(idx, "geographyOther", v)}
-                  searchable={false}
                 />
               </div>
             </CollapsibleContent>
@@ -271,76 +277,85 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-              <div className="glass-card p-6">
-                <h3 className="text-base font-semibold accent-text mb-6">{result[activeTab]?.name}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sections.map(s => {
-                    const val = result[activeTab]?.[s.key];
-                    if (!val) return null;
-
-                    const tooltip = TOOLTIPS[s.key];
-                    const header = (
-                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
-                        {s.icon} {s.label}
-                        {tooltip && <InfoTooltip text={tooltip} />}
-                      </h4>
-                    );
-
-                    if (s.key === "painPoints" && Array.isArray(val)) {
-                      return (
-                        <div key={s.key} className="md:col-span-2">
-                          {header}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {val.map((item: string, i: number) => (
-                              <div key={i} className="bg-secondary p-3 rounded-md text-sm text-foreground border-l-2 border-primary">{item}</div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    if (s.key === "whereTheyHangOut" && Array.isArray(val)) {
-                      return (
-                        <div key={s.key}>
-                          {header}
-                          <div className="flex flex-wrap gap-1.5">
-                            {val.map((item: string, i: number) => (
-                              <span key={i} className="text-xs px-2 py-1 rounded tag-selected border border-primary">{item}</span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    if (s.key === "howToPosition") {
-                      return (
-                        <div key={s.key} className="md:col-span-2">
-                          {header}
-                          <div className="bg-primary/10 border border-primary/30 p-4 rounded-md text-sm text-foreground">{val}</div>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div key={s.key} className={s.key === "objections" ? "md:col-span-2" : ""}>
-                        {header}
-                        {Array.isArray(val) ? (
-                          <ul className="space-y-1">
-                            {val.map((item: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {item}</li>)}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">{val}</p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {(!result[activeTab]?.painPoints || result[activeTab].painPoints.length === 0) && (
-                  <p className="text-destructive text-sm mt-4">Warning: Pain points missing for this ICP</p>
-                )}
+            <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-4">
+              <div className="glass-card p-6 text-center">
+                <h3 className="text-base font-semibold accent-text">{result[activeTab]?.name}</h3>
               </div>
+
+              {SECTION_GROUPS.map(group => {
+                const visibleKeys = group.keys.filter(key => result[activeTab]?.[key]);
+                if (visibleKeys.length === 0) return null;
+
+                return (
+                  <div key={group.title} className="glass-card p-6">
+                    <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">{group.title}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {visibleKeys.map(key => {
+                        const val = result[activeTab]?.[key];
+                        const tooltip = TOOLTIPS[key];
+                        const header = (
+                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                            {SECTION_LABELS[key]}
+                            {tooltip && <InfoTooltip text={tooltip} />}
+                          </h4>
+                        );
+
+                        if (key === "painPoints" && Array.isArray(val)) {
+                          return (
+                            <div key={key} className="md:col-span-2">
+                              {header}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {val.map((item: string, i: number) => (
+                                  <div key={i} className="bg-secondary p-3 rounded-md text-sm text-foreground border-l-2 border-primary">{item}</div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (key === "whereTheyHangOut" && Array.isArray(val)) {
+                          return (
+                            <div key={key}>
+                              {header}
+                              <div className="flex flex-wrap gap-1.5">
+                                {val.map((item: string, i: number) => (
+                                  <span key={i} className="text-xs px-2 py-1 rounded tag-selected border border-primary">{item}</span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (key === "howToPosition") {
+                          return (
+                            <div key={key} className="md:col-span-2">
+                              {header}
+                              <div className="bg-primary/10 border border-primary/30 p-4 rounded-md text-sm text-foreground">{val}</div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div key={key} className={key === "objections" ? "md:col-span-2" : ""}>
+                            {header}
+                            {Array.isArray(val) ? (
+                              <ul className="space-y-1">
+                                {val.map((item: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {item}</li>)}
+                              </ul>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">{val}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {(!result[activeTab]?.painPoints || result[activeTab].painPoints.length === 0) && (
+                <p className="text-destructive text-sm">Warning: Pain points missing for this ICP</p>
+              )}
             </motion.div>
           </AnimatePresence>
 

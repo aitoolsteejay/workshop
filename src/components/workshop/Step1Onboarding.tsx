@@ -59,7 +59,6 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!form.linkedinUrl.trim()) errs.linkedinUrl = "LinkedIn URL is required";
     if (form.industry.length === 0) errs.industry = "Select at least one industry";
     if (form.industry.includes("Other") && !form.industryOther.trim()) errs.industryOther = "Please specify your industry";
     if (form.businessType.length === 0) errs.businessType = "Select at least one business type";
@@ -99,8 +98,8 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
             <h3 className="text-sm font-semibold text-primary mb-4 uppercase tracking-wider">Business Basics</h3>
             <div className="space-y-4">
               <div>
-                <Label className="text-xs text-muted-foreground">LinkedIn Profile URL</Label>
-                <Input value={form.linkedinUrl} onChange={(e) => update("linkedinUrl", e.target.value)} placeholder="https://linkedin.com/in/yourprofile" className="mt-1.5 bg-secondary border-border focus:border-primary" />
+                <Label className="text-xs text-muted-foreground">LinkedIn Profile URL (optional)</Label>
+                <Input value={form.linkedinUrl} onChange={(e) => update("linkedinUrl", e.target.value)} placeholder="https://linkedin.com/in/yourprofile — leave blank if you don't have one" className="mt-1.5 bg-secondary border-border focus:border-primary" />
                 {errors.linkedinUrl && <p className="text-destructive text-xs mt-1">{errors.linkedinUrl}</p>}
               </div>
               <MultiSelect label="Industry" options={INDUSTRIES} selected={form.industry} onChange={v => update("industry", v)}
