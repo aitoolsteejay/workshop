@@ -24,6 +24,7 @@ interface Step5Props {
   icpData: any;
   valuePropData: any;
   profileData: any;
+  userName?: string;
   onSave: (data: any) => void;
   onNext: () => void;
   onBack?: () => void;
@@ -132,7 +133,7 @@ const LOVABLE_FAQS = [
   { q: "What are common mistakes to avoid?", a: "Vague prompts, regenerating everything, not specifying sections, and changing too many things at once." },
 ];
 
-export function Step5Website({ data, icpData, valuePropData, profileData, onSave, onNext, onBack }: Step5Props) {
+export function Step5Website({ data, icpData, valuePropData, profileData, userName, onSave, onNext, onBack }: Step5Props) {
   const [form, setForm] = useState({
     brandName: data?.brandName || "",
     primaryColor: data?.primaryColor || "#FFC947",
@@ -175,7 +176,7 @@ export function Step5Website({ data, icpData, valuePropData, profileData, onSave
       : "";
 
     const companyName = profileData?.company || form.brandName;
-    const isCompany = companyName && companyName.toLowerCase() !== (profileData?.role || "").toLowerCase();
+    const isCompany = Boolean(companyName) && (!userName || companyName.toLowerCase() !== userName.toLowerCase());
     const toneInstruction = isCompany
       ? `TONE: This is a COMPANY website for "${companyName}". Use "We" instead of "I". Include Services, Offerings, and Team positioning. Write in a professional company tone, not a personal brand tone.`
       : `TONE: This is a personal brand website. Use "I" where appropriate. Focus on the individual's expertise and authority.`;

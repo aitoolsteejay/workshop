@@ -114,8 +114,10 @@ async function fetchGemini(prompt: string, systemPrompt?: string): Promise<strin
 }
 
 export async function callGemini(prompt: string, systemPrompt?: string): Promise<string> {
-  // Deduplicate: if the same prompt is already in-flight, return that promise
-  const key = prompt.slice(0, 100);
+  // Deduplicate: if the exact same prompt is already in-flight, return that promise.
+  // Keyed on the full prompt (not a prefix) since every step's prompt shares a long
+  // identical instructional preamble before any user-specific data appears.
+  const key = `${prompt} ${systemPrompt || ""}`;
   const existing = activeRequests.get(key);
   if (existing) return existing;
 

@@ -251,7 +251,7 @@ Return ONLY valid JSON (no markdown):
         </div>
         {angles.length === 0 && <p className="text-xs text-destructive mt-1">Select at least one angle</p>}
 
-        <Button onClick={generate} className="accent-bg hover:opacity-90 w-full h-11 font-semibold mt-4" disabled={angles.length === 0}>
+        <Button onClick={generate} className="accent-bg hover:opacity-90 w-full h-11 font-semibold mt-4" disabled={loading || angles.length === 0}>
           {result ? "Regenerate Playbook" : "Generate Outreach Playbook"}
         </Button>
       </div>

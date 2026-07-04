@@ -218,7 +218,7 @@ export async function generatePDF(sessionData: any) {
   }
 
   // ICPs
-  const icps = sessionData?.icp_data?.result || [];
+  const icps = (sessionData?.icp_data?.result || []).filter(Boolean);
   for (let i = 0; i < icps.length; i++) {
     const icp = icps[i];
     y = newSection(doc, `ICP ${i + 1}: ${clean(icp.name || "Untitled")}`);
@@ -248,7 +248,7 @@ export async function generatePDF(sessionData: any) {
   }
 
   // Value Propositions
-  const vps = sessionData?.value_prop_data?.result || [];
+  const vps = (sessionData?.value_prop_data?.result || []).filter(Boolean);
   y = newSection(doc, "Value Propositions");
   for (let i = 0; i < vps.length; i++) {
     const vp = vps[i];
@@ -281,7 +281,7 @@ export async function generatePDF(sessionData: any) {
   const gtm = sessionData?.gtm_data?.result;
   y = newSection(doc, "Growth Strategy");
   if (gtm) {
-    const strategies = gtm.icpStrategies || (gtm.channels ? [gtm] : []);
+    const strategies = (gtm.icpStrategies || (gtm.channels ? [gtm] : [])).filter(Boolean);
     for (let si = 0; si < strategies.length; si++) {
       const strat = strategies[si];
       if (strat.icpName) { y = addSubHeader(doc, `ICP ${si + 1}: ${clean(strat.icpName)}`, y); y += 2; }
@@ -343,7 +343,7 @@ export async function generatePDF(sessionData: any) {
   const outreach = sessionData?.outreach_data?.result;
   y = newSection(doc, "Outreach Playbook");
   if (outreach?.playbooks) {
-    for (const pb of outreach.playbooks) {
+    for (const pb of outreach.playbooks.filter(Boolean)) {
       y = addSubHeader(doc, clean(pb.icpName), y);
       if (pb.strategicApproach) {
         y = addWrappedText(doc, `Best Angle: ${clean(pb.strategicApproach.bestAngle)}`, PAGE_MARGIN, y, maxW);

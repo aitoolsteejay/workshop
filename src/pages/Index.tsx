@@ -149,7 +149,7 @@ const Index = () => {
               <Step4ValueProp data={sessionData?.value_prop_data} icpData={sessionData?.icp_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("value_prop_data", d)} onNext={() => goToStep(5)} onBack={() => goToStep(3)} />
             )}
             {step === 5 && (
-              <Step5Website data={sessionData?.website_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("website_data", d)} onNext={() => goToStep(6)} onBack={() => goToStep(4)} />
+              <Step5Website data={sessionData?.website_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} userName={sessionData?.user_name} onSave={(d) => saveField("website_data", d)} onNext={() => goToStep(6)} onBack={() => goToStep(4)} />
             )}
             {step === 6 && (
               <Step6GTM data={sessionData?.gtm_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} onboardingData={sessionData?.onboarding_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("gtm_data", d)} onNext={() => goToStep(7)} onBack={() => goToStep(5)} />

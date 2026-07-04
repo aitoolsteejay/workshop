@@ -59,7 +59,7 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
 
   const coreOffer = form.offerProblem.trim() && form.offerAudience.trim() && form.offerMethod.trim()
     ? `We solve ${form.offerProblem.trim()} for ${form.offerAudience.trim()} through ${form.offerMethod.trim()}.`
-    : "";
+    : (data?.coreOffer || "");
 
   const copyText = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
