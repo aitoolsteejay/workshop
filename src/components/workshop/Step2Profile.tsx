@@ -44,7 +44,6 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
     company: data?.company || "",
     headline: data?.headline || "",
     about: data?.about || "",
-    targetAudience: data?.targetAudience || "",
     offerProblem: data?.offerProblem || "",
     offerAudience: data?.offerAudience || "",
     offerMethod: data?.offerMethod || "",
@@ -84,7 +83,7 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   };
 
   const generate = async () => {
-    if (!form.role || !form.company || !form.headline || !form.targetAudience || !coreOffer || form.tones.length === 0) {
+    if (!form.role || !form.company || !form.headline || !coreOffer || form.tones.length === 0) {
       setError("Please fill in all required fields");
       return;
     }
@@ -107,7 +106,7 @@ Analyse and optimise this LinkedIn profile:
 - About Section: ${form.about}
 - Role: ${form.role}
 - Company: ${form.company}
-- Target Audience (ICP): ${form.targetAudience}
+- Target Audience (ICP): ${form.offerAudience}
 - Core Offer: ${coreOffer}
 - Preferred Tones: ${form.tones.join(", ")}
 
@@ -196,7 +195,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
   };
 
   const handleContinueWithoutLinkedin = () => {
-    if (!form.role || !form.company || !form.targetAudience || !coreOffer || form.tones.length === 0) {
+    if (!form.role || !form.company || !coreOffer || form.tones.length === 0) {
       setError("Please fill in all required fields");
       return;
     }
@@ -245,10 +244,6 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
             </div>
           </>
         )}
-        <div>
-          <Label className="text-sm text-muted-foreground">Target Audience *</Label>
-          <Input value={form.targetAudience} onChange={e => update("targetAudience", e.target.value)} placeholder="e.g. Startup founders in India" className="mt-1 bg-secondary border-border focus:border-primary" />
-        </div>
         <div>
           <Label className="text-sm text-muted-foreground">Your Offer, In One Line *</Label>
           <div className="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
