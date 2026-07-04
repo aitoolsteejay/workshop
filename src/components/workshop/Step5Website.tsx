@@ -9,6 +9,7 @@ import { sanitizeAIText } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { useAutosave } from "@/hooks/use-autosave";
 import { Copy, Check, ExternalLink, Upload, ArrowLeft } from "lucide-react";
 import { MYNTMORE_NOTION_LINK } from "@/lib/constants";
 import {
@@ -25,7 +26,7 @@ interface Step5Props {
   valuePropData: any;
   profileData: any;
   userName?: string;
-  onSave: (data: any) => void;
+  onSave: (data: any, opts?: { silent?: boolean }) => void;
   onNext: () => void;
   onBack?: () => void;
 }
@@ -144,6 +145,8 @@ export function Step5Website({ data, icpData, valuePropData, profileData, userNa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
+
+  useAutosave({ ...form, generatedPrompt, designRef }, onSave);
 
   const update = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 

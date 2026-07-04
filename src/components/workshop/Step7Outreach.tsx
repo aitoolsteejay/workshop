@@ -7,6 +7,7 @@ import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { useAutosave } from "@/hooks/use-autosave";
 import { ArrowLeft, AlertTriangle, Video, Clock, ShieldAlert, X, Lightbulb } from "lucide-react";
 
 const ANGLES = ["Authority", "ROI", "Pain-led", "Contrarian", "Curiosity", "Offer-led"];
@@ -124,7 +125,7 @@ interface Step7Props {
   valuePropData: any;
   profileData: any;
   onboardingData: any;
-  onSave: (data: any) => void;
+  onSave: (data: any, opts?: { silent?: boolean }) => void;
   onNext: () => void;
   onBack?: () => void;
 }
@@ -137,6 +138,8 @@ export function Step7Outreach({ data, icpData, valuePropData, profileData, onboa
   const [activeTab, setActiveTab] = useState(0);
   const { toast } = useToast();
   const generationIdRef = useRef(0);
+
+  useAutosave({ angles, result }, onSave);
 
   const offer = profileData?.coreOffer || icpData?.offer || "";
   const icps = icpData?.result || [];

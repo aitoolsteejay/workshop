@@ -8,6 +8,7 @@ import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { useAutosave } from "@/hooks/use-autosave";
 import { ChevronDown, ArrowLeft } from "lucide-react";
 import { INDUSTRIES, COUNTRIES } from "@/lib/constants";
 import {
@@ -37,7 +38,7 @@ interface IcpInput {
 interface Step3Props {
   data: any;
   profileData: any;
-  onSave: (data: any) => void;
+  onSave: (data: any, opts?: { silent?: boolean }) => void;
   onNext: () => void;
   onBack?: () => void;
 }
@@ -56,6 +57,8 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
   const { toast } = useToast();
 
   const offer = profileData?.coreOffer || data?.offer || "";
+
+  useAutosave({ inputs: icps, offer, result }, onSave);
 
   const updateIcp = (idx: number, field: keyof IcpInput, value: any) => {
     setIcps(p => p.map((icp, i) => i === idx ? { ...icp, [field]: value } : icp));

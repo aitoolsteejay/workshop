@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { MultiSelect } from "./MultiSelect";
 import { ArrowLeft } from "lucide-react";
-import { INDUSTRIES, COUNTRIES } from "@/lib/constants";
+import { INDUSTRIES } from "@/lib/constants";
+import { useAutosave } from "@/hooks/use-autosave";
 
 const BUSINESS_TYPES = ["Service-based", "Product-based", "Hybrid"];
 
@@ -13,6 +14,8 @@ const REVENUE_OPTIONS = [
   "₹0–5 Lakhs", "₹5–10 Lakhs", "₹10–25 Lakhs", "₹25–50 Lakhs",
   "₹50 Lakhs–1 Cr", "₹1–2 Cr", "₹2–5 Cr", "₹5–10 Cr", "₹10 Cr+",
 ];
+
+const EMPLOYEE_OPTIONS = ["1–10", "11–50", "51–200", "201–500", "500+"];
 
 const GOAL_OPTIONS = [
   { label: "More leads", desc: "Generate more qualified prospects" },
@@ -23,7 +26,7 @@ const GOAL_OPTIONS = [
 
 interface Step1Props {
   data: any;
-  onSave: (data: any) => void;
+  onSave: (data: any, opts?: { silent?: boolean }) => void;
   onNext: () => void;
   onBack?: () => void;
 }
@@ -37,12 +40,23 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
     businessTypeOther: data?.businessTypeOther || "",
     revenue: data?.revenue || [] as string[],
     revenueOther: data?.revenueOther || "",
+    employees: data?.employees || [] as string[],
     goals: data?.goals || [] as string[],
     goalOther: data?.goalOther || "",
-    geography: data?.geography || [] as string[],
-    geographyOther: data?.geographyOther || "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const goalOtherRef = useRef<HTMLInputElement>(null);
+  const wasGoalOtherSelected = useRef(false);
+
+  useAutosave(form, onSave);
+
+  useEffect(() => {
+    const isSelected = form.goals.includes("Other");
+    if (isSelected && !wasGoalOtherSelected.current) {
+      goalOtherRef.current?.focus();
+    }
+    wasGoalOtherSelected.current = isSelected;
+  }, [form.goals]);
 
   const update = (key: string, value: any) => {
     setForm(p => ({ ...p, [key]: value }));
@@ -65,10 +79,9 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
     if (form.businessType.includes("Other") && !form.businessTypeOther.trim()) errs.businessTypeOther = "Please specify";
     if (form.revenue.length === 0) errs.revenue = "Select at least one revenue range";
     if (form.revenue.includes("Other") && !form.revenueOther.trim()) errs.revenueOther = "Please specify";
+    if (form.employees.length === 0) errs.employees = "Select your team size";
     if (form.goals.length === 0) errs.goals = "Select at least one goal";
     if (form.goals.includes("Other") && !form.goalOther.trim()) errs.goalOther = "Please specify your goal";
-    if (form.geography.length === 0) errs.geography = "Select at least one region";
-    if (form.geography.includes("Other") && !form.geographyOther.trim()) errs.geographyOther = "Please specify";
     return errs;
   };
 
@@ -83,8 +96,8 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
     { label: "Industry", value: form.industry.filter((x: string) => x !== "Other").concat(form.industryOther ? form.industryOther.split(",").map((s: string) => s.trim()) : []).join(", ") },
     { label: "Business", value: form.businessType.filter((x: string) => x !== "Other").join(", ") },
     { label: "Revenue", value: form.revenue.filter((x: string) => x !== "Other").join(", ") },
+    { label: "Team Size", value: form.employees.join(", ") },
     { label: "Goals", value: form.goals.filter((x: string) => x !== "Other").join(", ") },
-    { label: "Markets", value: form.geography.filter((x: string) => x !== "Other").join(", ") },
   ].filter(s => s.value);
 
   return (
@@ -114,6 +127,10 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
               <MultiSelect label="Monthly Revenue" options={REVENUE_OPTIONS} selected={form.revenue} onChange={v => update("revenue", v)}
                 hasOther otherValue={form.revenueOther} onOtherChange={v => update("revenueOther", v)} />
               {errors.revenue && <p className="text-destructive text-xs mt-1">{errors.revenue}</p>}
+
+              <MultiSelect label="Number of Employees" options={EMPLOYEE_OPTIONS} selected={form.employees} onChange={v => update("employees", v)}
+                hasOther={false} searchable={false} maxItems={1} />
+              {errors.employees && <p className="text-destructive text-xs mt-1">{errors.employees}</p>}
             </div>
           </div>
 
@@ -137,17 +154,10 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
             {errors.goals && <p className="text-destructive text-xs mt-2">{errors.goals}</p>}
             {form.goals.includes("Other") && (
               <div className="mt-3">
-                <Input placeholder="Enter custom goals (comma separated)" value={form.goalOther} onChange={(e) => update("goalOther", e.target.value)} className="bg-secondary border-border focus:border-primary" />
+                <Input ref={goalOtherRef} placeholder="Enter custom goals (comma separated)" value={form.goalOther} onChange={(e) => update("goalOther", e.target.value)} className="bg-secondary border-border focus:border-primary" />
                 {errors.goalOther && <p className="text-destructive text-xs mt-1">{errors.goalOther}</p>}
               </div>
             )}
-          </div>
-
-          <div className="glass-card p-6">
-            <h3 className="text-sm font-semibold text-primary mb-4 uppercase tracking-wider">Market Focus</h3>
-            <MultiSelect label="Target Geography" options={COUNTRIES} selected={form.geography} onChange={v => update("geography", v)}
-              hasOther otherValue={form.geographyOther} onOtherChange={v => update("geographyOther", v)} />
-            {errors.geography && <p className="text-destructive text-xs mt-2">{errors.geography}</p>}
           </div>
         </div>
 

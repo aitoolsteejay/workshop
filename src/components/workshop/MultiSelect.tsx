@@ -24,6 +24,8 @@ export function MultiSelect({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const otherInputRef = useRef<HTMLInputElement>(null);
+  const wasOtherSelected = useRef(false);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -39,12 +41,21 @@ export function MultiSelect({
   const nonOtherSelected = selected.filter(x => x !== "Other");
   const atMax = maxItems ? nonOtherSelected.length >= maxItems : false;
 
+  const isOtherSelected = selected.includes("Other");
+  useEffect(() => {
+    if (isOtherSelected && !wasOtherSelected.current) {
+      otherInputRef.current?.focus();
+    }
+    wasOtherSelected.current = isOtherSelected;
+  }, [isOtherSelected]);
+
   const toggle = (o: string) => {
     if (selected.includes(o)) {
       onChange(selected.filter(x => x !== o));
     } else {
       if (o !== "Other" && atMax) return;
       onChange([...selected, o]);
+      if (o === "Other") setOpen(false);
     }
   };
   const remove = (o: string) => onChange(selected.filter(x => x !== o));
@@ -115,9 +126,10 @@ export function MultiSelect({
           </div>
         </div>
       )}
-      {selected.includes("Other") && hasOther && (
+      {isOtherSelected && hasOther && (
         <div className="mt-2">
           <Input
+            ref={otherInputRef}
             placeholder="e.g. Fintech, Healthcare, Logistics — separate multiple values with a comma"
             value={otherValue || ""}
             onChange={(e) => onOtherChange?.(e.target.value)}

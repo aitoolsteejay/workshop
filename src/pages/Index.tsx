@@ -96,10 +96,10 @@ const Index = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const saveField = (field: string, data: any) => {
+  const saveField = (field: string, data: any, opts?: { silent?: boolean }) => {
     setSessionData((prev: any) => ({ ...prev, [field]: data }));
     debouncedSave(field, data);
-    toast({ title: "✓ Saved", duration: 3000 });
+    if (!opts?.silent) toast({ title: "✓ Saved", duration: 3000 });
   };
 
   const handleManualSave = () => {
@@ -137,25 +137,25 @@ const Index = () => {
               <WelcomeScreen onStart={handleStart} />
             )}
             {step === 1 && (
-              <Step1Onboarding data={sessionData?.onboarding_data} onSave={(d) => saveField("onboarding_data", d)} onNext={() => goToStep(2)} />
+              <Step1Onboarding data={sessionData?.onboarding_data} onSave={(d, opts) => saveField("onboarding_data", d, opts)} onNext={() => goToStep(2)} />
             )}
             {step === 2 && (
-              <Step2Profile data={sessionData?.profile_data} onSave={(d) => saveField("profile_data", d)} onNext={() => goToStep(3)} onBack={() => goToStep(1)} />
+              <Step2Profile data={sessionData?.profile_data} onSave={(d, opts) => saveField("profile_data", d, opts)} onNext={() => goToStep(3)} onBack={() => goToStep(1)} />
             )}
             {step === 3 && (
-              <Step3ICP data={sessionData?.icp_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("icp_data", d)} onNext={() => goToStep(4)} onBack={() => goToStep(2)} />
+              <Step3ICP data={sessionData?.icp_data} profileData={sessionData?.profile_data} onSave={(d, opts) => saveField("icp_data", d, opts)} onNext={() => goToStep(4)} onBack={() => goToStep(2)} />
             )}
             {step === 4 && (
               <Step4ValueProp data={sessionData?.value_prop_data} icpData={sessionData?.icp_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("value_prop_data", d)} onNext={() => goToStep(5)} onBack={() => goToStep(3)} />
             )}
             {step === 5 && (
-              <Step5Website data={sessionData?.website_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} userName={sessionData?.user_name} onSave={(d) => saveField("website_data", d)} onNext={() => goToStep(6)} onBack={() => goToStep(4)} />
+              <Step5Website data={sessionData?.website_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} userName={sessionData?.user_name} onSave={(d, opts) => saveField("website_data", d, opts)} onNext={() => goToStep(6)} onBack={() => goToStep(4)} />
             )}
             {step === 6 && (
               <Step6GTM data={sessionData?.gtm_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} onboardingData={sessionData?.onboarding_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("gtm_data", d)} onNext={() => goToStep(7)} onBack={() => goToStep(5)} />
             )}
             {step === 7 && (
-              <Step7Outreach data={sessionData?.outreach_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d) => saveField("outreach_data", d)} onNext={() => goToStep(8)} onBack={() => goToStep(6)} />
+              <Step7Outreach data={sessionData?.outreach_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d, opts) => saveField("outreach_data", d, opts)} onNext={() => goToStep(8)} onBack={() => goToStep(6)} />
             )}
             {step === 8 && (
               <FinalScreen sessionData={sessionData} onDownloadPDF={() => generatePDF(sessionData)} onRestart={handleStartFresh} />

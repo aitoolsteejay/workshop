@@ -11,6 +11,7 @@ import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
 import { ArrowLeft, X, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAutosave } from "@/hooks/use-autosave";
 
 const TONE_OPTIONS = ["Bold", "Professional", "Casual", "Witty", "Direct", "Empathetic", "Data-driven"];
 const MAX_TONES = 3;
@@ -33,7 +34,7 @@ function getTier(score: number) {
 
 interface Step2Props {
   data: any;
-  onSave: (data: any) => void;
+  onSave: (data: any, opts?: { silent?: boolean }) => void;
   onNext: () => void;
   onBack?: () => void;
 }
@@ -59,6 +60,8 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   const coreOffer = form.offerProblem.trim() && form.offerAudience.trim() && form.offerMethod.trim()
     ? `We solve ${form.offerProblem.trim()} for ${form.offerAudience.trim()} through ${form.offerMethod.trim()}.`
     : (data?.coreOffer || "");
+
+  useAutosave({ ...form, coreOffer, result }, onSave);
 
   const copyText = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -224,7 +227,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-sm text-muted-foreground">Role / Job Title *</Label>
+            <Label className="text-sm text-muted-foreground">Your Role *</Label>
             <Input value={form.role} onChange={e => update("role", e.target.value)} placeholder="Founder" className="mt-1 bg-secondary border-border focus:border-primary" />
           </div>
           <div>
