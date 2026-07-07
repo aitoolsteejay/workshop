@@ -224,16 +224,6 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
             <CollapsibleContent>
               <div className="glass-card p-5 mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4 border-primary">
                 <MultiSelect
-                  label="Roles"
-                  options={ROLES}
-                  selected={icps[idx].roles}
-                  onChange={v => updateIcp(idx, "roles", v)}
-                  hasOther
-                  otherValue={icps[idx].roleOther}
-                  onOtherChange={v => updateIcp(idx, "roleOther", v)}
-                />
-                <MultiSelect label="Company Size" options={SIZES} selected={icps[idx].sizes} onChange={v => updateIcp(idx, "sizes", v)} hasOther searchable={false} />
-                <MultiSelect
                   label="Industries"
                   options={INDUSTRIES}
                   selected={icps[idx].industries}
@@ -252,6 +242,16 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                   otherValue={icps[idx].geographyOther}
                   onOtherChange={v => updateIcp(idx, "geographyOther", v)}
                 />
+                <MultiSelect
+                  label="Roles"
+                  options={ROLES}
+                  selected={icps[idx].roles}
+                  onChange={v => updateIcp(idx, "roles", v)}
+                  hasOther
+                  otherValue={icps[idx].roleOther}
+                  onOtherChange={v => updateIcp(idx, "roleOther", v)}
+                />
+                <MultiSelect label="Company Size" options={SIZES} selected={icps[idx].sizes} onChange={v => updateIcp(idx, "sizes", v)} hasOther searchable={false} />
               </div>
             </CollapsibleContent>
           </Collapsible>
