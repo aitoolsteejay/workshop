@@ -125,15 +125,17 @@ For EACH ICP generate:
 9. Where They Hang Out (as a list of platforms)
 10. How to Position (messaging angle)
 11. Geography Context: How the target geography influences buying behavior, communication style, and platform preferences for this ICP
+12. Channel Partners: 3 to 4 real types of businesses or individuals who already have this ICP's trust and attention, and could refer or co-sell to them (e.g. complementary tool vendors, agencies, communities, consultants, associations serving this exact ICP). For each: the partner type, why they already have this ICP's attention, and a specific angle for approaching that partner about a referral or co-selling relationship.
 
 Rules:
 - Make each ICP DISTINCT.
 - Use specific, believable insights. No generic text.
 - Pain Points for all 3 ICPs MUST be filled.
+- Channel Partners must be specific and realistic to this ICP's industry and geography, not generic ("consultants" is too vague, "boutique HR consultancies serving Series A SaaS startups" is specific).
 - Adapt all outputs to reflect the target geography's market context, tone, and behavior.
 - Do NOT use em-dashes, asterisks, or hash signs in any output.
 
-Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string), geographyContext (string).`;
+Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks). Each object must have: name, whoTheyAre (array), coreResponsibilities (array), painPoints (array), goalsDesires (array), buyingTriggers (array), objections (array), psychology (string), whereTheyHangOut (array), howToPosition (string), geographyContext (string), channelPartners (array of objects, each with partnerType, whyTheyFit, approachAngle).`;
 
     try {
       const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 60000));
@@ -170,6 +172,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     psychology: "How they think and make decisions, use this to choose the right tone and angle",
     whereTheyHangOut: "Platforms and content they consume, use this to choose your outreach channel",
     howToPosition: "The messaging angle and emphasis that works best for this specific ICP",
+    channelPartners: "Other businesses or individuals who already have this ICP's trust, and could refer or co-sell to them",
   };
 
   const SECTION_LABELS: Record<string, string> = {
@@ -183,12 +186,14 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     whereTheyHangOut: "Where To Reach Them",
     howToPosition: "How To Position",
     geographyContext: "Geography Context",
+    channelPartners: "Channel Partners",
   };
 
   const SECTION_GROUPS = [
     { title: "Who They Are", keys: ["whoTheyAre", "coreResponsibilities", "psychology"] },
     { title: "What Drives Them", keys: ["painPoints", "goalsDesires", "buyingTriggers"] },
     { title: "How To Win Them", keys: ["objections", "howToPosition", "whereTheyHangOut", "geographyContext"] },
+    { title: "Channel Partners", keys: ["channelPartners"] },
   ];
 
   return (
@@ -341,6 +346,27 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                             <div key={key} className="md:col-span-2">
                               {header}
                               <div className="bg-primary/10 border border-primary/30 p-4 rounded-md text-sm text-foreground">{val}</div>
+                            </div>
+                          );
+                        }
+
+                        if (key === "channelPartners" && Array.isArray(val)) {
+                          return (
+                            <div key={key} className="md:col-span-2">
+                              {header}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {val.map((p: any, i: number) => (
+                                  <div key={i} className="bg-secondary p-4 rounded-md">
+                                    <p className="text-sm font-semibold text-foreground">{p.partnerType}</p>
+                                    {p.whyTheyFit && (
+                                      <p className="text-xs text-muted-foreground mt-2"><span className="text-muted-foreground/70 uppercase text-[10px] tracking-wider">Why they fit</span><br />{p.whyTheyFit}</p>
+                                    )}
+                                    {p.approachAngle && (
+                                      <p className="text-xs text-primary mt-2"><span className="text-muted-foreground/70 uppercase text-[10px] tracking-wider">How to approach</span><br />{p.approachAngle}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           );
                         }

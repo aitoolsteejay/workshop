@@ -245,6 +245,15 @@ export async function generatePDF(sessionData: any) {
       }
       y += 3;
     }
+    if (Array.isArray(icp.channelPartners) && icp.channelPartners.length > 0) {
+      y = addSubHeader(doc, "Channel Partners", y);
+      for (const p of icp.channelPartners) {
+        y = addWrappedText(doc, `${clean(p.partnerType)}: ${clean(p.whyTheyFit)}`, PAGE_MARGIN, y, maxW);
+        if (p.approachAngle) y = addWrappedText(doc, `Approach: ${clean(p.approachAngle)}`, PAGE_MARGIN, y, maxW);
+        y += 2;
+      }
+      y += 3;
+    }
   }
 
   // Value Propositions
