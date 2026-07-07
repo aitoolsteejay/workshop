@@ -31,7 +31,7 @@ serve(async (req) => {
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 8192,
+            maxOutputTokens: 16384,
           },
         }),
       }
@@ -52,6 +52,10 @@ serve(async (req) => {
 
     const data = await response.json();
     const result = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    if (data.candidates?.[0]?.finishReason === "MAX_TOKENS") {
+      console.error("Gemini response truncated: hit maxOutputTokens");
+    }
 
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
