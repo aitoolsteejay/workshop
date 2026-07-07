@@ -197,8 +197,15 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
       <p className="text-muted-foreground mb-6 text-sm">Build 3 detailed customer profiles for your business</p>
 
       <div className="glass-card p-4 mb-6 border-primary/30">
-        <p className="text-sm text-muted-foreground">
-          Fill in who buys from you for each of the 3 profiles below. Role, company size, industry, and geography together decide the pain points, messaging, and outreach channels we generate for that customer type.
+        <p className="text-sm text-muted-foreground mb-2">
+          Think of these as the 3 types of people who'd buy from you. For each one, tell us:
+        </p>
+        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+          <li>What industry they work in and where they're based</li>
+          <li>Their job title and how big their company is</li>
+        </ul>
+        <p className="text-sm text-muted-foreground mt-2">
+          We'll use this to figure out what to say to them and where to find them.
         </p>
       </div>
 
