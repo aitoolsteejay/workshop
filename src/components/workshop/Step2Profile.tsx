@@ -199,7 +199,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
   };
 
   const handleContinueWithoutLinkedin = () => {
-    if (!form.role || !form.company || !coreOffer || form.tones.length === 0) {
+    if (!form.role || !form.company || !coreOffer) {
       setError("Please fill in all required fields");
       return;
     }
@@ -265,21 +265,23 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
             </p>
           </div>
         </div>
-        <div>
-          <Label className="text-sm text-muted-foreground">Preferred Tone * (select up to 3)</Label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {TONE_OPTIONS.map(t => (
-              <button key={t} type="button" onClick={() => toggleTone(t)}
-                className={`text-sm px-3 py-1.5 rounded-md border transition-all flex items-center gap-1.5 ${
-                  form.tones.includes(t) ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
-                }`}>
-                {t}
-                {form.tones.includes(t) && <X className="w-3 h-3" />}
-              </button>
-            ))}
+        {!form.noLinkedin && (
+          <div>
+            <Label className="text-sm text-muted-foreground">Preferred Tone * (select up to 3)</Label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {TONE_OPTIONS.map(t => (
+                <button key={t} type="button" onClick={() => toggleTone(t)}
+                  className={`text-sm px-3 py-1.5 rounded-md border transition-all flex items-center gap-1.5 ${
+                    form.tones.includes(t) ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
+                  }`}>
+                  {t}
+                  {form.tones.includes(t) && <X className="w-3 h-3" />}
+                </button>
+              ))}
+            </div>
+            {form.tones.length === 0 && <p className="text-xs text-muted-foreground mt-1">Select at least one tone</p>}
           </div>
-          {form.tones.length === 0 && <p className="text-xs text-muted-foreground mt-1">Select at least one tone</p>}
-        </div>
+        )}
 
         {error && <p className="text-destructive text-sm">{error}</p>}
 
