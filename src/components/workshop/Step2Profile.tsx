@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
-import { sanitizeAIOutput } from "@/lib/sanitize";
+import { sanitizeAIOutput, sanitizeAIText } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
 import { ArrowLeft, X, Copy, Check } from "lucide-react";
@@ -58,11 +58,46 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const coreOffer = form.offerProblem.trim() && form.offerAudience.trim() && form.offerMethod.trim()
+  const initialOfferKey = `${data?.offerProblem || ""}|${data?.offerAudience || ""}|${data?.offerMethod || ""}`;
+  const [polishedOffer, setPolishedOffer] = useState(data?.coreOffer || "");
+  const [polishedKey, setPolishedKey] = useState(initialOfferKey);
+  const [polishing, setPolishing] = useState(false);
+
+  const offerKey = `${form.offerProblem}|${form.offerAudience}|${form.offerMethod}`;
+  const rawOffer = form.offerProblem.trim() && form.offerAudience.trim() && form.offerMethod.trim()
     ? `We solve ${form.offerProblem.trim()} for ${form.offerAudience.trim()} through ${form.offerMethod.trim()}.`
-    : (data?.coreOffer || "");
+    : "";
+  const coreOffer = (polishedKey === offerKey && polishedOffer) ? polishedOffer : (rawOffer || data?.coreOffer || "");
 
   useAutosave({ ...form, coreOffer, result }, onSave);
+
+  useEffect(() => {
+    if (!form.offerProblem.trim() || !form.offerAudience.trim() || !form.offerMethod.trim()) return;
+    if (offerKey === polishedKey) return;
+
+    const timer = setTimeout(async () => {
+      setPolishing(true);
+      try {
+        const prompt = `Rewrite these fragments into exactly one grammatically correct sentence in this format: "We solve [problem] for [audience] through [method]."
+Fix capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO, PR, HR, IT should be capitalised correctly) and grammar. Do not change the meaning or add new information. Keep it concise.
+
+Problem: ${form.offerProblem}
+Audience: ${form.offerAudience}
+Method: ${form.offerMethod}
+
+Return ONLY the single sentence. No quotes. No markdown.`;
+        const raw = await callGemini(prompt);
+        setPolishedOffer(sanitizeAIText(raw.trim()));
+        setPolishedKey(offerKey);
+      } catch {
+        // Silent fallback: coreOffer already falls back to the raw concatenation above.
+      } finally {
+        setPolishing(false);
+      }
+    }, 900);
+
+    return () => clearTimeout(timer);
+  }, [offerKey]);
 
   const copyText = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -259,10 +294,11 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
             <Input value={form.offerAudience} onChange={e => update("offerAudience", e.target.value)} placeholder="Who it's for" className="bg-secondary border-border focus:border-primary" />
             <Input value={form.offerMethod} onChange={e => update("offerMethod", e.target.value)} placeholder="How you solve it" className="bg-secondary border-border focus:border-primary" />
           </div>
-          <div className="mt-2 bg-secondary p-3 rounded-md">
-            <p className="text-sm italic text-muted-foreground">
+          <div className="mt-2 bg-secondary p-3 rounded-md flex items-center gap-2">
+            <p className="text-sm italic text-muted-foreground flex-1">
               {coreOffer || `We solve ${form.offerProblem || "[problem]"} for ${form.offerAudience || "[audience]"} through ${form.offerMethod || "[method]"}.`}
             </p>
+            {polishing && <span className="text-xs text-muted-foreground shrink-0">Polishing…</span>}
           </div>
         </div>
         {!form.noLinkedin && (
