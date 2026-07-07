@@ -1,13 +1,18 @@
 export const INDUSTRIES = [
-  "Fintech", "Healthtech", "Edtech", "E-commerce", "D2C",
-  "Agencies", "Consulting", "Coaching", "Real Estate", "Manufacturing", "Logistics",
-  "HR Tech", "Martech", "Legal", "Finance", "Healthcare", "Recruitment", "IT Services",
+  "SaaS", "Fintech", "Healthtech", "Edtech", "E-commerce", "D2C",
+  "Agencies", "Consulting", "Coaching", "Real Estate", "PropTech", "Manufacturing", "Logistics",
+  "HR Tech", "Martech", "LegalTech", "Legal", "Finance", "Healthcare", "Recruitment", "IT Services",
   "AI / ML Startups", "B2B Services", "Cybersecurity", "DevTools", "Climate Tech",
   "Automotive", "Retail", "Media", "Gaming", "Travel", "Hospitality", "Construction",
-  "Architecture", "Interior Design", "Fashion", "Food & Beverage", "Agriculture",
-  "Energy", "Telecom", "Insurance", "Banking", "Accounting", "PR & Communications",
+  "Architecture", "Interior Design", "Fashion", "Food & Beverage", "FoodTech", "Agriculture", "AgriTech",
+  "Energy", "Renewable Energy", "Telecom", "Insurance", "InsurTech", "Banking", "Accounting", "PR & Communications",
   "Event Management", "NGO / Non-profit", "Government", "Web3 / Crypto", "Blockchain",
-  "Supply Chain", "Aerospace", "Pharmaceuticals", "Beauty & Wellness", "Sports & Fitness",
+  "Supply Chain", "Wholesale & Distribution", "Aerospace", "Space Tech", "Defense",
+  "Pharmaceuticals", "Biotech", "Medical Devices", "Dental", "Veterinary", "Mental Health",
+  "Beauty & Wellness", "Sports & Fitness", "Robotics", "IoT", "Data & Analytics",
+  "Cloud Computing", "No-Code / Low-Code", "Digital Marketing", "Advertising",
+  "BPO / Staffing", "Payments", "Wealth Management", "Mobility / EV", "Mining",
+  "Chemicals", "Franchising", "AR / VR", "Publishing", "Music & Entertainment",
 ];
 
 export const COUNTRIES = [
