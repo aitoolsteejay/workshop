@@ -33,7 +33,6 @@ interface Step1Props {
 
 export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
   const [form, setForm] = useState({
-    linkedinUrl: data?.linkedinUrl || "",
     industry: data?.industry || [] as string[],
     industryOther: data?.industryOther || "",
     businessType: data?.businessType || [] as string[],
@@ -110,11 +109,6 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
           <div className="glass-card p-6">
             <h3 className="text-sm font-semibold text-primary mb-4 uppercase tracking-wider">Business Basics</h3>
             <div className="space-y-4">
-              <div>
-                <Label className="text-xs text-muted-foreground">LinkedIn Profile URL (optional)</Label>
-                <Input value={form.linkedinUrl} onChange={(e) => update("linkedinUrl", e.target.value)} placeholder="https://linkedin.com/in/yourprofile — leave blank if you don't have one" className="mt-1.5 bg-secondary border-border focus:border-primary" />
-                {errors.linkedinUrl && <p className="text-destructive text-xs mt-1">{errors.linkedinUrl}</p>}
-              </div>
               <MultiSelect label="Industry" options={INDUSTRIES} selected={form.industry} onChange={v => update("industry", v)}
                 hasOther otherValue={form.industryOther} onOtherChange={v => update("industryOther", v)} />
               {errors.industry && <p className="text-destructive text-xs mt-1">{errors.industry}</p>}

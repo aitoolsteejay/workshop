@@ -41,6 +41,7 @@ interface Step2Props {
 
 export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   const [form, setForm] = useState({
+    linkedinUrl: data?.linkedinUrl || "",
     role: data?.role || "",
     company: data?.company || "",
     headline: data?.headline || "",
@@ -237,6 +238,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
         </div>
         {!form.noLinkedin && (
           <>
+            <div>
+              <Label className="text-sm text-muted-foreground">LinkedIn Profile URL (optional)</Label>
+              <Input value={form.linkedinUrl} onChange={e => update("linkedinUrl", e.target.value)} placeholder="https://linkedin.com/in/yourprofile" className="mt-1 bg-secondary border-border focus:border-primary" />
+            </div>
             <div>
               <Label className="text-sm text-muted-foreground">Current LinkedIn Headline *</Label>
               <Input value={form.headline} onChange={e => update("headline", e.target.value)} placeholder="Reduce hiring time → for Talent Leaders → using automation" className="mt-1 bg-secondary border-border focus:border-primary" />
