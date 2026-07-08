@@ -4,7 +4,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, ArrowLeft } from "lucide-react";
@@ -13,12 +13,13 @@ interface Step4Props {
   data: any;
   icpData: any;
   profileData: any;
+  onboardingData?: any;
   onSave: (data: any) => void;
   onNext: () => void;
   onBack?: () => void;
 }
 
-export function Step4ValueProp({ data, icpData, profileData, onSave, onNext, onBack }: Step4Props) {
+export function Step4ValueProp({ data, icpData, profileData, onboardingData, onSave, onNext, onBack }: Step4Props) {
   const [result, setResult] = useState<any[]>(data?.result || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,6 +29,7 @@ export function Step4ValueProp({ data, icpData, profileData, onSave, onNext, onB
 
   const offer = profileData?.coreOffer || icpData?.offer || "";
   const icps = icpData?.result || [];
+  const businessType = Array.isArray(onboardingData?.businessType) ? onboardingData.businessType.join(", ") : (onboardingData?.businessType || "");
 
   const copyText = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -53,6 +55,9 @@ ${PERSONALISATION_RULE}
 
 ${GEO_AWARENESS_RULE}
 
+${BUSINESS_TYPE_RULE}
+
+Business Type: ${businessType || "Not specified"}
 Core Offer: ${offer}
 ${icpSummary}
 

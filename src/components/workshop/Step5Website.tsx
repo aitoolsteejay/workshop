@@ -6,7 +6,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIText } from "@/lib/sanitize";
-import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
@@ -25,6 +25,7 @@ interface Step5Props {
   icpData: any;
   valuePropData: any;
   profileData: any;
+  onboardingData?: any;
   userName?: string;
   onSave: (data: any, opts?: { silent?: boolean }) => void;
   onNext: () => void;
@@ -134,7 +135,7 @@ const LOVABLE_FAQS = [
   { q: "What are common mistakes to avoid?", a: "Vague prompts, regenerating everything, not specifying sections, and changing too many things at once." },
 ];
 
-export function Step5Website({ data, icpData, valuePropData, profileData, userName, onSave, onNext, onBack }: Step5Props) {
+export function Step5Website({ data, icpData, valuePropData, profileData, onboardingData, userName, onSave, onNext, onBack }: Step5Props) {
   const [form, setForm] = useState({
     brandName: data?.brandName || "",
     primaryColor: data?.primaryColor || "#FFC947",
@@ -169,6 +170,7 @@ export function Step5Website({ data, icpData, valuePropData, profileData, userNa
     const icps = icpData?.result || [];
     const vps = valuePropData?.result || [];
     const offer = profileData?.coreOffer || icpData?.offer || "";
+    const businessType = Array.isArray(onboardingData?.businessType) ? onboardingData.businessType.join(", ") : (onboardingData?.businessType || "");
     const icpSummary = icps.map((icp: any, i: number) =>
       `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, 3).join(", ")}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
@@ -191,6 +193,10 @@ ${NO_JARGON_RULE}
 ${PERSONALISATION_RULE}
 
 ${GEO_AWARENESS_RULE}
+
+${BUSINESS_TYPE_RULE}
+
+Business Type: ${businessType || "Not specified"}
 
 COLOUR OVERRIDE (MANDATORY): The ONLY colours to use in this website are: Primary: ${form.primaryColor}, Secondary: ${form.secondaryColor}. Do not use yellow (#FFC947) or black (#000000) unless those are the user's selected colours. Apply primary colour to: CTA buttons, headings, highlighted text, links, and accent elements. Apply secondary colour to: background, cards, section fills, and supporting areas. CSS variables must be: --primary: ${form.primaryColor}; --secondary: ${form.secondaryColor}; Strictly use the provided colour palette. Do not introduce new colours. Ensure contrast is maintained and visual hierarchy is clear across all sections.
 

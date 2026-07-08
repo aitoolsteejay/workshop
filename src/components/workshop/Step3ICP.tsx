@@ -5,7 +5,7 @@ import { InfoTooltip } from "./InfoTooltip";
 import { MultiSelect } from "./MultiSelect";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
@@ -38,12 +38,13 @@ interface IcpInput {
 interface Step3Props {
   data: any;
   profileData: any;
+  onboardingData?: any;
   onSave: (data: any, opts?: { silent?: boolean }) => void;
   onNext: () => void;
   onBack?: () => void;
 }
 
-export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Props) {
+export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, onBack }: Step3Props) {
   const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "", roleOther: "", geography: [], geographyOther: "" });
   const [icps, setIcps] = useState<IcpInput[]>(() => {
     const inputs = data?.inputs || [];
@@ -57,6 +58,7 @@ export function Step3ICP({ data, profileData, onSave, onNext, onBack }: Step3Pro
   const { toast } = useToast();
 
   const offer = profileData?.coreOffer || data?.offer || "";
+  const businessType = Array.isArray(onboardingData?.businessType) ? onboardingData.businessType.join(", ") : (onboardingData?.businessType || "");
 
   useAutosave({ inputs: icps, offer, result }, onSave);
 
@@ -110,6 +112,9 @@ ${PERSONALISATION_RULE}
 
 ${GEO_AWARENESS_RULE}
 
+${BUSINESS_TYPE_RULE}
+
+Business Type: ${businessType || "Not specified"}
 Core Offer: ${offer}
 ${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}, Target Geography: ${getGeographies(icps[i]).join(", ") || "Not specified"}`).join("\n")}
 

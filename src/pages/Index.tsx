@@ -143,13 +143,13 @@ const Index = () => {
               <Step2Profile data={sessionData?.profile_data} onSave={(d, opts) => saveField("profile_data", d, opts)} onNext={() => goToStep(3)} onBack={() => goToStep(1)} />
             )}
             {step === 3 && (
-              <Step3ICP data={sessionData?.icp_data} profileData={sessionData?.profile_data} onSave={(d, opts) => saveField("icp_data", d, opts)} onNext={() => goToStep(4)} onBack={() => goToStep(2)} />
+              <Step3ICP data={sessionData?.icp_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d, opts) => saveField("icp_data", d, opts)} onNext={() => goToStep(4)} onBack={() => goToStep(2)} />
             )}
             {step === 4 && (
-              <Step4ValueProp data={sessionData?.value_prop_data} icpData={sessionData?.icp_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("value_prop_data", d)} onNext={() => goToStep(5)} onBack={() => goToStep(3)} />
+              <Step4ValueProp data={sessionData?.value_prop_data} icpData={sessionData?.icp_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d) => saveField("value_prop_data", d)} onNext={() => goToStep(5)} onBack={() => goToStep(3)} />
             )}
             {step === 5 && (
-              <Step5Website data={sessionData?.website_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} userName={sessionData?.user_name} onSave={(d, opts) => saveField("website_data", d, opts)} onNext={() => goToStep(6)} onBack={() => goToStep(4)} />
+              <Step5Website data={sessionData?.website_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} userName={sessionData?.user_name} onSave={(d, opts) => saveField("website_data", d, opts)} onNext={() => goToStep(6)} onBack={() => goToStep(4)} />
             )}
             {step === 6 && (
               <Step6GTM data={sessionData?.gtm_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} onboardingData={sessionData?.onboarding_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("gtm_data", d)} onNext={() => goToStep(7)} onBack={() => goToStep(5)} />

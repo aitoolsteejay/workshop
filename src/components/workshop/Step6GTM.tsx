@@ -4,7 +4,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
-import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE } from "@/lib/prompt-rules";
+import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Star, Calendar, Users, Presentation, RefreshCw, Zap, AlertTriangle } from "lucide-react";
@@ -60,6 +60,7 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
   const icps = icpData?.result || [];
   const vps = valuePropData?.result || [];
   const industry = onboardingData?.industry || "";
+  const businessType = Array.isArray(onboardingData?.businessType) ? onboardingData.businessType.join(", ") : (onboardingData?.businessType || "");
 
   const inputBlock = useCallback((lite: boolean) => {
     const icpDetail = icps.map((icp: any, i: number) =>
@@ -68,8 +69,8 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
     const vpDetail = vps.map((vp: any, i: number) =>
       `ICP ${i + 1}: ${vp.icpName || vp.corePromise}. Method: ${vp.corePromise || vp.yourMethod}`
     ).join("\n");
-    return `Core Offer: ${offer}\nIndustry: ${Array.isArray(industry) ? industry.join(", ") : industry}\nICPs:\n${icpDetail}\nValue Propositions:\n${vpDetail}`;
-  }, [icps, vps, offer, industry]);
+    return `Core Offer: ${offer}\nBusiness Type: ${businessType || "Not specified"}\nIndustry: ${Array.isArray(industry) ? industry.join(", ") : industry}\nICPs:\n${icpDetail}\nValue Propositions:\n${vpDetail}`;
+  }, [icps, vps, offer, industry, businessType]);
 
   const buildChannelsPrompt = (lite: boolean) => `You are a Growth Strategist. Generate outreach channels and partner strategies per target customer type.
 
@@ -78,6 +79,8 @@ ${NO_JARGON_RULE}
 ${PERSONALISATION_RULE}
 
 ${GEO_AWARENESS_RULE}
+
+${BUSINESS_TYPE_RULE}
 
 ${inputBlock(lite)}
 
@@ -92,6 +95,8 @@ ${PERSONALISATION_RULE}
 
 ${GEO_AWARENESS_RULE}
 
+${BUSINESS_TYPE_RULE}
+
 ${inputBlock(lite)}
 
 Return JSON: { "icpStrategies": [{ "icpName": string, "timeline": [{ "phase": string, "title": string, "tasks": [${lite ? "2-3" : "3-5"} strings] }] }] }
@@ -104,6 +109,8 @@ ${NO_JARGON_RULE}
 ${PERSONALISATION_RULE}
 
 ${GEO_AWARENESS_RULE}
+
+${BUSINESS_TYPE_RULE}
 
 ${inputBlock(lite)}
 
