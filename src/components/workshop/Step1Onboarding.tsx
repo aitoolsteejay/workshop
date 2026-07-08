@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { INDUSTRIES } from "@/lib/constants";
 import { useAutosave } from "@/hooks/use-autosave";
 
-const BUSINESS_TYPES = ["Service-based", "Product-based", "Hybrid"];
+const BUSINESS_TYPES = ["Service-based", "Product-based", "Hybrid", "D2C", "B2B"];
 
 const REVENUE_OPTIONS = [
   "₹0–5 Lakhs", "₹5–10 Lakhs", "₹10–25 Lakhs", "₹25–50 Lakhs",

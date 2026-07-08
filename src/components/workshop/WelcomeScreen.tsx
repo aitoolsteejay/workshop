@@ -58,7 +58,7 @@ export function WelcomeScreen({ onStart, resumeData, onResume, onStartFresh }: W
       >
         <div className="text-center mb-10">
           <img
-            src="/myntmore-logo.png"
+            src="/workshop-static/myntmore-logo.png"
             alt="Myntmore"
             className="h-16 mx-auto mb-6"
           />

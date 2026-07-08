@@ -43,7 +43,7 @@ export function ProgressBar({ currentStep, totalSteps, onSave, onRestart }: Prog
           {/* LEFT: Logo + Step */}
           <div className="flex items-center gap-3 min-w-0">
             <img
-              src="/myntmore-logo.png"
+              src="/workshop-static/myntmore-logo.png"
               alt="Myntmore"
               className="h-8 sm:h-9 shrink-0"
               onError={(e) => {
