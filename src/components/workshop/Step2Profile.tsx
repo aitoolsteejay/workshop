@@ -46,9 +46,7 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
     company: data?.company || "",
     headline: data?.headline || "",
     about: data?.about || "",
-    offerProblem: data?.offerProblem || "",
-    offerAudience: data?.offerAudience || "",
-    offerMethod: data?.offerMethod || "",
+    offerDescription: data?.offerDescription || "",
     tones: data?.tones || (data?.tone ? [data.tone] : []) as string[],
     noLinkedin: data?.noLinkedin || false,
   });
@@ -58,39 +56,35 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const initialOfferKey = `${data?.offerProblem || ""}|${data?.offerAudience || ""}|${data?.offerMethod || ""}`;
   const [polishedOffer, setPolishedOffer] = useState(data?.coreOffer || "");
-  const [polishedKey, setPolishedKey] = useState(initialOfferKey);
+  const [polishedKey, setPolishedKey] = useState(data?.offerDescription || "");
   const [polishing, setPolishing] = useState(false);
 
-  const offerKey = `${form.offerProblem}|${form.offerAudience}|${form.offerMethod}`;
-  const rawOffer = form.offerProblem.trim() && form.offerAudience.trim() && form.offerMethod.trim()
-    ? `We solve ${form.offerProblem.trim()} for ${form.offerAudience.trim()} through ${form.offerMethod.trim()}.`
-    : "";
-  const coreOffer = (polishedKey === offerKey && polishedOffer) ? polishedOffer : (rawOffer || data?.coreOffer || "");
+  const offerKey = form.offerDescription.trim();
+  const coreOffer = (polishedKey === offerKey && polishedOffer) ? polishedOffer : (data?.coreOffer || "");
 
   useAutosave({ ...form, coreOffer, result }, onSave);
 
   useEffect(() => {
-    if (!form.offerProblem.trim() || !form.offerAudience.trim() || !form.offerMethod.trim()) return;
+    if (!offerKey) return;
     if (offerKey === polishedKey) return;
 
     const timer = setTimeout(async () => {
       setPolishing(true);
       try {
-        const prompt = `Rewrite these fragments into exactly one grammatically correct sentence in this format: "We solve [problem] for [audience] through [method]."
-Fix capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO, PR, HR, IT should be capitalised correctly) and grammar. Do not change the meaning or add new information. Keep it concise.
+        const prompt = `Read this business owner's description of their own business, and turn it into exactly one grammatically correct sentence in this format: "We solve [problem] for [audience] through [method]."
+Extract the core problem being solved, who it is for, and how they solve it, from the description below. Fix grammar and capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO should be capitalised correctly). Do not invent details that are not implied by the description. If a part is not explicit, make the most reasonable, conservative inference from context.
 
-Problem: ${form.offerProblem}
-Audience: ${form.offerAudience}
-Method: ${form.offerMethod}
+Business description: ${offerKey}
 
 Return ONLY the single sentence. No quotes. No markdown.`;
         const raw = await callGemini(prompt);
         setPolishedOffer(sanitizeAIText(raw.trim()));
         setPolishedKey(offerKey);
       } catch {
-        // Silent fallback: coreOffer already falls back to the raw concatenation above.
+        // Fall back to the user's own words, unformatted, so they're never blocked.
+        setPolishedOffer(sanitizeAIText(offerKey));
+        setPolishedKey(offerKey);
       } finally {
         setPolishing(false);
       }
@@ -145,7 +139,6 @@ Analyse and optimise this LinkedIn profile:
 - About Section: ${form.about}
 - Role: ${form.role}
 - Company: ${form.company}
-- Target Audience (ICP): ${form.offerAudience}
 - Core Offer: ${coreOffer}
 - Preferred Tones: ${form.tones.join(", ")}
 
@@ -288,17 +281,19 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
           </>
         )}
         <div>
-          <Label className="text-sm text-muted-foreground">Your Offer, In One Line *</Label>
-          <div className="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <Input value={form.offerProblem} onChange={e => update("offerProblem", e.target.value)} placeholder="What problem you solve" className="bg-secondary border-border focus:border-primary" />
-            <Input value={form.offerAudience} onChange={e => update("offerAudience", e.target.value)} placeholder="Who it's for" className="bg-secondary border-border focus:border-primary" />
-            <Input value={form.offerMethod} onChange={e => update("offerMethod", e.target.value)} placeholder="How you solve it" className="bg-secondary border-border focus:border-primary" />
-          </div>
-          <div className="mt-2 bg-secondary p-3 rounded-md flex items-center gap-2">
+          <Label className="text-sm text-muted-foreground">Your Offer, In Your Own Words *</Label>
+          <Textarea
+            value={form.offerDescription}
+            onChange={e => update("offerDescription", e.target.value)}
+            placeholder="e.g. We help small businesses that struggle to get consistent leads. We do this through AI-powered LinkedIn outreach and cold email systems."
+            className="mt-1.5 bg-secondary border-border focus:border-primary min-h-[70px]"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Just describe it like you would to a person. We'll turn it into a clear one-line pitch below.</p>
+          <div className="mt-2 bg-secondary p-3 rounded-md flex items-center gap-2 min-h-[44px]">
             <p className="text-sm italic text-muted-foreground flex-1">
-              {coreOffer || `We solve ${form.offerProblem || "[problem]"} for ${form.offerAudience || "[audience]"} through ${form.offerMethod || "[method]"}.`}
+              {coreOffer || (offerKey ? "" : "Your one-line pitch will appear here once you describe your business above.")}
             </p>
-            {polishing && <span className="text-xs text-muted-foreground shrink-0">Polishing…</span>}
+            {polishing && <span className="text-xs text-muted-foreground shrink-0">Writing your pitch…</span>}
           </div>
         </div>
         {!form.noLinkedin && (
