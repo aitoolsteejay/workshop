@@ -4,7 +4,7 @@ export const INDUSTRIES = [
   "HR Tech", "Martech", "LegalTech", "Legal", "Finance", "Healthcare", "Recruitment", "IT Services",
   "AI / ML Startups", "B2B Services", "Cybersecurity", "DevTools", "Climate Tech",
   "Automotive", "Retail", "Media", "Gaming", "Travel", "Hospitality", "Construction",
-  "Architecture", "Interior Design", "Fashion", "Food & Beverage", "FoodTech", "Agriculture", "AgriTech",
+  "Architecture", "Interior Design", "Fashion", "Jewellery", "Food & Beverage", "FoodTech", "Agriculture", "AgriTech",
   "Energy", "Renewable Energy", "Telecom", "Insurance", "InsurTech", "Banking", "Accounting", "PR & Communications",
   "Event Management", "NGO / Non-profit", "Government", "Web3 / Crypto", "Blockchain",
   "Supply Chain", "Wholesale & Distribution", "Aerospace", "Space Tech", "Defense",
