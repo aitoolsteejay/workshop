@@ -328,6 +328,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
         )}
       </div>
 
+      {!loading && result && (
+        <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground mt-4">Regenerate Analysis</Button>
+      )}
+
       {loading && <LoadingSpinner text="Analysing your LinkedIn profile... this takes ~20 seconds" />}
 
       {result && (
