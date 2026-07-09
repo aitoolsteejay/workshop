@@ -93,13 +93,9 @@ function truncatePrompt(prompt: string, maxLen = 2000): string {
 }
 
 async function fetchGemini(prompt: string, systemPrompt?: string): Promise<string> {
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini`;
-  const resp = await fetch(url, {
+  const resp = await fetch("/api/gemini", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt, systemPrompt }),
   });
 
