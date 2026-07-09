@@ -245,24 +245,29 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
 
       {strategies.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <div className="flex gap-1 mb-4 overflow-x-auto">
+          <div className="flex gap-1 mb-1 overflow-x-auto border-b border-border">
             {strategies.map((s: any, idx: number) => (
               <button key={idx} onClick={() => { setActiveIcpTab(idx); setActiveModule(0); }}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${activeIcpTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-                ICP {idx + 1} {s.icpName ? ` - ${s.icpName}` : ""}
+                className={`px-4 py-2.5 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition-colors ${activeIcpTab === idx ? "border-primary accent-text" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                ICP {idx + 1}{s.icpName ? ` · ${s.icpName}` : ""}
               </button>
             ))}
           </div>
 
           <AnimatePresence mode="wait">
             <motion.div key={activeIcpTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="flex gap-1 mb-6 overflow-x-auto">
-                {modules.map((m, idx) => (
-                  <button key={m} onClick={() => setActiveModule(idx)}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${activeModule === idx ? "bg-secondary text-foreground border border-primary" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-                    {m}
-                  </button>
-                ))}
+              <div className="mb-6 mt-4">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Strategy section for <span className="font-medium text-foreground">{strategies[activeIcpTab]?.icpName || `ICP ${activeIcpTab + 1}`}</span>
+                </p>
+                <div className="flex gap-1 overflow-x-auto bg-muted/60 rounded-lg p-1 w-fit max-w-full">
+                  {modules.map((m, idx) => (
+                    <button key={m} onClick={() => setActiveModule(idx)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${activeModule === idx ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                      {m}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {(() => {
