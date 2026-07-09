@@ -8,7 +8,8 @@ import { ArrowLeft } from "lucide-react";
 import { INDUSTRIES } from "@/lib/constants";
 import { useAutosave } from "@/hooks/use-autosave";
 
-const BUSINESS_TYPES = ["Service-based", "Product-based", "Hybrid", "D2C", "B2B"];
+const SELLING_TO_OPTIONS = ["D2C", "B2B", "Both"];
+const BUSINESS_TYPES = ["Product-based", "Service-based", "Hybrid"];
 
 const REVENUE_OPTIONS = [
   "₹0–5 Lakhs", "₹5–10 Lakhs", "₹10–25 Lakhs", "₹25–50 Lakhs",
@@ -35,8 +36,8 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
   const [form, setForm] = useState({
     industry: data?.industry || [] as string[],
     industryOther: data?.industryOther || "",
+    sellingTo: data?.sellingTo || [] as string[],
     businessType: data?.businessType || [] as string[],
-    businessTypeOther: data?.businessTypeOther || "",
     revenue: data?.revenue || [] as string[],
     revenueOther: data?.revenueOther || "",
     employees: data?.employees || [] as string[],
@@ -74,8 +75,8 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
     const errs: Record<string, string> = {};
     if (form.industry.length === 0) errs.industry = "Select at least one industry";
     if (form.industry.includes("Other") && !form.industryOther.trim()) errs.industryOther = "Please specify your industry";
-    if (form.businessType.length === 0) errs.businessType = "Select at least one business type";
-    if (form.businessType.includes("Other") && !form.businessTypeOther.trim()) errs.businessTypeOther = "Please specify";
+    if (form.sellingTo.length === 0) errs.sellingTo = "Select who you sell to";
+    if (form.businessType.length === 0) errs.businessType = "Select your business type";
     if (form.revenue.length === 0) errs.revenue = "Select at least one revenue range";
     if (form.revenue.includes("Other") && !form.revenueOther.trim()) errs.revenueOther = "Please specify";
     if (form.employees.length === 0) errs.employees = "Select your team size";
@@ -93,7 +94,8 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
 
   const summaryItems = [
     { label: "Industry", value: form.industry.filter((x: string) => x !== "Other").concat(form.industryOther ? form.industryOther.split(",").map((s: string) => s.trim()) : []).join(", ") },
-    { label: "Business", value: form.businessType.filter((x: string) => x !== "Other").join(", ") },
+    { label: "Selling To", value: form.sellingTo.join(", ") },
+    { label: "Business", value: form.businessType.join(", ") },
     { label: "Revenue", value: form.revenue.filter((x: string) => x !== "Other").join(", ") },
     { label: "Team Size", value: form.employees.join(", ") },
     { label: "Goals", value: form.goals.filter((x: string) => x !== "Other").join(", ") },
@@ -114,8 +116,12 @@ export function Step1Onboarding({ data, onSave, onNext, onBack }: Step1Props) {
               {errors.industry && <p className="text-destructive text-xs mt-1">{errors.industry}</p>}
               {errors.industryOther && <p className="text-destructive text-xs mt-1">{errors.industryOther}</p>}
 
+              <MultiSelect label="Who Do You Sell To" options={SELLING_TO_OPTIONS} selected={form.sellingTo} onChange={v => update("sellingTo", v)}
+                hasOther={false} searchable={false} maxItems={1} />
+              {errors.sellingTo && <p className="text-destructive text-xs mt-1">{errors.sellingTo}</p>}
+
               <MultiSelect label="Business Type" options={BUSINESS_TYPES} selected={form.businessType} onChange={v => update("businessType", v)}
-                hasOther otherValue={form.businessTypeOther} onOtherChange={v => update("businessTypeOther", v)} searchable={false} />
+                hasOther={false} searchable={false} maxItems={1} />
               {errors.businessType && <p className="text-destructive text-xs mt-1">{errors.businessType}</p>}
 
               <MultiSelect label="Monthly Revenue" options={REVENUE_OPTIONS} selected={form.revenue} onChange={v => update("revenue", v)}

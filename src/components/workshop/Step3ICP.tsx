@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
 import { ChevronDown, ArrowLeft } from "lucide-react";
 import { INDUSTRIES, COUNTRIES } from "@/lib/constants";
+import { joinField } from "@/lib/utils";
 import {
   Collapsible,
   CollapsibleContent,
@@ -58,7 +59,8 @@ export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, on
   const { toast } = useToast();
 
   const offer = profileData?.coreOffer || data?.offer || "";
-  const businessType = Array.isArray(onboardingData?.businessType) ? onboardingData.businessType.join(", ") : (onboardingData?.businessType || "");
+  const businessType = joinField(onboardingData?.businessType);
+  const sellingTo = joinField(onboardingData?.sellingTo);
 
   useAutosave({ inputs: icps, offer, result }, onSave);
 
@@ -114,6 +116,7 @@ ${GEO_AWARENESS_RULE}
 
 ${BUSINESS_TYPE_RULE}
 
+Selling To: ${sellingTo || "Not specified"}
 Business Type: ${businessType || "Not specified"}
 Core Offer: ${offer}
 ${Array.from({ length: 3 }, (_, i) => `ICP ${i + 1} Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}, Target Geography: ${getGeographies(icps[i]).join(", ") || "Not specified"}`).join("\n")}
@@ -165,7 +168,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     }
   };
 
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<number | "partners">(0);
 
   const TOOLTIPS: Record<string, string> = {
     whoTheyAre: "A detailed description of this ideal customer's role, company type, and context",
@@ -177,7 +180,6 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     psychology: "How they think and make decisions, use this to choose the right tone and angle",
     whereTheyHangOut: "Platforms and content they consume, use this to choose your outreach channel",
     howToPosition: "The messaging angle and emphasis that works best for this specific ICP",
-    channelPartners: "Other businesses or individuals who already have this ICP's trust, and could refer or co-sell to them",
   };
 
   const SECTION_LABELS: Record<string, string> = {
@@ -191,14 +193,12 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
     whereTheyHangOut: "Where To Reach Them",
     howToPosition: "How To Position",
     geographyContext: "Geography Context",
-    channelPartners: "Channel Partners",
   };
 
   const SECTION_GROUPS = [
     { title: "Who They Are", keys: ["whoTheyAre", "coreResponsibilities", "psychology"] },
     { title: "What Drives Them", keys: ["painPoints", "goalsDesires", "buyingTriggers"] },
     { title: "How To Win Them", keys: ["objections", "howToPosition", "whereTheyHangOut", "geographyContext"] },
-    { title: "Channel Partners", keys: ["channelPartners"] },
   ];
 
   return (
@@ -294,16 +294,51 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                 ICP {idx + 1}
               </button>
             ))}
+            {result.some((icp: any) => Array.isArray(icp.channelPartners) && icp.channelPartners.length > 0) && (
+              <button onClick={() => setActiveTab("partners")}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "partners" ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                Channel Partners
+              </button>
+            )}
           </div>
 
           <AnimatePresence mode="wait">
+            {activeTab === "partners" ? (
+              <motion.div key="partners" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-4">
+                {result.map((icp: any, idx: number) => {
+                  const partners = icp.channelPartners;
+                  if (!Array.isArray(partners) || partners.length === 0) return null;
+                  return (
+                    <div key={idx} className="glass-card p-6">
+                      <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-1 flex items-center gap-1">
+                        For ICP {idx + 1}: {icp.name}
+                        <InfoTooltip text="Other businesses or individuals who already have this ICP's trust, and could refer or co-sell to them" />
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                        {partners.map((p: any, i: number) => (
+                          <div key={i} className="bg-secondary p-4 rounded-md">
+                            <p className="text-sm font-semibold text-foreground">{p.partnerType}</p>
+                            {p.whyTheyFit && (
+                              <p className="text-xs text-muted-foreground mt-2"><span className="text-muted-foreground/70 uppercase text-[10px] tracking-wider">Why they fit</span><br />{p.whyTheyFit}</p>
+                            )}
+                            {p.approachAngle && (
+                              <p className="text-xs text-primary mt-2"><span className="text-muted-foreground/70 uppercase text-[10px] tracking-wider">How to approach</span><br />{p.approachAngle}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            ) : (
             <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-4">
               <div className="glass-card p-6 text-center">
-                <h3 className="text-base font-semibold accent-text">{result[activeTab]?.name}</h3>
+                <h3 className="text-base font-semibold accent-text">{result[activeTab as number]?.name}</h3>
               </div>
 
               {SECTION_GROUPS.map(group => {
-                const visibleKeys = group.keys.filter(key => result[activeTab]?.[key]);
+                const visibleKeys = group.keys.filter(key => result[activeTab as number]?.[key]);
                 if (visibleKeys.length === 0) return null;
 
                 return (
@@ -311,7 +346,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                     <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">{group.title}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {visibleKeys.map(key => {
-                        const val = result[activeTab]?.[key];
+                        const val = result[activeTab as number]?.[key];
                         const tooltip = TOOLTIPS[key];
                         const header = (
                           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
@@ -355,27 +390,6 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                           );
                         }
 
-                        if (key === "channelPartners" && Array.isArray(val)) {
-                          return (
-                            <div key={key} className="md:col-span-2">
-                              {header}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {val.map((p: any, i: number) => (
-                                  <div key={i} className="bg-secondary p-4 rounded-md">
-                                    <p className="text-sm font-semibold text-foreground">{p.partnerType}</p>
-                                    {p.whyTheyFit && (
-                                      <p className="text-xs text-muted-foreground mt-2"><span className="text-muted-foreground/70 uppercase text-[10px] tracking-wider">Why they fit</span><br />{p.whyTheyFit}</p>
-                                    )}
-                                    {p.approachAngle && (
-                                      <p className="text-xs text-primary mt-2"><span className="text-muted-foreground/70 uppercase text-[10px] tracking-wider">How to approach</span><br />{p.approachAngle}</p>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        }
-
                         return (
                           <div key={key} className={key === "objections" ? "md:col-span-2" : ""}>
                             {header}
@@ -394,10 +408,11 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                 );
               })}
 
-              {(!result[activeTab]?.painPoints || result[activeTab].painPoints.length === 0) && (
+              {(!result[activeTab as number]?.painPoints || result[activeTab as number].painPoints.length === 0) && (
                 <p className="text-destructive text-sm">Warning: Pain points missing for this ICP</p>
               )}
             </motion.div>
+            )}
           </AnimatePresence>
 
           <Button onClick={generate} variant="ghost" className="w-full mt-4 text-muted-foreground">Regenerate ICPs</Button>

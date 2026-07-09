@@ -8,6 +8,7 @@ import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, ArrowLeft } from "lucide-react";
+import { joinField } from "@/lib/utils";
 
 interface Step4Props {
   data: any;
@@ -29,7 +30,8 @@ export function Step4ValueProp({ data, icpData, profileData, onboardingData, onS
 
   const offer = profileData?.coreOffer || icpData?.offer || "";
   const icps = icpData?.result || [];
-  const businessType = Array.isArray(onboardingData?.businessType) ? onboardingData.businessType.join(", ") : (onboardingData?.businessType || "");
+  const businessType = joinField(onboardingData?.businessType);
+  const sellingTo = joinField(onboardingData?.sellingTo);
 
   const copyText = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -47,7 +49,12 @@ export function Step4ValueProp({ data, icpData, profileData, onboardingData, onS
       `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).join(", ")}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
 
-    const prompt = `You are a senior strategist. Generate structured Value Propositions for each of these 3 target customer types:
+    const allPartners = icps.flatMap((icp: any) => (icp.channelPartners || []).map((p: any) => ({ ...p, forIcp: icp.name })));
+    const partnerSummary = allPartners.length > 0
+      ? allPartners.map((p: any, i: number) => `Partner ${i + 1}: ${p.partnerType} (relevant to ${p.forIcp}). Why they fit: ${p.whyTheyFit || "Not specified"}`).join("\n")
+      : "";
+
+    const prompt = `You are a senior strategist. Generate structured Value Propositions for each of these 3 target customer types${partnerSummary ? ", plus one for the Channel Partners audience" : ""}:
 
 ${NO_JARGON_RULE}
 
@@ -57,11 +64,13 @@ ${GEO_AWARENESS_RULE}
 
 ${BUSINESS_TYPE_RULE}
 
+Selling To: ${sellingTo || "Not specified"}
 Business Type: ${businessType || "Not specified"}
 Core Offer: ${offer}
 ${icpSummary}
+${partnerSummary ? `\nChannel Partners (a 4th audience: businesses or individuals who could refer or co-sell to us, NOT end customers):\n${partnerSummary}` : ""}
 
-For EACH target customer type, provide:
+For EACH target customer type${partnerSummary ? " AND the Channel Partners audience" : ""}, provide:
 1. corePromise: One powerful sentence that captures the transformation (max 15 words)
 2. beforeState: What life looks like BEFORE using this solution (3 bullet points)
 3. afterState: What life looks like AFTER (3 bullet points)
@@ -75,11 +84,11 @@ For EACH target customer type, provide:
 11. positioning: A unique core positioning statement for THIS specific customer type following exactly this format: "We help [specific customer descriptor] to [their specific desired outcome] by [your specific method for this customer type]". Each customer type MUST have a DIFFERENT positioning statement. Use simple, easy-to-understand language. No jargon.
 12. coreAngle: The single strongest hook to lead with when talking to this customer type. Must be one of: "Authority", "ROI", "Speed", or "Trust". Include a one-line explanation of why this angle works best for them.
 
-Rules:
+${partnerSummary ? `For the Channel Partners entry specifically: frame every field around what is in it for THEM as a partner (extra revenue, a better offering for their own clients, low-effort referral, credibility), not around solving an end customer's problem. Set icpName to exactly "Channel Partners".\n\n` : ""}Rules:
 - Each customer type must feel fundamentally DIFFERENT.
 - Ban phrases like "increase growth", "improve results", "scale faster".
 - Do NOT use em-dashes, asterisks, or hash signs in any output.
-- Return ONLY a valid JSON array of 3 objects (no markdown, no code blocks).`;
+- Return ONLY a valid JSON array of ${partnerSummary ? "4" : "3"} objects (no markdown, no code blocks).`;
 
     try {
       const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 60000));
@@ -127,10 +136,10 @@ Rules:
       {result.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="flex gap-1 mb-6">
-            {result.map((_: any, idx: number) => (
+            {result.map((vp: any, idx: number) => (
               <button key={idx} onClick={() => setActiveTab(idx)}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-                ICP {idx + 1}
+                {vp?.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${idx + 1}`}
               </button>
             ))}
           </div>

@@ -8,6 +8,7 @@ import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Star, Calendar, Users, Presentation, RefreshCw, Zap, AlertTriangle } from "lucide-react";
+import { joinField } from "@/lib/utils";
 
 interface Step6Props {
   data: any;
@@ -60,7 +61,8 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
   const icps = icpData?.result || [];
   const vps = valuePropData?.result || [];
   const industry = onboardingData?.industry || "";
-  const businessType = Array.isArray(onboardingData?.businessType) ? onboardingData.businessType.join(", ") : (onboardingData?.businessType || "");
+  const businessType = joinField(onboardingData?.businessType);
+  const sellingTo = joinField(onboardingData?.sellingTo);
 
   const inputBlock = useCallback((lite: boolean) => {
     const icpDetail = icps.map((icp: any, i: number) =>
@@ -69,8 +71,8 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
     const vpDetail = vps.map((vp: any, i: number) =>
       `ICP ${i + 1}: ${vp.icpName || vp.corePromise}. Method: ${vp.corePromise || vp.yourMethod}`
     ).join("\n");
-    return `Core Offer: ${offer}\nBusiness Type: ${businessType || "Not specified"}\nIndustry: ${Array.isArray(industry) ? industry.join(", ") : industry}\nICPs:\n${icpDetail}\nValue Propositions:\n${vpDetail}`;
-  }, [icps, vps, offer, industry, businessType]);
+    return `Core Offer: ${offer}\nSelling To: ${sellingTo || "Not specified"}\nBusiness Type: ${businessType || "Not specified"}\nIndustry: ${Array.isArray(industry) ? industry.join(", ") : industry}\nICPs:\n${icpDetail}\nValue Propositions:\n${vpDetail}`;
+  }, [icps, vps, offer, industry, businessType, sellingTo]);
 
   const buildChannelsPrompt = (lite: boolean) => `You are a Growth Strategist. Generate outreach channels and partner strategies per target customer type.
 

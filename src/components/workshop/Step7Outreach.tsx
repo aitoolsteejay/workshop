@@ -5,6 +5,7 @@ import { InfoTooltip } from "./InfoTooltip";
 import { callGemini } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
+import { joinField } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
@@ -146,7 +147,8 @@ export function Step7Outreach({ data, icpData, valuePropData, profileData, onboa
   const vps = valuePropData?.result || [];
   const userName = profileData?.role ? `${profileData.role} at ${profileData.company}` : "";
   const industry = onboardingData?.industry || "";
-  const businessType = Array.isArray(onboardingData?.businessType) ? onboardingData.businessType.join(", ") : (onboardingData?.businessType || "");
+  const businessType = joinField(onboardingData?.businessType);
+  const sellingTo = joinField(onboardingData?.sellingTo);
 
   const toggleAngle = (a: string) => {
     setAngles(prev => {
@@ -181,6 +183,7 @@ ${BUSINESS_TYPE_RULE}
 - Client: ${userName}
 - Offer: ${offer}
 - Value Proposition: ${topVP}
+- Selling To: ${sellingTo || "Not specified"}
 - Business Type: ${businessType || "Not specified"}
 - Industry: ${Array.isArray(industry) ? industry.join(", ") : industry}
 - Selected Angles: ${angles.join(", ")}
@@ -234,7 +237,7 @@ Return ONLY valid JSON (no markdown):
     } finally {
       if (currentGenId === generationIdRef.current) setLoading(false);
     }
-  }, [angles, offer, icps, vps, userName, industry, businessType, onSave, toast]);
+  }, [angles, offer, icps, vps, userName, industry, businessType, sellingTo, onSave, toast]);
 
   const playbooks = result?.playbooks || [];
 
