@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { MultiSelect } from "./MultiSelect";
-import { callGemini } from "@/lib/workshop-store";
+import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
@@ -153,7 +153,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
         const jsonMatch = raw.match(/\[[\s\S]*\]/);
         parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
       } catch {
-        setError("Something went wrong. Please try again.");
+        setError(AI_PARSE_ERROR_MESSAGE);
         setLoading(false);
         return;
       }
@@ -162,7 +162,7 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
       onSave({ inputs: icps, offer, result: parsed });
       toast({ title: "✓ Saved", description: "ICPs generated and saved", duration: 3000 });
     } catch (e: any) {
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
+      setError(describeGeminiError(e));
     } finally {
       setLoading(false);
     }

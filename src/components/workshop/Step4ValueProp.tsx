@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
-import { callGemini } from "@/lib/workshop-store";
+import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
@@ -98,7 +98,7 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
         const match = raw.match(/\[[\s\S]*\]/);
         parsed = JSON.parse(match ? match[0] : raw);
       } catch {
-        setError("Something went wrong. Please try again.");
+        setError(AI_PARSE_ERROR_MESSAGE);
         setLoading(false);
         return;
       }
@@ -107,7 +107,7 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
       onSave({ result: parsed });
       toast({ title: "✓ Saved", duration: 3000 });
     } catch (e: any) {
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
+      setError(describeGeminiError(e));
     } finally {
       setLoading(false);
     }

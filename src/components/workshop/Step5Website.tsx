@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
-import { callGemini } from "@/lib/workshop-store";
+import { callGemini, describeGeminiError } from "@/lib/workshop-store";
 import { sanitizeAIText } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
@@ -246,7 +246,7 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
       onSave({ ...form, generatedPrompt: sanitized, designRef });
       toast({ title: "✓ Saved", duration: 3000 });
     } catch (e: any) {
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
+      setError(describeGeminiError(e));
     } finally {
       setLoading(false);
     }

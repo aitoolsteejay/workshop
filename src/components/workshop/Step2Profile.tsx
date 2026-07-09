@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
-import { callGemini } from "@/lib/workshop-store";
+import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/workshop-store";
 import { sanitizeAIOutput, sanitizeAIText } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
@@ -199,7 +199,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
         parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
       } catch {
-        setError("Something went wrong. Please try again.");
+        setError(AI_PARSE_ERROR_MESSAGE);
         setLoading(false);
         return;
       }
@@ -211,11 +211,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
       onSave({ ...form, coreOffer, result: parsed });
       toast({ title: "✓ Saved", description: "Profile analysis saved", duration: 3000 });
     } catch (e: any) {
-      if (e.message === "timeout") {
-        setError("This is taking too long. Please try again.");
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      setError(describeGeminiError(e));
     } finally {
       setLoading(false);
     }

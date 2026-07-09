@@ -148,3 +148,24 @@ export async function callGemini(prompt: string, systemPrompt?: string): Promise
   activeRequests.set(key, promise);
   return promise;
 }
+
+/**
+ * Turns a callGemini() rejection into a specific, user-facing message so
+ * "the AI service is misconfigured" (e.g. missing GEMINI_API_KEY on Vercel)
+ * reads differently from "the request timed out" or a generic failure,
+ * instead of every failure mode collapsing into the same unhelpful text.
+ */
+export function describeGeminiError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (msg === "timeout") return "This is taking too long. Please try again.";
+  if (msg.includes("GEMINI_API_KEY")) return "The AI service isn't configured. Please check the GEMINI_API_KEY setup in Vercel.";
+  const statusMatch = msg.match(/^AI call failed: (\d+)/);
+  if (statusMatch) {
+    const status = Number(statusMatch[1]);
+    if (status === 429) return "Rate limited. Please try again in a moment.";
+    return "Could not reach the AI service. Please try again in a moment.";
+  }
+  return "Something went wrong. Please try again.";
+}
+
+export const AI_PARSE_ERROR_MESSAGE = "The AI response could not be read. Please try again.";

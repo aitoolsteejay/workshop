@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
-import { callGemini } from "@/lib/workshop-store";
+import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/workshop-store";
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { joinField } from "@/lib/utils";
@@ -223,7 +223,7 @@ Return ONLY valid JSON (no markdown):
         const match = raw.match(/\{[\s\S]*\}/);
         parsed = JSON.parse(match ? match[0] : raw);
       } catch {
-        setError("Something went wrong. Please try again.");
+        setError(AI_PARSE_ERROR_MESSAGE);
         setLoading(false);
         return;
       }
@@ -233,7 +233,7 @@ Return ONLY valid JSON (no markdown):
       toast({ title: "✓ Saved", duration: 3000 });
     } catch (e: any) {
       if (currentGenId !== generationIdRef.current) return;
-      setError(e.message === "timeout" ? "This is taking too long. Please try again." : "Something went wrong. Please try again.");
+      setError(describeGeminiError(e));
     } finally {
       if (currentGenId === generationIdRef.current) setLoading(false);
     }
