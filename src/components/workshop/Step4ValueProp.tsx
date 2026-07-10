@@ -46,7 +46,7 @@ export function Step4ValueProp({ data, icpData, profileData, onboardingData, onS
     setResult([]);
 
     const icpSummary = icps.map((icp: any, i: number) =>
-      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).join(", ")}. Geography: ${icp.geographyContext || "Not specified"}`
+      `ICP ${i + 1}: ${icp.name}. Audience Type: ${icp.audienceType || (sellingTo === "D2C" ? "D2C" : "B2B")}. Pain Points: ${(icp.painPoints || []).join(", ")}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
 
     const allPartners = icps.flatMap((icp: any) => (icp.channelPartners || []).map((p: any) => ({ ...p, forIcp: icp.name })));
@@ -83,6 +83,8 @@ For EACH target customer type${partnerSummary ? " AND the Channel Partners audie
 10. icpName: The customer type name
 11. positioning: A unique core positioning statement for THIS specific customer type following exactly this format: "We help [specific customer descriptor] to [their specific desired outcome] by [your specific method for this customer type]". Each customer type MUST have a DIFFERENT positioning statement. Use simple, easy-to-understand language. No jargon.
 12. coreAngle: The single strongest hook to lead with when talking to this customer type. Must be one of: "Authority", "ROI", "Speed", or "Trust". Include a one-line explanation of why this angle works best for them.
+
+Each ICP above is explicitly marked Audience Type B2B or D2C, its value proposition must reflect that. For a B2B ICP: frame corePromise, positioning, and content around business outcomes, ROI, risk reduction, and professional credibility, channels like LinkedIn and case studies. For a D2C ICP: frame everything around a personal transformation for an individual, emotional and lifestyle benefits, social proof, and channels like Instagram, TikTok, and community. Never use business/ROI language for a D2C ICP or purely emotional/lifestyle language for a B2B ICP.
 
 ${partnerSummary ? `For the Channel Partners entry specifically: frame every field around what is in it for THEM as a partner (extra revenue, a better offering for their own clients, low-effort referral, credibility), not around solving an end customer's problem. Set icpName to exactly "Channel Partners".\n\n` : ""}Rules:
 - Each customer type must feel fundamentally DIFFERENT.

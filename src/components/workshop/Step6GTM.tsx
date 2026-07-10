@@ -66,7 +66,7 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
 
   const inputBlock = useCallback((lite: boolean) => {
     const icpDetail = icps.map((icp: any, i: number) =>
-      `ICP ${i + 1}: ${icp.name}. Pain Points: ${(icp.painPoints || []).slice(0, lite ? 2 : undefined).join(", ")}. Goals: ${Array.isArray(icp.goalsDesires) ? icp.goalsDesires.slice(0, lite ? 2 : undefined).join(", ") : (icp.goalsDesires || "")}. Geography: ${icp.geographyContext || "Not specified"}`
+      `ICP ${i + 1}: ${icp.name}. Audience Type: ${icp.audienceType || (sellingTo === "D2C" ? "D2C" : "B2B")}. Pain Points: ${(icp.painPoints || []).slice(0, lite ? 2 : undefined).join(", ")}. Goals: ${Array.isArray(icp.goalsDesires) ? icp.goalsDesires.slice(0, lite ? 2 : undefined).join(", ") : (icp.goalsDesires || "")}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
     const vpDetail = vps.map((vp: any, i: number) =>
       `ICP ${i + 1}: ${vp.icpName || vp.corePromise}. Method: ${vp.corePromise || vp.yourMethod}`

@@ -15,6 +15,26 @@ export const INDUSTRIES = [
   "Chemicals", "Franchising", "AR / VR", "Publishing", "Music & Entertainment",
 ];
 
+export const CONSUMER_PERSONAS = [
+  "Young Professionals", "Students", "New Parents", "Parents of School-Age Kids",
+  "Working Mothers", "Homeowners", "Newlyweds", "Retirees / Seniors",
+  "Fitness & Wellness Enthusiasts", "Health-Conscious Consumers", "Tech Enthusiasts",
+  "Fashion-Forward Shoppers", "Budget-Conscious Shoppers", "Premium / Luxury Buyers",
+  "Frequent Travellers", "Foodies", "Pet Owners", "Gamers", "Small Business Owners (Personal Purchase)",
+  "Freelancers / Gig Workers", "Other",
+];
+
+export const SPEND_TIERS = [
+  "Budget / Value-Seeking", "Mid-Market / Mainstream", "Premium / High Spend", "Luxury", "Other",
+];
+
+export const CONSUMER_CATEGORIES = [
+  "Fashion & Apparel", "Beauty & Personal Care", "Health & Wellness", "Fitness & Sports",
+  "Food & Beverage", "Home & Lifestyle", "Electronics & Gadgets", "Travel & Leisure",
+  "Parenting & Family", "Education & Learning", "Entertainment & Media", "Automotive",
+  "Pets", "Personal Finance & Banking", "Jewellery & Accessories", "Other",
+];
+
 export const COUNTRIES = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
   "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",
