@@ -34,13 +34,15 @@ function getTier(score: number) {
 
 interface Step2Props {
   data: any;
+  userName?: string;
   onSave: (data: any, opts?: { silent?: boolean }) => void;
   onNext: () => void;
   onBack?: () => void;
 }
 
-export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
+export function Step2Profile({ data, userName, onSave, onNext, onBack }: Step2Props) {
   const [form, setForm] = useState({
+    name: data?.name || userName || "",
     linkedinUrl: data?.linkedinUrl || "",
     role: data?.role || "",
     company: data?.company || "",
@@ -49,6 +51,8 @@ export function Step2Profile({ data, onSave, onNext, onBack }: Step2Props) {
     offerDescription: data?.offerDescription || "",
     tones: data?.tones || (data?.tone ? [data.tone] : []) as string[],
     noLinkedin: data?.noLinkedin || false,
+    noHeadline: data?.noHeadline || false,
+    noAbout: data?.noAbout || false,
   });
   const [result, setResult] = useState<any>(data?.result || null);
   const [loading, setLoading] = useState(false);
@@ -116,17 +120,32 @@ Return ONLY the single sentence. No quotes. No markdown.`;
   };
 
   const generate = async () => {
-    if (!form.role || !form.company || !form.headline || !coreOffer || form.tones.length === 0) {
+    if (!form.name.trim() || !form.role || !form.company || !coreOffer || form.tones.length === 0) {
       setError("Please fill in all required fields");
       return;
     }
-    if (!form.about.trim()) {
-      setError("Please fill in your About section to get an accurate score.");
+    if (!form.linkedinUrl.trim()) {
+      setError("Please add your LinkedIn profile URL, or check \"I don't have a LinkedIn profile yet\" above.");
+      return;
+    }
+    if (!form.noHeadline && !form.headline.trim()) {
+      setError("Please fill in your current headline, or check \"I don't have a LinkedIn headline\".");
+      return;
+    }
+    if (!form.noAbout && !form.about.trim()) {
+      setError("Please fill in your About section, or check \"I don't have a LinkedIn about section\".");
       return;
     }
     setError("");
     setLoading(true);
     setResult(null);
+
+    const headlineInput = form.noHeadline
+      ? "Not provided. This person has no existing headline. Create an original, strong headline from scratch using their role, company, and core offer."
+      : form.headline;
+    const aboutInput = form.noAbout
+      ? "Not provided. This person has no existing About section. Create an original About section from scratch using their role, company, and core offer, following the structure below."
+      : form.about;
 
     const prompt = `You are an expert LinkedIn Profile Strategist specialising in lead generation.
 
@@ -135,13 +154,14 @@ ${NO_JARGON_RULE}
 ${PERSONALISATION_RULE}
 
 Analyse and optimise this LinkedIn profile:
-- Current Headline: ${form.headline}
-- About Section: ${form.about}
+- Name: ${form.name}
+- Current Headline: ${headlineInput}
+- About Section: ${aboutInput}
 - Role: ${form.role}
 - Company: ${form.company}
 - Core Offer: ${coreOffer}
 - Preferred Tones: ${form.tones.join(", ")}
-
+${(form.noHeadline || form.noAbout) ? `\nIMPORTANT: Where a section says "Not provided", score that criterion very low since there is genuinely nothing there yet, do NOT invent or assume existing content when scoring. But the optimised headlines, aboutSection, and positioningAngles you generate must still be fully written from scratch using their Name, Role, Company, and Core Offer, exactly as if starting fresh.\n` : ""}
 SCORING (0 to 100 total):
 Score the profile on 5 criteria, 20 points each:
 1. Clarity (0-20): How clearly does the headline communicate who they help, how, and why?
@@ -188,7 +208,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
   "toImprove": [array of strings],
   "headlines": [3 strings],
   "aboutSection": string,
-  "positioningAngles": string
+  "positioningAngles": [3-4 strings, each ONE standalone positioning power statement, do not number them yourself]
 }`;
 
     try {
@@ -223,7 +243,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
   };
 
   const handleContinueWithoutLinkedin = () => {
-    if (!form.role || !form.company || !coreOffer) {
+    if (!form.name.trim() || !form.role || !form.company || !coreOffer) {
       setError("Please fill in all required fields");
       return;
     }
@@ -250,6 +270,10 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
           <span className="text-sm text-foreground">I don't have a LinkedIn profile yet</span>
         </label>
 
+        <div>
+          <Label className="text-sm text-muted-foreground">Your Name *</Label>
+          <Input value={form.name} onChange={e => update("name", e.target.value)} placeholder="Jane Doe" className="mt-1 bg-secondary border-border focus:border-primary" />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label className="text-sm text-muted-foreground">Your Role *</Label>
@@ -263,17 +287,41 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
         {!form.noLinkedin && (
           <>
             <div>
-              <Label className="text-sm text-muted-foreground">LinkedIn Profile URL (optional)</Label>
+              <Label className="text-sm text-muted-foreground">LinkedIn Profile URL *</Label>
               <Input value={form.linkedinUrl} onChange={e => update("linkedinUrl", e.target.value)} placeholder="https://linkedin.com/in/yourprofile" className="mt-1 bg-secondary border-border focus:border-primary" />
             </div>
-            <div>
-              <Label className="text-sm text-muted-foreground">Current LinkedIn Headline *</Label>
-              <Input value={form.headline} onChange={e => update("headline", e.target.value)} placeholder="Reduce hiring time → for Talent Leaders → using automation" className="mt-1 bg-secondary border-border focus:border-primary" />
-            </div>
-            <div>
-              <Label className="text-sm text-muted-foreground">About Section *</Label>
-              <Textarea value={form.about} onChange={e => update("about", e.target.value)} placeholder="Your LinkedIn about section..." className="mt-1 bg-secondary border-border focus:border-primary min-h-[80px]" />
-            </div>
+
+            <label className="flex items-center gap-2 p-3 rounded-md bg-secondary border border-border cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.noHeadline}
+                onChange={e => update("noHeadline", e.target.checked)}
+                className="accent-primary w-4 h-4"
+              />
+              <span className="text-sm text-foreground">I don't have a LinkedIn headline</span>
+            </label>
+            {!form.noHeadline && (
+              <div>
+                <Label className="text-sm text-muted-foreground">Current LinkedIn Headline *</Label>
+                <Input value={form.headline} onChange={e => update("headline", e.target.value)} placeholder="Reduce hiring time → for Talent Leaders → using automation" className="mt-1 bg-secondary border-border focus:border-primary" />
+              </div>
+            )}
+
+            <label className="flex items-center gap-2 p-3 rounded-md bg-secondary border border-border cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.noAbout}
+                onChange={e => update("noAbout", e.target.checked)}
+                className="accent-primary w-4 h-4"
+              />
+              <span className="text-sm text-foreground">I don't have a LinkedIn about section</span>
+            </label>
+            {!form.noAbout && (
+              <div>
+                <Label className="text-sm text-muted-foreground">About Section *</Label>
+                <Textarea value={form.about} onChange={e => update("about", e.target.value)} placeholder="Your LinkedIn about section..." className="mt-1 bg-secondary border-border focus:border-primary min-h-[80px]" />
+              </div>
+            )}
           </>
         )}
         <div>
@@ -446,10 +494,17 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
             <div className="glass-card p-6">
               <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                 Positioning Angles
-                <InfoTooltip text="A one-sentence power statement that defines your market position and differentiates you" />
+                <InfoTooltip text="One-sentence power statements that define your market position and differentiate you" />
               </h3>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.positioningAngles}</p>
-              <CopyBtn text={result.positioningAngles} id="positioning" />
+              {(Array.isArray(result.positioningAngles)
+                ? result.positioningAngles
+                : String(result.positioningAngles).split(/\n+|(?=\d+\.\s)/).map((s: string) => s.replace(/^\d+\.\s*/, "").trim()).filter(Boolean)
+              ).map((angle: string, i: number) => (
+                <div key={i} className="bg-secondary p-3 rounded-md mb-2 flex gap-2">
+                  <span className="text-primary font-semibold shrink-0">{i + 1}.</span>
+                  <p className="text-sm text-muted-foreground">{angle}</p>
+                </div>
+              ))}
             </div>
           )}
 
@@ -457,7 +512,6 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
             <div className="glass-card p-6">
               <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Score Explanation</h3>
               <p className="text-sm text-muted-foreground">{result.scoreMeaning}</p>
-              <CopyBtn text={result.scoreMeaning} id="score-explanation" />
             </div>
           )}
 

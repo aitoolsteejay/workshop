@@ -140,7 +140,7 @@ const Index = () => {
               <Step1Onboarding data={sessionData?.onboarding_data} onSave={(d, opts) => saveField("onboarding_data", d, opts)} onNext={() => goToStep(2)} />
             )}
             {step === 2 && (
-              <Step2Profile data={sessionData?.profile_data} onSave={(d, opts) => saveField("profile_data", d, opts)} onNext={() => goToStep(3)} onBack={() => goToStep(1)} />
+              <Step2Profile data={sessionData?.profile_data} userName={sessionData?.user_name} onSave={(d, opts) => saveField("profile_data", d, opts)} onNext={() => goToStep(3)} onBack={() => goToStep(1)} />
             )}
             {step === 3 && (
               <Step3ICP data={sessionData?.icp_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d, opts) => saveField("icp_data", d, opts)} onNext={() => goToStep(4)} onBack={() => goToStep(2)} />
