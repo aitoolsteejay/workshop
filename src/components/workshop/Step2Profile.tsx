@@ -60,37 +60,42 @@ export function Step2Profile({ data, userName, onSave, onNext, onBack }: Step2Pr
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const [polishedOffer, setPolishedOffer] = useState(data?.coreOffer || "");
-  const [polishedKey, setPolishedKey] = useState(data?.offerDescription || "");
-  const [polishing, setPolishing] = useState(false);
+  const [offerOptions, setOfferOptions] = useState<string[]>(data?.offerOptions || []);
+  const [optionsKey, setOptionsKey] = useState(data?.offerDescription || "");
+  const [selectedOfferIdx, setSelectedOfferIdx] = useState<number | null>(data?.selectedOfferIdx ?? null);
+  const [generatingOptions, setGeneratingOptions] = useState(false);
 
   const offerKey = form.offerDescription.trim();
-  const coreOffer = (polishedKey === offerKey && polishedOffer) ? polishedOffer : (data?.coreOffer || "");
+  const coreOffer = (selectedOfferIdx !== null && offerOptions[selectedOfferIdx]) ? offerOptions[selectedOfferIdx] : "";
 
-  useAutosave({ ...form, coreOffer, result }, onSave);
+  useAutosave({ ...form, coreOffer, offerOptions, selectedOfferIdx, result }, onSave);
 
   useEffect(() => {
     if (!offerKey) return;
-    if (offerKey === polishedKey) return;
+    if (offerKey === optionsKey) return;
 
     const timer = setTimeout(async () => {
-      setPolishing(true);
+      setGeneratingOptions(true);
       try {
-        const prompt = `Read this business owner's description of their own business, and turn it into exactly one grammatically correct sentence in this format: "We solve [problem] for [audience] through [method]."
-Extract the core problem being solved, who it is for, and how they solve it, from the description below. Fix grammar and capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO should be capitalised correctly). Do not invent details that are not implied by the description. If a part is not explicit, make the most reasonable, conservative inference from context.
+        const prompt = `Read this business owner's description of their own business, and turn it into 3 distinct, more detailed rewritten versions of their business offering.
+Each version must be 2 to 3 sentences, clearly covering: the core problem being solved, who it is for, and how they solve it (the method or mechanism). Write in plain, professional language, fix grammar and capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO should be capitalised correctly). Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
+Make the 3 versions meaningfully different in phrasing and emphasis (for example, one could lead with the outcome, one with the audience, one with the method), not just minor rewordings of each other.
 
 Business description: ${offerKey}
 
-Return ONLY the single sentence. No quotes. No markdown.`;
+Return ONLY a valid JSON array of exactly 3 strings (no markdown, no code blocks).`;
         const raw = await callGemini(prompt);
-        setPolishedOffer(sanitizeAIText(raw.trim()));
-        setPolishedKey(offerKey);
+        const match = raw.match(/\[[\s\S]*\]/);
+        const parsed = JSON.parse(match ? match[0] : raw);
+        if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("bad shape");
+        setOfferOptions(parsed.slice(0, 3).map((s: string) => sanitizeAIText(String(s))));
       } catch {
-        // Fall back to the user's own words, unformatted, so they're never blocked.
-        setPolishedOffer(sanitizeAIText(offerKey));
-        setPolishedKey(offerKey);
+        // Fall back to the user's own words, unformatted, so they're never blocked; they can edit each into shape themselves.
+        setOfferOptions([sanitizeAIText(offerKey), sanitizeAIText(offerKey), sanitizeAIText(offerKey)]);
       } finally {
-        setPolishing(false);
+        setOptionsKey(offerKey);
+        setSelectedOfferIdx(null);
+        setGeneratingOptions(false);
       }
     }, 900);
 
@@ -228,7 +233,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
       parsed.clarityScore = Math.min(parsed.clarityScore || 0, 100);
       parsed.keywordScore = Math.min(parsed.keywordScore || 0, 100);
       setResult(parsed);
-      onSave({ ...form, coreOffer, result: parsed });
+      onSave({ ...form, coreOffer, offerOptions, selectedOfferIdx, result: parsed });
       toast({ title: "✓ Saved", description: "Profile analysis saved", duration: 3000 });
     } catch (e: any) {
       setError(describeGeminiError(e));
@@ -238,7 +243,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
   };
 
   const handleNext = () => {
-    onSave({ ...form, coreOffer, result });
+    onSave({ ...form, coreOffer, offerOptions, selectedOfferIdx, result });
     onNext();
   };
 
@@ -248,7 +253,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
       return;
     }
     setError("");
-    onSave({ ...form, coreOffer, result: null });
+    onSave({ ...form, coreOffer, offerOptions, selectedOfferIdx, result: null });
     onNext();
   };
 
@@ -332,13 +337,45 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
             placeholder="e.g. We help small businesses that struggle to get consistent leads. We do this through AI-powered LinkedIn outreach and cold email systems."
             className="mt-1.5 bg-secondary border-border focus:border-primary min-h-[70px]"
           />
-          <p className="text-xs text-muted-foreground mt-1">Just describe it like you would to a person. We'll turn it into a clear one-line pitch below.</p>
-          <div className="mt-2 bg-secondary p-3 rounded-md flex items-center gap-2 min-h-[44px]">
-            <p className="text-sm italic text-muted-foreground flex-1">
-              {coreOffer || (offerKey ? "" : "Your one-line pitch will appear here once you describe your business above.")}
-            </p>
-            {polishing && <span className="text-xs text-muted-foreground shrink-0">Writing your pitch…</span>}
-          </div>
+          <p className="text-xs text-muted-foreground mt-1">Just describe it like you would to a person. We'll turn it into 3 versions you can edit and choose from below.</p>
+
+          {generatingOptions && (
+            <p className="text-xs text-muted-foreground mt-2">Writing 3 versions of your offer…</p>
+          )}
+
+          {!generatingOptions && offerOptions.length === 0 && !offerKey && (
+            <p className="text-xs text-muted-foreground mt-2">Your 3 offer options will appear here once you describe your business above.</p>
+          )}
+
+          {offerOptions.length > 0 && (
+            <div className="mt-3">
+              <Label className="text-sm text-muted-foreground flex items-center gap-1">
+                Choose Your Business Offering *
+                <InfoTooltip text="This exact wording is used throughout your workshop: ICPs, value proposition, website copy, and outreach. Edit any version below, then select the one that best represents your business." />
+              </Label>
+              <div className="mt-2 space-y-2">
+                {offerOptions.map((opt, i) => (
+                  <div key={i} onClick={() => setSelectedOfferIdx(i)}
+                    className={`p-3 rounded-md border cursor-pointer transition-colors flex items-start gap-2 ${selectedOfferIdx === i ? "border-primary bg-primary/5" : "border-border bg-secondary"}`}>
+                    <input
+                      type="radio"
+                      checked={selectedOfferIdx === i}
+                      onChange={() => setSelectedOfferIdx(i)}
+                      className="accent-primary w-4 h-4 mt-1.5 shrink-0"
+                    />
+                    <Textarea
+                      value={opt}
+                      onChange={e => { const v = e.target.value; setOfferOptions(p => p.map((x, idx) => idx === i ? v : x)); }}
+                      className="flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-0 min-h-[60px] resize-none text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+              {selectedOfferIdx === null && (
+                <p className="text-xs text-destructive mt-1">Select one of the 3 versions above to use as your business offering</p>
+              )}
+            </div>
+          )}
         </div>
         {!form.noLinkedin && (
           <div>
