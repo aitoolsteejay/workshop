@@ -9,7 +9,7 @@ import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
-import { ChevronDown, ArrowLeft } from "lucide-react";
+import { ChevronDown, ArrowLeft, Brain, AlertTriangle, Target, Zap, Radio, User, TrendingUp, Trophy, ShieldAlert } from "lucide-react";
 import { INDUSTRIES, COUNTRIES, CONSUMER_PERSONAS, SPEND_TIERS, CONSUMER_CATEGORIES } from "@/lib/constants";
 import { joinField } from "@/lib/utils";
 import {
@@ -223,10 +223,29 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
   };
 
   const SECTION_GROUPS = [
-    { title: "Who They Are", keys: ["whoTheyAre", "coreResponsibilities", "psychology"] },
-    { title: "What Drives Them", keys: ["painPoints", "goalsDesires", "buyingTriggers"] },
-    { title: "How To Win Them", keys: ["objections", "howToPosition", "whereTheyHangOut", "geographyContext"] },
+    { title: "Who They Are", icon: User, keys: ["whoTheyAre", "coreResponsibilities", "psychology"] },
+    { title: "What Drives Them", icon: TrendingUp, keys: ["painPoints", "goalsDesires", "buyingTriggers"] },
+    { title: "How To Win Them", icon: Trophy, keys: ["objections", "howToPosition", "whereTheyHangOut", "geographyContext"] },
   ];
+
+  const CARD_STYLES: Record<string, { icon: any; border: string; iconColor: string }> = {
+    painPoints: { icon: AlertTriangle, border: "border-primary", iconColor: "text-primary" },
+    goalsDesires: { icon: Target, border: "border-emerald-400", iconColor: "text-emerald-400" },
+    buyingTriggers: { icon: Zap, border: "border-primary", iconColor: "text-primary" },
+    objections: { icon: ShieldAlert, border: "border-destructive", iconColor: "text-destructive" },
+  };
+
+  const getSnapshotNodes = (icp: any) => {
+    if (!icp) return [];
+    const nodes = [
+      { key: "psychology", icon: Brain, label: "Psychology", text: icp.psychology },
+      { key: "painPoints", icon: AlertTriangle, label: "Top Pain Point", text: Array.isArray(icp.painPoints) ? icp.painPoints[0] : icp.painPoints },
+      { key: "goalsDesires", icon: Target, label: "Top Goal", text: Array.isArray(icp.goalsDesires) ? icp.goalsDesires[0] : icp.goalsDesires },
+      { key: "buyingTriggers", icon: Zap, label: "Top Trigger", text: Array.isArray(icp.buyingTriggers) ? icp.buyingTriggers[0] : icp.buyingTriggers },
+      { key: "whereTheyHangOut", icon: Radio, label: "Best Channel", text: Array.isArray(icp.whereTheyHangOut) ? icp.whereTheyHangOut[0] : icp.whereTheyHangOut },
+    ];
+    return nodes.filter(n => n.text);
+  };
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-4xl mx-auto">
@@ -397,13 +416,62 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                 )}
               </div>
 
+              {(() => {
+                const nodes = getSnapshotNodes(result[activeTab as number]);
+                if (nodes.length < 3) return null;
+                const angleStep = 360 / nodes.length;
+                const radius = 32;
+                return (
+                  <div className="glass-card p-6">
+                    <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4 flex items-center gap-1">
+                      ICP Snapshot
+                      <InfoTooltip text="A quick visual summary of this ICP's core psychology, pain point, goal, buying trigger, and best channel" />
+                    </h3>
+                    <div className="relative mx-auto h-80 sm:h-96" style={{ maxWidth: 560 }}>
+                      <svg className="absolute inset-0 w-full h-full text-border" style={{ overflow: "visible" }}>
+                        {nodes.map((n, i) => {
+                          const angle = (-90 + i * angleStep) * (Math.PI / 180);
+                          const x = 50 + radius * Math.cos(angle);
+                          const y = 50 + radius * Math.sin(angle);
+                          return <line key={n.key} x1="50%" y1="50%" x2={`${x}%`} y2={`${y}%`} stroke="currentColor" strokeWidth="1.5" />;
+                        })}
+                      </svg>
+                      <div className="absolute rounded-2xl accent-bg flex items-center justify-center text-center p-2 shadow-lg w-28 h-28 sm:w-32 sm:h-32"
+                        style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-primary-foreground leading-tight line-clamp-5">{result[activeTab as number]?.name}</span>
+                      </div>
+                      {nodes.map((n, i) => {
+                        const angle = (-90 + i * angleStep) * (Math.PI / 180);
+                        const x = 50 + radius * Math.cos(angle);
+                        const y = 50 + radius * Math.sin(angle);
+                        const Icon = n.icon;
+                        return (
+                          <div key={n.key} className="absolute glass-card p-2.5 text-left w-[38%] sm:w-[30%]"
+                            style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}>
+                            <div className="flex items-center gap-1 mb-1">
+                              <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
+                              <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">{n.label}</span>
+                            </div>
+                            <p className="text-[11px] sm:text-xs text-foreground line-clamp-3">{n.text}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {SECTION_GROUPS.map(group => {
                 const visibleKeys = group.keys.filter(key => result[activeTab as number]?.[key]);
                 if (visibleKeys.length === 0) return null;
 
+                const GroupIcon = group.icon;
                 return (
                   <div key={group.title} className="glass-card p-6">
-                    <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">{group.title}</h3>
+                    <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                      <GroupIcon className="w-4 h-4" />
+                      {group.title}
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {visibleKeys.map(key => {
                         const val = result[activeTab as number]?.[key];
@@ -419,13 +487,18 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                           </h4>
                         );
 
-                        if (key === "painPoints" && Array.isArray(val)) {
+                        const cardStyle = CARD_STYLES[key];
+                        if (cardStyle && Array.isArray(val)) {
+                          const CardIcon = cardStyle.icon;
                           return (
                             <div key={key} className="md:col-span-2">
                               {header}
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {val.map((item: string, i: number) => (
-                                  <div key={i} className="bg-secondary p-3 rounded-md text-sm text-foreground border-l-2 border-primary">{item}</div>
+                                  <div key={i} className={`bg-secondary p-3 rounded-md text-sm text-foreground border-l-2 ${cardStyle.border} flex items-start gap-2`}>
+                                    <CardIcon className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${cardStyle.iconColor}`} />
+                                    <span>{item}</span>
+                                  </div>
                                 ))}
                               </div>
                             </div>
