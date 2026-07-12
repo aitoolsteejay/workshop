@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { MultiSelect } from "./MultiSelect";
 import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/workshop-store";
-import { sanitizeAIOutput } from "@/lib/sanitize";
+import { sanitizeAIOutput, sanitizeAIText } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
 import { ChevronDown, ArrowLeft, Brain, AlertTriangle, Target, Zap, Radio, User, TrendingUp, Trophy, ShieldAlert } from "lucide-react";
-import { INDUSTRIES, COUNTRIES, CONSUMER_PERSONAS, SPEND_TIERS, CONSUMER_CATEGORIES } from "@/lib/constants";
+import { INDUSTRIES, COUNTRIES } from "@/lib/constants";
 import { joinField } from "@/lib/utils";
 import {
   Collapsible,
@@ -27,7 +29,6 @@ const ROLES = [
 const SIZES = ["1–10", "10–50", "50–200", "200–500", "500–1000", "1000+"];
 
 interface IcpInput {
-  audienceType: "B2B" | "D2C";
   roles: string[];
   sizes: string[];
   industries: string[];
@@ -35,6 +36,10 @@ interface IcpInput {
   roleOther: string;
   geography: string[];
   geographyOther: string;
+  d2cDescription: string;
+  d2cOptions: string[];
+  d2cOptionsKey: string;
+  d2cSelectedIdx: number | null;
 }
 
 interface Step3Props {
@@ -49,9 +54,8 @@ interface Step3Props {
 export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, onBack }: Step3Props) {
   const businessType = joinField(onboardingData?.businessType);
   const sellingTo = joinField(onboardingData?.sellingTo);
-  const defaultAudienceType: "B2B" | "D2C" = sellingTo === "D2C" ? "D2C" : "B2B";
 
-  const emptyIcp = (): IcpInput => ({ audienceType: defaultAudienceType, roles: [], sizes: [], industries: [], industryOther: "", roleOther: "", geography: [], geographyOther: "" });
+  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "", roleOther: "", geography: [], geographyOther: "", d2cDescription: "", d2cOptions: [], d2cOptionsKey: "", d2cSelectedIdx: null });
   const [icps, setIcps] = useState<IcpInput[]>(() => {
     const inputs = data?.inputs || [];
     while (inputs.length < 3) inputs.push(emptyIcp());
@@ -64,19 +68,18 @@ export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, on
   const { toast } = useToast();
 
   const offer = profileData?.coreOffer || data?.offer || "";
-  const showAudienceToggle = sellingTo === "Both";
-  const icpAudienceType = (idx: number): "B2B" | "D2C" => showAudienceToggle ? icps[idx].audienceType : defaultAudienceType;
+  const showB2BBlock = sellingTo !== "D2C";
+  const showD2CBlock = sellingTo === "D2C" || sellingTo === "Both";
+  const icpAudienceType = (idx: number): "B2B" | "D2C" => {
+    if (sellingTo === "D2C") return "D2C";
+    if (sellingTo !== "Both") return "B2B";
+    return icps[idx].d2cSelectedIdx !== null ? "D2C" : "B2B";
+  };
 
   useAutosave({ inputs: icps, offer, result }, onSave);
 
   const updateIcp = (idx: number, field: keyof IcpInput, value: any) => {
     setIcps(p => p.map((icp, i) => i === idx ? { ...icp, [field]: value } : icp));
-  };
-
-  const setIcpAudienceType = (idx: number, type: "B2B" | "D2C") => {
-    setIcps(p => p.map((icp, i) => i === idx && icp.audienceType !== type
-      ? { ...icp, audienceType: type, roles: [], sizes: [], industries: [], roleOther: "", industryOther: "" }
-      : icp));
   };
 
   const getIndustries = (icp: IcpInput) => {
@@ -109,10 +112,16 @@ export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, on
   const generate = async () => {
     if (!offer.trim()) { setError("Core offer is missing. Please complete Step 2 first."); return; }
     for (let i = 0; i < 3; i++) {
-      const isD2C = icpAudienceType(i) === "D2C";
-      if (icps[i].roles.length === 0) { setError(`ICP ${i + 1}: select at least one ${isD2C ? "customer persona" : "role"}`); return; }
-      if (icps[i].sizes.length === 0) { setError(`ICP ${i + 1}: select at least one ${isD2C ? "spending segment" : "company size"}`); return; }
-      if (icps[i].industries.length === 0) { setError(`ICP ${i + 1}: select at least one ${isD2C ? "interest category" : "industry"}`); return; }
+      if (icpAudienceType(i) === "D2C") {
+        if (icps[i].d2cSelectedIdx === null || !icps[i].d2cOptions[icps[i].d2cSelectedIdx]) {
+          setError(`ICP ${i + 1}: describe this customer and select one of the generated versions`);
+          return;
+        }
+      } else {
+        if (icps[i].roles.length === 0) { setError(`ICP ${i + 1}: select at least one role`); return; }
+        if (icps[i].sizes.length === 0) { setError(`ICP ${i + 1}: select at least one company size`); return; }
+        if (icps[i].industries.length === 0) { setError(`ICP ${i + 1}: select at least one industry`); return; }
+      }
     }
     setError("");
     setLoading(true);
@@ -121,7 +130,8 @@ export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, on
     const icpTypeLines = Array.from({ length: 3 }, (_, i) => {
       const type = icpAudienceType(i);
       if (type === "D2C") {
-        return `ICP ${i + 1} Audience Type: D2C (individual consumer). Inputs: Consumer Personas: ${getRoles(icps[i]).join(", ")}, Spending Segment: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Interest Categories: ${getIndustries(icps[i]).join(", ")}, Target Geography: ${getGeographies(icps[i]).join(", ") || "Not specified"}`;
+        const description = icps[i].d2cSelectedIdx !== null ? icps[i].d2cOptions[icps[i].d2cSelectedIdx] : icps[i].d2cDescription;
+        return `ICP ${i + 1} Audience Type: D2C (individual consumer). Customer Description (from the business owner, AI-cleaned): ${description}. Target Geography: ${getGeographies(icps[i]).join(", ") || "Not specified"}`;
       }
       return `ICP ${i + 1} Audience Type: B2B (business buyer). Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}, Target Geography: ${getGeographies(icps[i]).join(", ") || "Not specified"}`;
     }).join("\n");
@@ -257,10 +267,15 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
           Think of these as the 3 types of people who'd buy from you. For each one, tell us:
         </p>
         <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-          {defaultAudienceType === "D2C" && !showAudienceToggle ? (
+          {sellingTo === "D2C" ? (
             <>
               <li>What kind of consumer they are and what they care about</li>
               <li>How much they typically spend and where they're based</li>
+            </>
+          ) : sellingTo === "Both" ? (
+            <>
+              <li>Whether they're a business buyer or an individual consumer</li>
+              <li>What matters most to them and where they're based</li>
             </>
           ) : (
             <>
@@ -286,13 +301,19 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                     {idx + 1}
                   </span>
                   <span className="font-semibold text-sm">ICP {idx + 1}</span>
-                  {showAudienceToggle && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{icps[idx].audienceType}</span>
+                  {sellingTo === "Both" && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{icpAudienceType(idx)}</span>
                   )}
-                  {icps[idx].roles.length > 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      ({icps[idx].roles.length} {isD2C ? "personas" : "roles"}, {icps[idx].sizes.length} {isD2C ? "spend segments" : "sizes"}, {icps[idx].industries.length} {isD2C ? "categories" : "industries"}, {icps[idx].geography.length} geographies)
-                    </span>
+                  {isD2C ? (
+                    icps[idx].d2cSelectedIdx !== null && (
+                      <span className="text-xs text-muted-foreground">(customer description selected)</span>
+                    )
+                  ) : (
+                    icps[idx].roles.length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        ({icps[idx].roles.length} roles, {icps[idx].sizes.length} sizes, {icps[idx].industries.length} industries, {icps[idx].geography.length} geographies)
+                      </span>
+                    )
                   )}
                 </div>
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${openIcp === idx ? "rotate-180" : ""}`} />
@@ -300,48 +321,67 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="glass-card p-5 mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4 border-primary">
-                {showAudienceToggle && (
-                  <div className="sm:col-span-2 flex items-center gap-2 -mt-1 mb-1">
-                    <span className="text-xs text-muted-foreground">This ICP is:</span>
-                    <div className="flex gap-1 bg-secondary rounded-md p-0.5">
-                      {(["B2B", "D2C"] as const).map(t => (
-                        <button key={t} type="button" onClick={() => setIcpAudienceType(idx, t)}
-                          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${icps[idx].audienceType === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                          {t === "B2B" ? "A Business" : "An Individual Consumer"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                {showB2BBlock && (
+                  <>
+                    <MultiSelect
+                      label="Industries"
+                      options={INDUSTRIES}
+                      selected={icps[idx].industries}
+                      onChange={v => updateIcp(idx, "industries", v)}
+                      hasOther
+                      otherValue={icps[idx].industryOther}
+                      onOtherChange={v => updateIcp(idx, "industryOther", v)}
+                      maxItems={3}
+                    />
+                    <MultiSelect
+                      label="Target Geography"
+                      options={COUNTRIES}
+                      selected={icps[idx].geography}
+                      onChange={v => updateIcp(idx, "geography", v)}
+                      hasOther
+                      otherValue={icps[idx].geographyOther}
+                      onOtherChange={v => updateIcp(idx, "geographyOther", v)}
+                    />
+                    <MultiSelect
+                      label="Roles"
+                      options={ROLES}
+                      selected={icps[idx].roles}
+                      onChange={v => updateIcp(idx, "roles", v)}
+                      hasOther
+                      otherValue={icps[idx].roleOther}
+                      onOtherChange={v => updateIcp(idx, "roleOther", v)}
+                    />
+                    <MultiSelect label="Company Size" options={SIZES} selected={icps[idx].sizes} onChange={v => updateIcp(idx, "sizes", v)} hasOther searchable={false} />
+                  </>
                 )}
-                <MultiSelect
-                  label={isD2C ? "Interest Categories" : "Industries"}
-                  options={isD2C ? CONSUMER_CATEGORIES : INDUSTRIES}
-                  selected={icps[idx].industries}
-                  onChange={v => updateIcp(idx, "industries", v)}
-                  hasOther
-                  otherValue={icps[idx].industryOther}
-                  onOtherChange={v => updateIcp(idx, "industryOther", v)}
-                  maxItems={3}
-                />
-                <MultiSelect
-                  label="Target Geography"
-                  options={COUNTRIES}
-                  selected={icps[idx].geography}
-                  onChange={v => updateIcp(idx, "geography", v)}
-                  hasOther
-                  otherValue={icps[idx].geographyOther}
-                  onOtherChange={v => updateIcp(idx, "geographyOther", v)}
-                />
-                <MultiSelect
-                  label={isD2C ? "Consumer Persona" : "Roles"}
-                  options={isD2C ? CONSUMER_PERSONAS : ROLES}
-                  selected={icps[idx].roles}
-                  onChange={v => updateIcp(idx, "roles", v)}
-                  hasOther
-                  otherValue={icps[idx].roleOther}
-                  onOtherChange={v => updateIcp(idx, "roleOther", v)}
-                />
-                <MultiSelect label={isD2C ? "Spending Segment" : "Company Size"} options={isD2C ? SPEND_TIERS : SIZES} selected={icps[idx].sizes} onChange={v => updateIcp(idx, "sizes", v)} hasOther searchable={false} />
+                {showD2CBlock && (
+                  <>
+                    {showB2BBlock && (
+                      <div className="sm:col-span-2 border-t border-border pt-4 mt-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Or, describe an individual consumer instead</p>
+                      </div>
+                    )}
+                    <D2CDescriptionBox
+                      idx={idx}
+                      description={icps[idx].d2cDescription}
+                      options={icps[idx].d2cOptions}
+                      optionsKey={icps[idx].d2cOptionsKey}
+                      selectedIdx={icps[idx].d2cSelectedIdx}
+                      updateIcp={updateIcp}
+                    />
+                    {!showB2BBlock && (
+                      <MultiSelect
+                        label="Target Geography"
+                        options={COUNTRIES}
+                        selected={icps[idx].geography}
+                        onChange={v => updateIcp(idx, "geography", v)}
+                        hasOther
+                        otherValue={icps[idx].geographyOther}
+                        onOtherChange={v => updateIcp(idx, "geographyOther", v)}
+                      />
+                    )}
+                  </>
+                )}
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -569,5 +609,93 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
         </div>
       )}
     </motion.div>
+  );
+}
+
+function D2CDescriptionBox({ idx, description, options, optionsKey, selectedIdx, updateIcp }: {
+  idx: number;
+  description: string;
+  options: string[];
+  optionsKey: string;
+  selectedIdx: number | null;
+  updateIcp: (idx: number, field: keyof IcpInput, value: any) => void;
+}) {
+  const [generating, setGenerating] = useState(false);
+  const key = description.trim();
+
+  useEffect(() => {
+    if (!key) return;
+    if (key === optionsKey) return;
+
+    const timer = setTimeout(async () => {
+      setGenerating(true);
+      try {
+        const prompt = `Read this business owner's rough description of one type of individual consumer (D2C, not a business buyer) they want to target, and turn it into 3 distinct, more detailed, cleaner rewritten versions of this customer description.
+Each version must be 2 to 3 sentences describing who this person is, their lifestyle or life stage, and why they'd want this product or service. Write in plain, professional language, fix grammar and capitalisation. Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
+Make the 3 versions meaningfully different in phrasing and emphasis (for example, one could lead with their lifestyle, one with their motivation, one with their life stage), not just minor rewordings of each other.
+
+Customer description: ${key}
+
+Return ONLY a valid JSON array of exactly 3 strings (no markdown, no code blocks).`;
+        const raw = await callGemini(prompt);
+        const match = raw.match(/\[[\s\S]*\]/);
+        const parsed = JSON.parse(match ? match[0] : raw);
+        if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("bad shape");
+        updateIcp(idx, "d2cOptions", parsed.slice(0, 3).map((s: string) => sanitizeAIText(String(s))));
+      } catch {
+        // Fall back to the user's own words, unformatted, so they're never blocked; they can edit each into shape themselves.
+        updateIcp(idx, "d2cOptions", [sanitizeAIText(key), sanitizeAIText(key), sanitizeAIText(key)]);
+      } finally {
+        updateIcp(idx, "d2cOptionsKey", key);
+        updateIcp(idx, "d2cSelectedIdx", null);
+        setGenerating(false);
+      }
+    }, 900);
+
+    return () => clearTimeout(timer);
+  }, [key]);
+
+  return (
+    <div className="sm:col-span-2">
+      <Label className="text-sm text-muted-foreground">Describe This Customer, In Your Own Words *</Label>
+      <Textarea
+        value={description}
+        onChange={e => updateIcp(idx, "d2cDescription", e.target.value)}
+        placeholder="e.g. Young parents who just moved into a new home, want it to look nice, but don't have a big budget to spend on decor"
+        className="mt-1.5 bg-secondary border-border focus:border-primary min-h-[70px]"
+      />
+      <p className="text-xs text-muted-foreground mt-1">Just describe them like you would to a person. We'll turn it into 3 versions you can edit and choose from below.</p>
+
+      {generating && (
+        <p className="text-xs text-muted-foreground mt-2">Writing 3 versions of this customer…</p>
+      )}
+
+      {options.length > 0 && (
+        <div className="mt-3">
+          <Label className="text-sm text-muted-foreground">Choose This Customer Description *</Label>
+          <div className="mt-2 space-y-2">
+            {options.map((opt, i) => (
+              <div key={i} onClick={() => updateIcp(idx, "d2cSelectedIdx", i)}
+                className={`p-3 rounded-md border cursor-pointer transition-colors flex items-start gap-2 ${selectedIdx === i ? "border-primary bg-primary/5" : "border-border bg-secondary"}`}>
+                <input
+                  type="radio"
+                  checked={selectedIdx === i}
+                  onChange={() => updateIcp(idx, "d2cSelectedIdx", i)}
+                  className="accent-primary w-4 h-4 mt-1.5 shrink-0"
+                />
+                <Textarea
+                  value={opt}
+                  onChange={e => { const v = e.target.value; updateIcp(idx, "d2cOptions", options.map((x, ii) => ii === i ? v : x)); }}
+                  className="flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-0 min-h-[60px] resize-none text-sm"
+                />
+              </div>
+            ))}
+          </div>
+          {selectedIdx === null && (
+            <p className="text-xs text-destructive mt-1">Select one of the 3 versions above to use for this ICP</p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
