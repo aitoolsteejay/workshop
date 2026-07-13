@@ -7,6 +7,7 @@ import { Step3ICP } from "@/components/workshop/Step3ICP";
 import { Step4ValueProp } from "@/components/workshop/Step4ValueProp";
 import { Step5Website } from "@/components/workshop/Step5Website";
 import { Step6GTM } from "@/components/workshop/Step6GTM";
+import { StepAddOns } from "@/components/workshop/StepAddOns";
 import { Step7Outreach } from "@/components/workshop/Step7Outreach";
 import { FinalScreen } from "@/components/workshop/FinalScreen";
 import { ProgressBar } from "@/components/workshop/ProgressBar";
@@ -21,7 +22,7 @@ import { generatePDF } from "@/lib/pdf-export";
 import { useToast } from "@/hooks/use-toast";
 
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 const Index = () => {
   const [step, setStep] = useState(-1);
@@ -155,9 +156,12 @@ const Index = () => {
               <Step6GTM data={sessionData?.gtm_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} onboardingData={sessionData?.onboarding_data} profileData={sessionData?.profile_data} onSave={(d) => saveField("gtm_data", d)} onNext={() => goToStep(7)} onBack={() => goToStep(5)} />
             )}
             {step === 7 && (
-              <Step7Outreach data={sessionData?.outreach_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d, opts) => saveField("outreach_data", d, opts)} onNext={() => goToStep(8)} onBack={() => goToStep(6)} />
+              <StepAddOns data={sessionData?.addons_data} onboardingData={sessionData?.onboarding_data} onSave={(d, opts) => saveField("addons_data", d, opts)} onNext={() => goToStep(8)} onBack={() => goToStep(6)} />
             )}
             {step === 8 && (
+              <Step7Outreach data={sessionData?.outreach_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d, opts) => saveField("outreach_data", d, opts)} onNext={() => goToStep(9)} onBack={() => goToStep(7)} />
+            )}
+            {step === 9 && (
               <FinalScreen sessionData={sessionData} onDownloadPDF={() => generatePDF(sessionData)} onRestart={handleStartFresh} />
             )}
           </AnimatePresence>

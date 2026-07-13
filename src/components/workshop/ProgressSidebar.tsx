@@ -8,6 +8,7 @@ const STEP_NAMES = [
   "Value Proposition",
   "Website Builder",
   "Growth Strategy",
+  "Add-Ons",
   "Outreach Playbook",
   "Final Summary",
 ];
@@ -21,9 +22,9 @@ export function ProgressSidebar({ currentStep, onNavigate }: ProgressSidebarProp
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  if (currentStep < 1 || currentStep > 8) return null;
+  if (currentStep < 1 || currentStep > 9) return null;
 
-  const stepIcons = ["1", "2", "3", "4", "5", "6", "7", "8"];
+  const stepIcons = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
   const content = (
     <nav className="flex flex-col h-full">
