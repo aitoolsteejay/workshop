@@ -11,7 +11,7 @@ import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
-import { ChevronDown, ArrowLeft, Brain, AlertTriangle, Target, Zap, Radio, User, TrendingUp, Trophy, ShieldAlert } from "lucide-react";
+import { ChevronDown, ArrowLeft, Brain, AlertTriangle, Target, Zap, Radio, User, TrendingUp, Trophy, ShieldAlert, ChevronRight } from "lucide-react";
 import { INDUSTRIES, COUNTRIES } from "@/lib/constants";
 import { joinField } from "@/lib/utils";
 import {
@@ -571,9 +571,14 @@ Return ONLY a valid JSON array of exactly 3 objects (no markdown, no code blocks
                           <div key={key} className={key === "objections" ? "md:col-span-2" : ""}>
                             {header}
                             {Array.isArray(val) ? (
-                              <ul className="space-y-1">
-                                {val.map((item: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {item}</li>)}
-                              </ul>
+                              <div className="space-y-1.5">
+                                {val.map((item: string, i: number) => (
+                                  <div key={i} className="bg-secondary p-2.5 rounded-md flex items-start gap-1.5">
+                                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                                    <span className="text-sm text-foreground">{item}</span>
+                                  </div>
+                                ))}
+                              </div>
                             ) : (
                               <p className="text-sm text-muted-foreground">{val}</p>
                             )}

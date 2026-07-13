@@ -9,7 +9,7 @@ import { joinField } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
-import { ArrowLeft, AlertTriangle, Video, Clock, ShieldAlert, X, Lightbulb } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Video, Clock, ShieldAlert, X, Lightbulb, CheckCircle2, XCircle, ArrowRightCircle } from "lucide-react";
 
 const ANGLES = ["Authority", "ROI", "Pain-led", "Contrarian", "Curiosity", "Offer-led"];
 const MAX_ANGLES = 2;
@@ -308,15 +308,25 @@ Return ONLY valid JSON (no markdown):
                         </div>
                         <div>
                           <span className="text-xs text-muted-foreground">They care about</span>
-                          <ul className="mt-1 space-y-0.5">
-                            {pb.icpContext?.careAbout?.map((c: string, i: number) => <li key={i} className="text-sm text-emerald-400">✓ {c}</li>)}
-                          </ul>
+                          <div className="mt-1 space-y-1">
+                            {pb.icpContext?.careAbout?.map((c: string, i: number) => (
+                              <div key={i} className="text-sm text-foreground flex items-start gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                                {c}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                         <div>
                           <span className="text-xs text-muted-foreground">They ignore</span>
-                          <ul className="mt-1 space-y-0.5">
-                            {pb.icpContext?.ignore?.map((c: string, i: number) => <li key={i} className="text-sm text-destructive">✗ {c}</li>)}
-                          </ul>
+                          <div className="mt-1 space-y-1">
+                            {pb.icpContext?.ignore?.map((c: string, i: number) => (
+                              <div key={i} className="text-sm text-foreground flex items-start gap-1.5">
+                                <XCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                                {c}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -445,11 +455,14 @@ Return ONLY valid JSON (no markdown):
                           Personalisation Tips
                           <InfoTooltip text="How to make your messages feel specifically written for each person rather than generic" />
                         </h3>
-                        <ul className="space-y-1.5">
+                        <div className="space-y-2">
                           {pb.personalisationTips.map((tip: string, i: number) => (
-                            <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-primary shrink-0">→</span>{tip}</li>
+                            <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-primary flex items-start gap-2">
+                              <ArrowRightCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                              <span className="text-sm text-foreground">{tip}</span>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     )}
 
@@ -510,11 +523,14 @@ Return ONLY valid JSON (no markdown):
                           What Not to Do
                           <InfoTooltip text="Common mistakes that reduce reply rates for this specific customer type" />
                         </h3>
-                        <ul className="space-y-1.5">
+                        <div className="space-y-2">
                           {pb.whatToAvoid.map((w: string, i: number) => (
-                            <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-destructive shrink-0">✗</span>{w}</li>
+                            <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-destructive flex items-start gap-2">
+                              <XCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                              <span className="text-sm text-foreground">{w}</span>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     )}
                   </>
@@ -556,11 +572,14 @@ Return ONLY valid JSON (no markdown):
             <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
               <ShieldAlert className="w-3.5 h-3.5 inline mr-1" /> Message Rules
             </h3>
-            <ul className="space-y-1.5">
+            <div className="space-y-2">
               {MESSAGE_RULES.map((rule, i) => (
-                <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-primary shrink-0">→</span>{rule}</li>
+                <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-primary flex items-start gap-2">
+                  <ArrowRightCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground">{rule}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </motion.div>
       )}

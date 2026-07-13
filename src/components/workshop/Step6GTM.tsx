@@ -7,7 +7,7 @@ import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Star, Calendar, Users, Presentation, RefreshCw, Zap, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Star, Calendar, Users, Presentation, RefreshCw, Zap, AlertTriangle, CheckSquare } from "lucide-react";
 import { joinField } from "@/lib/utils";
 
 interface Step6Props {
@@ -319,11 +319,14 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
                                   <h4 className="text-base font-semibold">{phase.title}</h4>
                                 </div>
                               </div>
-                              <ul className="space-y-1.5 ml-11">
+                              <div className="space-y-1.5 ml-11">
                                 {phase.tasks?.map((task: string, j: number) => (
-                                  <li key={j} className="text-sm text-muted-foreground flex gap-2"><span className="text-muted-foreground/50">•</span>{task}</li>
+                                  <div key={j} className="text-sm text-foreground flex items-start gap-2">
+                                    <CheckSquare className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                                    {task}
+                                  </div>
                                 ))}
-                              </ul>
+                              </div>
                             </div>
                           ))}
                         </div>
