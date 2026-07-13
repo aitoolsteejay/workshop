@@ -35,9 +35,6 @@ export function StepAddOns({ data, onboardingData, onSave, onNext, onBack }: Ste
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  const industries: string[] = Array.isArray(onboardingData?.industry) ? onboardingData.industry : [];
-  const isJewellery = industries.includes("Jewellery");
-
   useAutosave({ selections, enhancedPrompt }, onSave);
 
   const toggleTag = (catKey: string, value: string, max: number) => {
@@ -110,67 +107,59 @@ Keep it as ONE prompt (not multiple options), rich with visual, lighting, and ma
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-4xl mx-auto">
       <h2 className="text-[20px] font-bold mb-1">Bonus <span className="accent-text">Add-Ons</span></h2>
-      <p className="text-muted-foreground mb-8 text-sm">Extra tools tailored to your industry</p>
+      <p className="text-muted-foreground mb-8 text-sm">Extra tools to help bring your business to life</p>
 
-      {!isJewellery ? (
-        <div className="glass-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">No add-ons are available for your industry yet. Check back soon!</p>
-        </div>
-      ) : (
-        <>
-          <div className="glass-card p-6 mb-6 border-primary/30">
-            <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Gem className="w-4 h-4" />
-              Jewellery Design Prompt Generator
-              <InfoTooltip text="Pick a jewellery type plus any style, material, gemstone, and mood details, and we'll build an AI image-generation prompt you can use in tools like Midjourney or DALL-E to visualise the design" />
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Select a piece type and up to 3 options in each other category to build a design prompt for AI image generators.
-            </p>
-          </div>
+      <div className="glass-card p-6 mb-6 border-primary/30">
+        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <Gem className="w-4 h-4" />
+          Jewellery Design Prompt Generator
+          <InfoTooltip text="Pick a jewellery type plus any style, material, gemstone, and mood details, and we'll build an AI image-generation prompt you can use in tools like Midjourney or DALL-E to visualise the design" />
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Select a piece type and up to 3 options in each other category to build a design prompt for AI image generators.
+        </p>
+      </div>
 
-          <div className="space-y-6">
-            {CATEGORIES.map(cat => (
-              <div key={cat.key} className="glass-card p-6">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{cat.label}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {cat.options.map(opt => {
-                    const selected = (selections[cat.key] || []).includes(opt);
-                    return (
-                      <button key={opt} type="button" onClick={() => toggleTag(cat.key, opt, cat.max)}
-                        className={`text-sm px-4 py-2 rounded-md border transition-all ${
-                          selected ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
-                        }`}>
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {basePrompt && (
-            <div className="glass-card p-6 mt-6">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Generated Prompt</h4>
-              <div className="bg-secondary p-4 rounded-md">
-                <p className="text-sm text-foreground whitespace-pre-wrap">{enhancedPrompt || basePrompt}</p>
-              </div>
-              {error && <p className="text-destructive text-xs mt-2">{error}</p>}
-              <div className="flex flex-wrap gap-2 mt-3">
-                <Button onClick={enhance} disabled={enhancing} variant="outline" size="sm" className="gap-1.5 border-primary text-primary hover:bg-primary/10">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {enhancing ? "Enhancing…" : enhancedPrompt ? "Regenerate with AI" : "Enhance with AI"}
-                </Button>
-                <Button onClick={copyPrompt} variant="outline" size="sm" className="gap-1.5">
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Copied!" : "Copy Prompt"}
-                </Button>
-              </div>
-              {enhancing && <div className="mt-3"><LoadingSpinner text="Polishing your prompt..." /></div>}
+      <div className="space-y-6">
+        {CATEGORIES.map(cat => (
+          <div key={cat.key} className="glass-card p-6">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{cat.label}</h4>
+            <div className="flex flex-wrap gap-2">
+              {cat.options.map(opt => {
+                const selected = (selections[cat.key] || []).includes(opt);
+                return (
+                  <button key={opt} type="button" onClick={() => toggleTag(cat.key, opt, cat.max)}
+                    className={`text-sm px-4 py-2 rounded-md border transition-all ${
+                      selected ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
+                    }`}>
+                    {opt}
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </>
+          </div>
+        ))}
+      </div>
+
+      {basePrompt && (
+        <div className="glass-card p-6 mt-6">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Generated Prompt</h4>
+          <div className="bg-secondary p-4 rounded-md">
+            <p className="text-sm text-foreground whitespace-pre-wrap">{enhancedPrompt || basePrompt}</p>
+          </div>
+          {error && <p className="text-destructive text-xs mt-2">{error}</p>}
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Button onClick={enhance} disabled={enhancing} variant="outline" size="sm" className="gap-1.5 border-primary text-primary hover:bg-primary/10">
+              <Sparkles className="w-3.5 h-3.5" />
+              {enhancing ? "Enhancing…" : enhancedPrompt ? "Regenerate with AI" : "Enhance with AI"}
+            </Button>
+            <Button onClick={copyPrompt} variant="outline" size="sm" className="gap-1.5">
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? "Copied!" : "Copy Prompt"}
+            </Button>
+          </div>
+          {enhancing && <div className="mt-3"><LoadingSpinner text="Polishing your prompt..." /></div>}
+        </div>
       )}
 
       <div className="mt-8 flex items-center justify-between">
