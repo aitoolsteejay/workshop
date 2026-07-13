@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
-import { callGemini, describeGeminiError } from "@/lib/workshop-store";
+import { callGemini, describeGeminiError, type GeminiImage } from "@/lib/workshop-store";
 import { sanitizeAIText } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
@@ -89,6 +89,31 @@ const FOLLOW_UP_PROMPTS = [
     description: "Adds an interactive quiz that qualifies visitors and captures leads",
     prompt: "Add a Lead Qualification Quiz section with 5-7 multiple choice questions. Questions should assess: company size, current challenges, budget range, timeline, and goals. At the end, show a personalised result (e.g. 'You are a great fit for our Growth plan'). Include a lead capture form (name, email) before revealing results. Display a progress bar during the quiz. Style as a full-width section with one question per screen and smooth transitions.",
   },
+];
+
+function isLightColor(hex: string): boolean {
+  const c = hex.replace("#", "");
+  if (c.length !== 6) return false;
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 150;
+}
+
+function parseDataUrl(dataUrl: string): GeminiImage | undefined {
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) return undefined;
+  return { mimeType: match[1], data: match[2] };
+}
+
+const STYLE_ARCHETYPES = [
+  "Swiss minimalist: generous white space, strict grid alignment, restrained typography, no decorative elements, lots of breathing room",
+  "Editorial premium: large serif or high-contrast display headings, magazine-style asymmetric layouts, refined spacing, sophisticated feel",
+  "Bold geometric: sharp angular shapes, confident oversized typography, strong diagonal or angled section dividers",
+  "Soft organic: rounded corners, gentle gradients, soft blob shapes, warm and approachable feel, friendly typography",
+  "Modern product-led: clean cards with subtle shadows, gradient accents, product-screenshot-first hero, tech-forward but calm",
+  "Warm human-centred: photography-led sections, handwritten-style accent details, friendly rounded typography, personable tone",
 ];
 
 const GENERAL_FAQS = [
@@ -178,9 +203,21 @@ export function Step5Website({ data, icpData, valuePropData, profileData, onboar
     ).join("\n");
     const topVP = vps[0] ? `${vps[0].corePromise || vps[0].desiredOutcome}` : offer;
 
-    const designInstruction = designRef
-      ? "\n\nIMPORTANT: A design reference image has been provided. Use it for STRUCTURE and LAYOUT only. Do NOT copy colors from the reference. Use ONLY the brand colors specified above."
+    const designImage = designRef ? parseDataUrl(designRef) : undefined;
+    const designInstruction = designImage
+      ? "\n\nDESIGN REFERENCE (MANDATORY): An image is attached to this request. Study its actual layout, section order, spacing, typography scale, and visual structure, and closely follow that structure for this website. Do NOT copy its colours. Use ONLY the brand colours specified above."
       : "";
+
+    const industry = joinField(onboardingData?.industry);
+    const industryHint = industry
+      ? `Industry Context (MANDATORY): This is a ${industry} business. The visual language, imagery references, and copy tone must feel authentic to this specific industry, not like a generic template.`
+      : "";
+
+    const useLightTheme = isLightColor(form.secondaryColor);
+    const themeInstruction = useLightTheme
+      ? "Use a LIGHT theme: white or very light neutral backgrounds, with the given colours used as accents, headings, and CTAs. Body text stays dark and readable."
+      : "Use a DARK theme: deep neutral backgrounds (not pure black), with the given colours used as accents, headings, and CTAs. Body text stays light and readable.";
+    const styleArchetype = STYLE_ARCHETYPES[Math.floor(Math.random() * STYLE_ARCHETYPES.length)];
 
     const companyName = profileData?.company || form.brandName;
     const isCompany = Boolean(companyName) && (!userName || companyName.toLowerCase() !== userName.toLowerCase());
@@ -204,6 +241,10 @@ Business Type: ${businessType || "Not specified"}
 COLOUR OVERRIDE (MANDATORY): The ONLY colours to use in this website are: Primary: ${form.primaryColor}, Secondary: ${form.secondaryColor}. Do not use yellow (#FFC947) or black (#000000) unless those are the user's selected colours. Apply primary colour to: CTA buttons, headings, highlighted text, links, and accent elements. Apply secondary colour to: background, cards, section fills, and supporting areas. CSS variables must be: --primary: ${form.primaryColor}; --secondary: ${form.secondaryColor}; Strictly use the provided colour palette. Do not introduce new colours. Ensure contrast is maintained and visual hierarchy is clear across all sections.
 
 ${toneInstruction}
+
+${industryHint}
+
+Design Direction (MANDATORY, do not default to a generic template): ${styleArchetype}
 
 IMPORTANT: The website MUST include a sticky navigation header at the top of every page. The header must contain: the brand logo or name on the left, navigation links in the centre (e.g. About, Services, Results, FAQ, Contact), and a CTA button on the right (e.g. 'Book a Call'). The header must be visible at all times as the user scrolls.
 
@@ -231,8 +272,8 @@ The generated website must have EXACTLY these 8 sections in this order:
 8. Footer: TJ's LinkedIn, Instagram, Newsletter, Calendly, Myntmore Services: ${MYNTMORE_NOTION_LINK}
 
 Design rules:
-- Dark theme with given colours
-- Minimal, high-contrast design
+- ${themeInstruction}
+- Follow the Design Direction above, not a generic template
 - Font: Inter or Outfit
 - All copy must be FINAL
 
@@ -240,7 +281,7 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
 
     try {
       const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 60000));
-      const raw = await Promise.race([callGemini(prompt), timeoutP]) as string;
+      const raw = await Promise.race([callGemini(prompt, undefined, designImage), timeoutP]) as string;
       const sanitized = sanitizeAIText(raw);
       setGeneratedPrompt(sanitized);
       onSave({ ...form, generatedPrompt: sanitized, designRef });

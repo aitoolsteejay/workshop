@@ -7,7 +7,7 @@ import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Check, ArrowLeft } from "lucide-react";
+import { Copy, Check, ArrowLeft, XCircle, CheckCircle2, ArrowRightCircle, XOctagon } from "lucide-react";
 import { joinField } from "@/lib/utils";
 
 interface Step4Props {
@@ -157,19 +157,25 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="glass-card p-5">
                   <h4 className="text-xs font-medium text-destructive uppercase tracking-wider mb-3">Before</h4>
-                  <ul className="space-y-2">
+                  <div className="space-y-2">
                     {result[activeTab]?.beforeState?.map((b: string, i: number) => (
-                      <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-destructive">✗</span>{b}</li>
+                      <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-destructive flex items-start gap-2">
+                        <XCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">{b}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
                 <div className="glass-card p-5">
                   <h4 className="text-xs font-medium text-emerald-400 uppercase tracking-wider mb-3">After</h4>
-                  <ul className="space-y-2">
+                  <div className="space-y-2">
                     {result[activeTab]?.afterState?.map((a: string, i: number) => (
-                      <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-emerald-400">✓</span>{a}</li>
+                      <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-emerald-400 flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">{a}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               </div>
 
@@ -197,22 +203,28 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
                     Why Others Fail
                     <InfoTooltip text="Common reasons why other solutions don't solve this customer's problem the way yours does" />
                   </h4>
-                  <ul className="space-y-2">
+                  <div className="space-y-2">
                     {result[activeTab]?.whyOthersFail?.map((f: string, i: number) => (
-                      <li key={i} className="text-sm text-muted-foreground">• {f}</li>
+                      <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-destructive/60 flex items-start gap-2">
+                        <XOctagon className="w-3.5 h-3.5 text-destructive/80 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">{f}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
                 <div className="glass-card p-5">
                   <h4 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
                     Why You Win
                     <InfoTooltip text="The specific advantage your approach has over alternatives for this customer" />
                   </h4>
-                  <ul className="space-y-2">
+                  <div className="space-y-2">
                     {result[activeTab]?.whyYouWin?.map((w: string, i: number) => (
-                      <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-primary">→</span>{w}</li>
+                      <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-primary flex items-start gap-2">
+                        <ArrowRightCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">{w}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               </div>
 

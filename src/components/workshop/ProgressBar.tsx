@@ -16,6 +16,7 @@ const stepLabels = [
   "Value Proposition",
   "Website Builder",
   "GTM Strategy",
+  "Add-Ons",
   "Outreach Playbook",
   "Final Summary",
 ];

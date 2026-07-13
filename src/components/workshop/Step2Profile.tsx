@@ -9,7 +9,7 @@ import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/w
 import { sanitizeAIOutput, sanitizeAIText } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE } from "@/lib/prompt-rules";
 import { motion } from "framer-motion";
-import { ArrowLeft, X, Copy, Check } from "lucide-react";
+import { ArrowLeft, X, Copy, Check, CheckCircle2, ArrowUpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
 
@@ -483,22 +483,28 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
                 What's Working
                 <InfoTooltip text="These are the strongest elements of your current profile that should be kept or enhanced" />
               </h3>
-              <ul className="space-y-2">
+              <div className="space-y-2">
                 {result.whatsWorking?.map((w: string, i: number) => (
-                  <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-emerald-400 shrink-0">✓</span>{w}</li>
+                  <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-emerald-400 flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span className="text-sm text-foreground">{w}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
             <div className="glass-card p-6">
               <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-primary flex items-center gap-1">
                 To Improve
                 <InfoTooltip text="Prioritised list of changes that will have the biggest impact on your profile score" />
               </h3>
-              <ul className="space-y-2">
+              <div className="space-y-2">
                 {result.toImprove?.map((w: string, i: number) => (
-                  <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-primary shrink-0">→</span>{w}</li>
+                  <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-primary flex items-start gap-2">
+                    <ArrowUpCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                    <span className="text-sm text-foreground">{w}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
 
