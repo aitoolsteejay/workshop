@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { prompt, systemPrompt } = req.body || {};
+    const { prompt, systemPrompt, image } = req.body || {};
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {
       res.status(500).json({ error: "GEMINI_API_KEY is not configured" });
@@ -20,6 +20,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!prompt) {
       res.status(400).json({ error: "prompt is required" });
       return;
+    }
+
+    const parts: any[] = [
+      {
+        text: `${systemPrompt || "You are a B2B growth strategy expert. Return valid JSON when asked."}\n\n${prompt}`,
+      },
+    ];
+    if (image?.data && image?.mimeType) {
+      parts.push({ inlineData: { mimeType: image.mimeType, data: image.data } });
     }
 
     const response = await fetch(
@@ -31,11 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           contents: [
             {
               role: "user",
-              parts: [
-                {
-                  text: `${systemPrompt || "You are a B2B growth strategy expert. Return valid JSON when asked."}\n\n${prompt}`,
-                },
-              ],
+              parts,
             },
           ],
           generationConfig: {

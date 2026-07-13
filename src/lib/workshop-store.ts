@@ -92,11 +92,16 @@ function truncatePrompt(prompt: string, maxLen = 2000): string {
   return prompt.slice(0, maxLen) + "\n\n[Truncated for reliability]";
 }
 
-async function fetchGemini(prompt: string, systemPrompt?: string): Promise<string> {
+export interface GeminiImage {
+  mimeType: string;
+  data: string; // base64, no data: prefix
+}
+
+async function fetchGemini(prompt: string, systemPrompt?: string, image?: GeminiImage): Promise<string> {
   const resp = await fetch("/api/gemini", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, systemPrompt }),
+    body: JSON.stringify({ prompt, systemPrompt, image }),
   });
 
   if (!resp.ok) {
@@ -109,11 +114,11 @@ async function fetchGemini(prompt: string, systemPrompt?: string): Promise<strin
   return data.result;
 }
 
-export async function callGemini(prompt: string, systemPrompt?: string): Promise<string> {
+export async function callGemini(prompt: string, systemPrompt?: string, image?: GeminiImage): Promise<string> {
   // Deduplicate: if the exact same prompt is already in-flight, return that promise.
   // Keyed on the full prompt (not a prefix) since every step's prompt shares a long
   // identical instructional preamble before any user-specific data appears.
-  const key = `${prompt} ${systemPrompt || ""}`;
+  const key = `${prompt} ${systemPrompt || ""} ${image?.data ? image.data.slice(0, 100) : ""}`;
   const existing = activeRequests.get(key);
   if (existing) return existing;
 
@@ -123,7 +128,7 @@ export async function callGemini(prompt: string, systemPrompt?: string): Promise
     // Attempt with full prompt (up to 3 retries)
     for (let attempt = 0; attempt < RETRY_DELAYS.length; attempt++) {
       try {
-        return await fetchGemini(prompt, systemPrompt);
+        return await fetchGemini(prompt, systemPrompt, image);
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
         console.warn(`Gemini attempt ${attempt + 1} failed:`, lastError.message);
@@ -133,7 +138,7 @@ export async function callGemini(prompt: string, systemPrompt?: string): Promise
       }
     }
 
-    // Fallback: retry once with a simplified/truncated prompt
+    // Fallback: retry once with a simplified/truncated prompt (image dropped to save payload size)
     try {
       console.warn("Retrying with simplified prompt...");
       return await fetchGemini(truncatePrompt(prompt), systemPrompt);
