@@ -35,8 +35,6 @@ export function StepAddOns({ data, onboardingData, onSave, onNext, onBack }: Ste
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  useAutosave({ selections, enhancedPrompt }, onSave);
-
   const toggleTag = (catKey: string, value: string, max: number) => {
     setSelections(p => {
       const cur = p[catKey] || [];
@@ -71,6 +69,8 @@ export function StepAddOns({ data, onboardingData, onSave, onNext, onBack }: Ste
     return parts.join(", ") + ".";
   }, [selections]);
 
+  useAutosave({ selections, enhancedPrompt, basePrompt }, onSave);
+
   const enhance = async () => {
     if (!basePrompt) return;
     setEnhancing(true);
@@ -100,7 +100,7 @@ Keep it as ONE prompt (not multiple options), rich with visual, lighting, and ma
   };
 
   const handleNext = () => {
-    onSave({ selections, enhancedPrompt });
+    onSave({ selections, enhancedPrompt, basePrompt });
     onNext();
   };
 
