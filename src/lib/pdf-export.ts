@@ -155,6 +155,7 @@ export async function generatePDF(sessionData: any) {
   const w = doc.internal.pageSize.getWidth();
   const maxW = w - PAGE_MARGIN * 2;
   const userName = sessionData?.user_name || "Attendee";
+  const addonsPrompt = sessionData?.addons_data?.enhancedPrompt || sessionData?.addons_data?.basePrompt;
 
   // Load logo for all pages
   const logoLoaded = await loadLogo();
@@ -187,7 +188,7 @@ export async function generatePDF(sessionData: any) {
   let y = newSection(doc, "Table of Contents");
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
-  const tocItems = ["Profile Analysis", "ICP 1", "ICP 2", "ICP 3", "Value Propositions", "Website Prompt", "Growth Strategy", "Outreach Playbook"];
+  const tocItems = ["Profile Analysis", "ICP 1", "ICP 2", "ICP 3", "Value Propositions", "Website Prompt", "Growth Strategy", "Outreach Playbook", ...(addonsPrompt ? ["Bonus Add-Ons"] : [])];
   tocItems.forEach((item, i) => {
     doc.text(`${i + 1}. ${item}`, PAGE_MARGIN + 5, y);
     y += 8;
@@ -261,7 +262,8 @@ export async function generatePDF(sessionData: any) {
   y = newSection(doc, "Value Propositions");
   for (let i = 0; i < vps.length; i++) {
     const vp = vps[i];
-    y = addSubHeader(doc, `ICP ${i + 1}: ${clean(vp.icpName)}`, y);
+    const vpLabel = vp.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${i + 1}: ${clean(vp.icpName)}`;
+    y = addSubHeader(doc, vpLabel, y);
     if (vp.corePromise) { y = addWrappedText(doc, `Core Promise: ${clean(vp.corePromise)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.beforeState) { y = addSubHeader(doc, "Before", y); y = addBulletList(doc, vp.beforeState, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.afterState) { y = addSubHeader(doc, "After", y); y = addBulletList(doc, vp.afterState, PAGE_MARGIN, y, maxW); y += 2; }
@@ -369,12 +371,43 @@ export async function generatePDF(sessionData: any) {
         y = addWrappedText(doc, `Tone Evolution: ${clean(pb.followUpSystem.toneEvolution)}`, PAGE_MARGIN, y, maxW);
         y += 3;
       }
+      if (pb.channelPlan) {
+        y = addSubHeader(doc, "Channel & Content Plan", y);
+        if (pb.channelPlan.platforms) y = addWrappedText(doc, `Best Platforms: ${pb.channelPlan.platforms.join(", ")}`, PAGE_MARGIN, y, maxW);
+        if (pb.channelPlan.contentIdeas) { y += 2; y = addSubHeader(doc, "Content Ideas", y); y = addBulletList(doc, pb.channelPlan.contentIdeas, PAGE_MARGIN, y, maxW); }
+        if (pb.channelPlan.outreachAngle) y = addWrappedText(doc, `How to Engage: ${clean(pb.channelPlan.outreachAngle)}`, PAGE_MARGIN, y, maxW);
+        if (pb.channelPlan.conversionPath) y = addWrappedText(doc, `Conversion Path: ${clean(pb.channelPlan.conversionPath)}`, PAGE_MARGIN, y, maxW);
+        y += 3;
+      }
+      if (pb.campaignIdeas) {
+        y = addSubHeader(doc, "Campaign Ideas to Try", y);
+        for (const c of pb.campaignIdeas) {
+          y = addWrappedText(doc, `${clean(c.name)}: ${clean(c.description)}`, PAGE_MARGIN, y, maxW);
+          y += 2;
+        }
+        y += 3;
+      }
       if (pb.whatToAvoid) {
         y = addSubHeader(doc, "What to Avoid", y);
         y = addBulletList(doc, pb.whatToAvoid, PAGE_MARGIN, y, maxW);
       }
       y += 5;
     }
+  }
+
+  // Add-Ons
+  const addons = sessionData?.addons_data;
+  if (addonsPrompt) {
+    y = newSection(doc, "Bonus Add-Ons");
+    y = addSubHeader(doc, "Jewellery Design Prompt Generator", y);
+    const sel = addons?.selections || {};
+    const selSummary = ["type", "style", "material", "gemstone", "mood"]
+      .map(k => (sel[k] || []).join(", "))
+      .filter(Boolean)
+      .join(" | ");
+    if (selSummary) { y = addWrappedText(doc, `Selections: ${selSummary}`, PAGE_MARGIN, y, maxW); y += 3; }
+    y = addSubHeader(doc, "Generated Prompt", y);
+    y = addWrappedText(doc, clean(addonsPrompt), PAGE_MARGIN, y, maxW);
   }
 
   // Thank You page

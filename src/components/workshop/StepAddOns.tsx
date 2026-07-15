@@ -2,19 +2,29 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
-import { callGemini, describeGeminiError } from "@/lib/workshop-store";
-import { sanitizeAIText } from "@/lib/sanitize";
+import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/workshop-store";
+import { sanitizeAIText, sanitizeAIOutput } from "@/lib/sanitize";
 import { useAutosave } from "@/hooks/use-autosave";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, Check, Sparkles, Gem } from "lucide-react";
+import { ArrowLeft, Copy, Check, Sparkles, Gem, ExternalLink, Camera } from "lucide-react";
+
+const JEWELLERY_TYPES = ["Ring", "Necklace", "Earrings", "Bracelet", "Cuff", "Brooch", "Anklet", "Pendant", "Choker", "Hair pin"];
 
 const CATEGORIES: { key: string; label: string; max: number; options: string[] }[] = [
-  { key: "type", label: "Jewellery Type", max: 1, options: ["Ring", "Necklace", "Earrings", "Bracelet", "Cuff", "Brooch", "Anklet", "Pendant", "Choker", "Hair pin"] },
+  { key: "type", label: "Jewellery Type", max: 1, options: JEWELLERY_TYPES },
   { key: "style", label: "Style", max: 3, options: ["Minimalist", "Art Deco", "Bohemian", "Gothic", "Vintage", "Sculptural", "Geometric", "Nature-inspired", "Brutalist", "Celestial"] },
   { key: "material", label: "Material / Metal", max: 3, options: ["Yellow gold", "White gold", "Rose gold", "Sterling silver", "Oxidised silver", "Bronze", "Titanium", "Resin", "Mixed metals", "Recycled gold"] },
   { key: "gemstone", label: "Gemstone or Detail", max: 3, options: ["Diamond", "Emerald", "Sapphire", "Pearl", "Opal", "Turquoise", "Garnet", "No stones", "Enamel", "Seed pearls"] },
   { key: "mood", label: "Mood / Theme", max: 3, options: ["Romantic", "Edgy", "Playful", "Elegant", "Mystical", "Earthy", "Bold", "Delicate", "Futuristic", "Coastal"] },
+];
+
+const MODELLING_STEPS = [
+  "Have a clear photo of your actual jewellery piece ready (recommended, not required).",
+  "Open Gemini and start a new chat.",
+  "Gemini's built-in image generation model, nicknamed Nano Banana, works directly in the app, no separate setup needed.",
+  "Paste one of the prompts below. For best results, attach your product photo in the same message so Gemini uses your actual design.",
+  "Generate a few variations, then download your favourite for your product listing or ad creative.",
 ];
 
 interface StepAddOnsProps {
@@ -33,9 +43,12 @@ export function StepAddOns({ data, onboardingData, onSave, onNext, onBack }: Ste
   const [enhancing, setEnhancing] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [modelType, setModelType] = useState<string>(data?.modelType || "");
+  const [modelPrompts, setModelPrompts] = useState<string[]>(data?.modelPrompts || []);
+  const [modelling, setModelling] = useState(false);
+  const [modelError, setModelError] = useState("");
+  const [copiedModelIdx, setCopiedModelIdx] = useState<number | null>(null);
   const { toast } = useToast();
-
-  useAutosave({ selections, enhancedPrompt }, onSave);
 
   const toggleTag = (catKey: string, value: string, max: number) => {
     setSelections(p => {
@@ -62,25 +75,30 @@ export function StepAddOns({ data, onboardingData, onSave, onNext, onBack }: Ste
     const article = /^[aeiou]/i.test(leadPhrase) ? "an" : "a";
 
     const parts: string[] = [];
-    parts.push(`A highly detailed, photorealistic product photograph of ${article} ${leadPhrase}`);
-    if (material) parts.push(`crafted in ${material.toLowerCase()}`);
-    if (gemstones.length > 0) parts.push(`set with ${gemstones.join(", ").toLowerCase()}`);
-    else if (noStones) parts.push("with no gemstones, a clean unadorned finish");
-    if (mood) parts.push(`evoking ${/^[aeiou]/i.test(mood) ? "an" : "a"} ${mood.toLowerCase()} feeling`);
-    parts.push("shot on a soft neutral background with studio lighting, ultra sharp focus, high resolution, elegant composition");
+    parts.push(`A highly detailed, photorealistic macro product photograph of ${article} ${leadPhrase}`);
+    if (material) parts.push(`crafted in ${material.toLowerCase()}, with visible fine metalwork and a polished, true-to-life surface finish`);
+    if (gemstones.length > 0) parts.push(`set with ${gemstones.join(", ").toLowerCase()}, each stone catching and refracting light with realistic sparkle and depth`);
+    else if (noStones) parts.push("with no gemstones, a clean unadorned finish that lets the form and texture of the metal speak for itself");
+    if (mood) parts.push(`styled to evoke ${/^[aeiou]/i.test(mood) ? "an" : "a"} ${mood.toLowerCase()} feeling through its silhouette, texture, and finish`);
+    parts.push("shot on a professional camera with a macro lens, shallow depth of field with the piece in tack-sharp focus and a gently blurred foreground and background");
+    parts.push("three-point studio lighting setup with a soft key light, a subtle fill light to open up shadows, and a rim light to trace the edges and highlight the material's shine");
+    parts.push("set on a soft neutral seamless background with a gentle gradient and a faint natural shadow beneath the piece for grounding");
+    parts.push("centered, elegant product composition, ultra sharp focus, 8k resolution, commercial jewellery catalogue quality");
     return parts.join(", ") + ".";
   }, [selections]);
+
+  useAutosave({ selections, enhancedPrompt, basePrompt, modelType, modelPrompts }, onSave);
 
   const enhance = async () => {
     if (!basePrompt) return;
     setEnhancing(true);
     setError("");
     try {
-      const prompt = `You are an expert at writing prompts for AI image generation tools (Midjourney, DALL-E, Stable Diffusion). Take this rough jewellery design brief and rewrite it into one vivid, highly detailed, professional image-generation prompt for a jewellery product photo.
+      const prompt = `You are an expert AI-art prompt engineer who writes prompts for AI image generation tools (Midjourney, DALL-E, Stable Diffusion, Gemini). Take this rough jewellery design brief and rewrite it into one vivid, richly detailed, professional image-generation prompt for a jewellery product photo.
 
 Rough brief: ${basePrompt}
 
-Keep it as ONE prompt (not multiple options), rich with visual, lighting, and material detail, written the way a professional AI-art prompt engineer would write it. Do NOT use em-dashes, asterisks, or hash signs. Return ONLY the prompt text, no quotes, no markdown, no explanation.`;
+Write ONE single flowing prompt of at least 120 words (not multiple options, not a list). It must read as one continuous descriptive passage and cover all of the following in detail: the subject and its materials and craftsmanship, the camera and composition (lens type, framing, angle, depth of field), the lighting setup (key light, fill, rim, how it interacts with the metal and stones), the background and setting, the overall mood and styling, and technical quality descriptors (resolution, sharpness, realism). Use precise, vivid, sensory language the way a professional product photographer or prompt engineer would, technical photography terms are welcome and encouraged here since this is for an image generator, not for a general reader. Do NOT use em-dashes, asterisks, or hash signs. Return ONLY the prompt text, no quotes, no markdown, no explanation.`;
       const raw = await callGemini(prompt);
       setEnhancedPrompt(sanitizeAIText(raw.trim()));
     } catch (e: any) {
@@ -99,8 +117,52 @@ Keep it as ONE prompt (not multiple options), rich with visual, lighting, and ma
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const generateModelPrompts = async () => {
+    if (!modelType) return;
+    setModelling(true);
+    setModelError("");
+    try {
+      const typeName = modelType === "Earrings" ? "earrings" : modelType.toLowerCase();
+      const prompt = `You are an expert at writing prompts for Gemini's native image generation model (nicknamed "Nano Banana") to create photorealistic images of jewellery being worn by a real person.
+
+Write 5 distinct, richly detailed image-generation prompts for showing a ${typeName} being modelled by a person. Each prompt must be a single flowing paragraph of at least 60 words. Together, the 5 prompts should cover a good mix of shot types: for example a clean studio close-up on the body part, a natural everyday lifestyle shot, an outdoor or editorial styled shot, a close macro detail shot, and a shot with styled hair, makeup, and outfit context.
+
+For each prompt, describe: which exact body part or area the ${typeName} is worn on, a natural and inclusive description of the model (skin tone, styling) without naming any real celebrity or public figure, the camera angle and framing, the lighting setup, the background or setting, and the overall mood. Do NOT use em-dashes, asterisks, or hash signs.
+
+Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown code fences. Example format: ["prompt one text", "prompt two text", "prompt three text", "prompt four text", "prompt five text"]`;
+      const raw = await callGemini(prompt);
+      let parsed;
+      try {
+        const match = raw.match(/\[[\s\S]*\]/);
+        parsed = JSON.parse(match ? match[0] : raw);
+      } catch {
+        setModelError(AI_PARSE_ERROR_MESSAGE);
+        setModelling(false);
+        return;
+      }
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        setModelError(AI_PARSE_ERROR_MESSAGE);
+        setModelling(false);
+        return;
+      }
+      setModelPrompts(sanitizeAIOutput(parsed.map((p: any) => String(p).trim())));
+    } catch (e: any) {
+      setModelError(describeGeminiError(e));
+    } finally {
+      setModelling(false);
+    }
+  };
+
+  const copyModelPrompt = (text: string, idx: number) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedModelIdx(idx);
+    toast({ title: "✓ Copied", duration: 2000 });
+    setTimeout(() => setCopiedModelIdx(null), 2000);
+  };
+
   const handleNext = () => {
-    onSave({ selections, enhancedPrompt });
+    onSave({ selections, enhancedPrompt, basePrompt, modelType, modelPrompts });
     onNext();
   };
 
@@ -159,6 +221,74 @@ Keep it as ONE prompt (not multiple options), rich with visual, lighting, and ma
             </Button>
           </div>
           {enhancing && <div className="mt-3"><LoadingSpinner text="Polishing your prompt..." /></div>}
+        </div>
+      )}
+
+      <div className="glass-card p-6 mt-10 mb-6 border-primary/30">
+        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <Camera className="w-4 h-4" />
+          AI Jewellery Modelling
+          <InfoTooltip text="Pick a jewellery type and we'll write detailed prompts for Gemini's image model (Nano Banana) so you can generate photos of that piece being worn by a person" />
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Pick a jewellery type below to get 5 detailed prompts for showing it modelled by a person, ready to paste into Gemini.
+        </p>
+      </div>
+
+      <div className="glass-card p-6">
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Jewellery Type</h4>
+        <div className="flex flex-wrap gap-2">
+          {JEWELLERY_TYPES.map(opt => (
+            <button key={opt} type="button" onClick={() => { setModelType(opt); setModelPrompts([]); }}
+              className={`text-sm px-4 py-2 rounded-md border transition-all ${
+                modelType === opt ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
+              }`}>
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {modelType && (
+        <div className="glass-card p-6 mt-6">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">How to Use This</h4>
+          <ol className="space-y-2 mb-4">
+            {MODELLING_STEPS.map((step, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                <span className="text-primary font-semibold shrink-0">{i + 1}.</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+          <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+            Open Gemini <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+
+          <div className="mt-5">
+            <Button onClick={generateModelPrompts} disabled={modelling} className="accent-bg hover:opacity-90 gap-1.5">
+              <Sparkles className="w-4 h-4" />
+              {modelling ? "Generating…" : modelPrompts.length > 0 ? "Regenerate Prompts" : "Generate Modelling Prompts"}
+            </Button>
+            {modelError && <p className="text-destructive text-xs mt-2">{modelError}</p>}
+            {modelling && <div className="mt-3"><LoadingSpinner text="Writing detailed modelling prompts..." /></div>}
+          </div>
+
+          {modelPrompts.length > 0 && (
+            <div className="space-y-3 mt-5">
+              {modelPrompts.map((p, i) => (
+                <div key={i} className="bg-secondary p-4 rounded-md">
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{p}</p>
+                  <div className="mt-3">
+                    <Button onClick={() => copyModelPrompt(p, i)} variant="outline" size="sm" className="gap-1.5">
+                      {copiedModelIdx === i ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedModelIdx === i ? "Copied!" : "Copy Prompt"}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

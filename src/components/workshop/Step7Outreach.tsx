@@ -9,7 +9,7 @@ import { joinField } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
-import { ArrowLeft, AlertTriangle, Video, Clock, ShieldAlert, X, Lightbulb, CheckCircle2, XCircle, ArrowRightCircle } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Video, Clock, ShieldAlert, X, Lightbulb, CheckCircle2, XCircle, ArrowRightCircle, Radio, Megaphone, Target } from "lucide-react";
 
 const ANGLES = ["Authority", "ROI", "Pain-led", "Contrarian", "Curiosity", "Offer-led"];
 const MAX_ANGLES = 2;
@@ -170,7 +170,7 @@ export function Step7Outreach({ data, icpData, valuePropData, profileData, onboa
 
     const topVP = vps[0] ? `${vps[0].corePromise || vps[0].desiredOutcome}` : offer;
 
-    const prompt = `You are a world-class B2B Outreach Strategist. Generate a STRATEGIC OUTREACH PLAYBOOK (not scripts or templates).
+    const prompt = `You are a world-class Outreach Strategist experienced in both B2B outreach and D2C consumer marketing. Generate a STRATEGIC OUTREACH PLAYBOOK (not scripts or templates).
 
 ${NO_JARGON_RULE}
 
@@ -190,25 +190,35 @@ ${BUSINESS_TYPE_RULE}
 - ICPs:
 ${icpSummary}
 
+AUDIENCE TYPE ADAPTATION (MANDATORY): Check each ICP's Audience Type above, it changes what this playbook must contain.
+- For a B2B ICP: this is a business buyer approached 1:1, mainly on LinkedIn. Fill in "followUpSystem" with a LinkedIn connection-and-DM cadence. Leave "channelPlan" and "campaignIdeas" as null, they are not used for B2B.
+- For a D2C ICP: this is an individual consumer, NOT a business buyer. Do NOT generate any LinkedIn connection request, InMail, or B2B 1:1 outreach content, it is completely irrelevant to how you actually reach individual consumers. Leave "followUpSystem" as null. Instead fill in "channelPlan" and "campaignIdeas" with genuinely different, platform-appropriate ideas for reaching individual consumers (for example organic content, short-form video, paid social ads, influencer or creator seeding, email or SMS flows, community or comment engagement), specific to this business, offer, and audience, not generic advice.
+
 For EACH of the 3 target customer types, generate a strategic playbook with these sections:
 
-1. "icpContext": { "who": string, "mindset": string, "careAbout": [3 strings], "ignore": [3 strings] }
+1. "audienceType": exactly "B2B" or "D2C", matching the Audience Type given for this ICP above.
 
-2. "strategicApproach": { "bestAngle": string, "positioningStyle": one of "Peer"|"Expert"|"Challenger"|"Insider", "positioningDetail": { "whatItMeans": string (2 sentences explaining the style in plain English), "howToShowUp": [2-3 strings, specific behaviours or tactics], "whatToAvoid": [1-2 strings], "exampleOpener": string (example opening line showing this style in action) }, "whatNotToDo": [3 strings] }
+2. "icpContext": { "who": string, "mindset": string, "careAbout": [3 strings], "ignore": [3 strings] }
 
-3. "personalisationTips": [3 strings, each a specific tip on how to make messages feel personally written for each person rather than generic]
+3. "strategicApproach": { "bestAngle": string, "positioningStyle": one of "Peer"|"Expert"|"Challenger"|"Insider", "positioningDetail": { "whatItMeans": string (2 sentences explaining the style in plain English), "howToShowUp": [2-3 strings, specific behaviours or tactics], "whatToAvoid": [1-2 strings], "exampleOpener": string (example opening line showing this style in action, fitting the audience type: a DM/connection opener for B2B, a comment/DM or ad hook for D2C) }, "whatNotToDo": [3 strings] }
 
-4. "followUpSystem": { "totalTouches": number (4-6), "delayDays": [array of numbers], "escalationLogic": string, "toneEvolution": string }
+4. "personalisationTips": [3 strings, each a specific tip on how to make messages or content feel personally relevant rather than generic]
 
-5. "whatToAvoid": [4-5 specific mistakes for this customer type]
+5. "followUpSystem" (B2B only, else null): { "totalTouches": number (4-6), "delayDays": [array of numbers], "escalationLogic": string, "toneEvolution": string }
+
+6. "channelPlan" (D2C only, else null): { "platforms": [2-3 strings, specific platforms fitting this audience], "contentIdeas": [4-5 strings, specific content or campaign ideas for this exact business and audience], "outreachAngle": string (how to directly reach and engage individual prospects on these platforms, e.g. via comments, DMs, or ads, in a way that fits the platform and audience), "conversionPath": string (how someone goes from noticing this brand to actually buying) }
+
+7. "campaignIdeas" (D2C only, else null): [array of 3 objects, each { "name": string, "description": string (2-3 sentences describing this specific campaign approach) }]
+
+8. "whatToAvoid": [4-5 specific mistakes for this customer type]
 
 IMPORTANT: Do NOT use em-dashes, asterisks, or hash signs in any output.
-IMPORTANT: When mentioning Clay, always reference it as "Clay (https://clay.com/?via=23e526)". When mentioning Apollo, always reference it as "Apollo (https://apollo.partnerlinks.io/7gvq2nugzjir)". These are the correct links.
+IMPORTANT: When mentioning Clay, always reference it as "Clay (https://clay.com/?via=23e526)". When mentioning Apollo, always reference it as "Apollo (https://apollo.partnerlinks.io/7gvq2nugzjir)". These links are only relevant for B2B playbooks, do not mention them for D2C.
 
 Return ONLY valid JSON (no markdown):
 {
   "playbooks": [
-    { "icpName": string, "icpContext": ..., "strategicApproach": ..., "personalisationTips": [...], "followUpSystem": ..., "whatToAvoid": [...] },
+    { "icpName": string, "audienceType": ..., "icpContext": ..., "strategicApproach": ..., "personalisationTips": [...], "followUpSystem": ..., "channelPlan": ..., "campaignIdeas": ..., "whatToAvoid": [...] },
     ... (3 total)
   ]
 }`;
@@ -228,6 +238,14 @@ Return ONLY valid JSON (no markdown):
         return;
       }
       parsed = sanitizeAIOutput(parsed);
+      if (Array.isArray(parsed?.playbooks)) {
+        parsed.playbooks = parsed.playbooks.map((pb: any, i: number) => ({
+          ...pb,
+          audienceType: pb?.audienceType === "D2C" || pb?.audienceType === "B2B"
+            ? pb.audienceType
+            : (icps[i]?.audienceType || (sellingTo === "D2C" ? "D2C" : "B2B")),
+        }));
+      }
       setResult(parsed);
       onSave({ angles, result: parsed });
       toast({ title: "✓ Saved", duration: 3000 });
@@ -277,11 +295,16 @@ Return ONLY valid JSON (no markdown):
       {playbooks.length > 0 && !loading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
           {/* ICP Tabs */}
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             {playbooks.map((pb: any, idx: number) => (
               <button key={idx} onClick={() => setActiveTab(idx)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                 ICP {idx + 1}
+                {pb?.audienceType && (
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${activeTab === idx ? "bg-black/20 text-primary-foreground" : "bg-background text-muted-foreground"}`}>
+                    {pb.audienceType}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -292,6 +315,7 @@ Return ONLY valid JSON (no markdown):
                 const pb = playbooks[activeTab];
                 if (!pb) return null;
                 const recommendedStyle = pb.strategicApproach?.positioningStyle;
+                const isD2C = pb.audienceType === "D2C";
                 return (
                   <>
                     {/* ICP Context */}
@@ -400,53 +424,107 @@ Return ONLY valid JSON (no markdown):
                       </div>
                     </div>
 
-                    {/* What This Looks Like in Practice */}
-                    <div className="glass-card p-5">
-                      <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
-                        What This Looks Like in Practice
-                        <InfoTooltip text="A step-by-step real-world outreach flow to follow with this customer type" />
-                      </h3>
+                    {/* What This Looks Like in Practice (B2B only) */}
+                    {!isD2C && (
+                      <div className="glass-card p-5">
+                        <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
+                          What This Looks Like in Practice
+                          <InfoTooltip text="A step-by-step real-world outreach flow to follow with this customer type" />
+                        </h3>
 
-                      <div className="bg-primary/10 border border-primary/20 rounded-md p-3 mb-4 flex gap-2">
-                        <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                        <p className="text-xs text-muted-foreground">Likes, comments, and Loom videos warm up the prospect and increase the chances of your message being noticed and replied to. The whole point of LinkedIn outreach is to be remembered, not just to sell.</p>
-                      </div>
+                        <div className="bg-primary/10 border border-primary/20 rounded-md p-3 mb-4 flex gap-2">
+                          <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          <p className="text-xs text-muted-foreground">Likes, comments, and Loom videos warm up the prospect and increase the chances of your message being noticed and replied to. The whole point of LinkedIn outreach is to be remembered, not just to sell.</p>
+                        </div>
 
-                      <div className="space-y-4">
-                        {PRACTICE_STEPS.map((phase) => (
-                          <div key={phase.phase}>
-                            <h4 className="text-xs font-semibold text-primary mb-2">{phase.phase}</h4>
-                            <div className="space-y-2">
-                              {phase.steps.map((ps) => (
-                                <div key={ps.step} className="bg-secondary p-4 rounded-md">
-                                  <div className="flex items-start gap-3">
-                                    <span className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold accent-bg shrink-0 mt-0.5">{ps.step}</span>
-                                    <div className="flex-1">
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold">{ps.action}</span>
-                                        <span className="text-[10px] text-muted-foreground">{ps.timing}</span>
+                        <div className="space-y-4">
+                          {PRACTICE_STEPS.map((phase) => (
+                            <div key={phase.phase}>
+                              <h4 className="text-xs font-semibold text-primary mb-2">{phase.phase}</h4>
+                              <div className="space-y-2">
+                                {phase.steps.map((ps) => (
+                                  <div key={ps.step} className="bg-secondary p-4 rounded-md">
+                                    <div className="flex items-start gap-3">
+                                      <span className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold accent-bg shrink-0 mt-0.5">{ps.step}</span>
+                                      <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-sm font-semibold">{ps.action}</span>
+                                          <span className="text-[10px] text-muted-foreground">{ps.timing}</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-1">{ps.detail}</p>
+                                        {ps.tip && (
+                                          <p className="text-xs text-primary mt-1.5">{ps.tip}</p>
+                                        )}
+                                        {ps.delay && (
+                                          <span className="text-[10px] text-primary mt-1 inline-block">⏱ {ps.delay}</span>
+                                        )}
                                       </div>
-                                      <p className="text-xs text-muted-foreground mt-1">{ps.detail}</p>
-                                      {ps.tip && (
-                                        <p className="text-xs text-primary mt-1.5">{ps.tip}</p>
-                                      )}
-                                      {ps.delay && (
-                                        <span className="text-[10px] text-primary mt-1 inline-block">⏱ {ps.delay}</span>
-                                      )}
                                     </div>
                                   </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mt-4 flex gap-2">
+                          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                          <p className="text-xs text-muted-foreground">Do not send too many follow-ups. If someone explicitly says no, respect it. Retarget them with a helpful resource so you stay top of mind, but never push.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Channel & Content Plan (D2C only) */}
+                    {isD2C && pb.channelPlan && (
+                      <div className="glass-card p-5">
+                        <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
+                          Channel & Content Plan
+                          <InfoTooltip text="Where and how to reach individual consumers for this ICP, since B2B-style connection requests don't apply here" />
+                        </h3>
+
+                        {pb.channelPlan.platforms && (
+                          <div className="mb-4">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Radio className="w-3.5 h-3.5" /> Best Platforms</span>
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                              {pb.channelPlan.platforms.map((p: string, i: number) => (
+                                <span key={i} className="text-xs px-2 py-1 rounded tag-selected border border-primary">{p}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {pb.channelPlan.contentIdeas && (
+                          <div className="mb-4">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 mb-1.5"><Megaphone className="w-3.5 h-3.5" /> Content Ideas</span>
+                            <div className="space-y-2">
+                              {pb.channelPlan.contentIdeas.map((c: string, i: number) => (
+                                <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-primary flex items-start gap-2">
+                                  <ArrowRightCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                                  <span className="text-sm text-foreground">{c}</span>
                                 </div>
                               ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        )}
 
-                      <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mt-4 flex gap-2">
-                        <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                        <p className="text-xs text-muted-foreground">Do not send too many follow-ups. If someone explicitly says no, respect it. Retarget them with a helpful resource so you stay top of mind, but never push.</p>
+                        {pb.channelPlan.outreachAngle && (
+                          <div className="mb-4">
+                            <span className="text-xs text-muted-foreground">How To Engage Prospects Directly</span>
+                            <p className="text-sm mt-1 text-foreground">{pb.channelPlan.outreachAngle}</p>
+                          </div>
+                        )}
+
+                        {pb.channelPlan.conversionPath && (
+                          <div className="bg-primary/10 border border-primary/30 p-3 rounded-md flex gap-2">
+                            <Target className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                            <div>
+                              <span className="text-xs text-muted-foreground uppercase tracking-wider">Conversion Path</span>
+                              <p className="text-sm text-foreground mt-0.5">{pb.channelPlan.conversionPath}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    )}
 
                     {/* Personalisation Tips */}
                     {pb.personalisationTips && (
@@ -466,55 +544,59 @@ Return ONLY valid JSON (no markdown):
                       </div>
                     )}
 
-                    {/* Loom Video Guide */}
-                    <div className="glass-card p-5">
-                      <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <Video className="w-3.5 h-3.5" /> Loom Video Guide
-                      </h3>
-                      <div className="bg-secondary p-4 rounded-md space-y-2">
-                        <p className="text-sm font-semibold">What is Loom?</p>
-                        <p className="text-xs text-muted-foreground">A 1-3 minute personalised screen recording (loom.com, free). Show something relevant to them: their website, a quick audit, a useful insight. Talk directly to them. Casual and direct. Not overproduced.</p>
-                        <p className="text-xs text-muted-foreground mt-2"><strong>When to use:</strong> After engagement, when insight is strong.</p>
-                        <p className="text-xs text-muted-foreground"><strong>Alternatively:</strong> Record and send a voice note on LinkedIn mobile.</p>
-                      </div>
-                    </div>
-
-                    {/* Delay System */}
-                    <div className="glass-card p-5">
-                      <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
-                        <Clock className="w-3.5 h-3.5 inline mr-1" /> Delay System
-                      </h3>
-                      <div className="bg-secondary p-3 rounded-md mb-3">
-                        <p className="text-sm font-semibold">2-5 day gaps between messages</p>
-                        <p className="text-xs text-muted-foreground mt-1">Too fast = flagged as spam. Too slow = lose context.</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-secondary p-3 rounded-md">
-                          <span className="text-xs text-muted-foreground">High-ticket deals</span>
-                          <p className="text-sm mt-0.5">Longer gaps (4-5 days)</p>
-                        </div>
-                        <div className="bg-secondary p-3 rounded-md">
-                          <span className="text-xs text-muted-foreground">Warm leads</span>
-                          <p className="text-sm mt-0.5">Shorter gaps (2-3 days)</p>
-                        </div>
-                      </div>
-                      {pb.followUpSystem && (
-                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          <div className="bg-secondary p-3 rounded-md text-center">
-                            <span className="text-2xl font-bold accent-text">{pb.followUpSystem?.totalTouches || "4-6"}</span>
-                            <p className="text-xs text-muted-foreground mt-1">Total Touches</p>
+                    {!isD2C && (
+                      <>
+                        {/* Loom Video Guide */}
+                        <div className="glass-card p-5">
+                          <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <Video className="w-3.5 h-3.5" /> Loom Video Guide
+                          </h3>
+                          <div className="bg-secondary p-4 rounded-md space-y-2">
+                            <p className="text-sm font-semibold">What is Loom?</p>
+                            <p className="text-xs text-muted-foreground">A 1-3 minute personalised screen recording (loom.com, free). Show something relevant to them: their website, a quick audit, a useful insight. Talk directly to them. Casual and direct. Not overproduced.</p>
+                            <p className="text-xs text-muted-foreground mt-2"><strong>When to use:</strong> After engagement, when insight is strong.</p>
+                            <p className="text-xs text-muted-foreground"><strong>Alternatively:</strong> Record and send a voice note on LinkedIn mobile.</p>
                           </div>
-                          <div className="bg-secondary p-3 rounded-md col-span-1 sm:col-span-3">
-                            <span className="text-xs text-muted-foreground">Delay (days)</span>
-                            <div className="flex gap-1 mt-1 flex-wrap">
-                              {pb.followUpSystem?.delayDays?.map((d: number, i: number) => (
-                                <span key={i} className="text-xs px-2 py-0.5 rounded tag-selected border border-primary">Day {d}</span>
-                              ))}
+                        </div>
+
+                        {/* Delay System */}
+                        <div className="glass-card p-5">
+                          <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
+                            <Clock className="w-3.5 h-3.5 inline mr-1" /> Delay System
+                          </h3>
+                          <div className="bg-secondary p-3 rounded-md mb-3">
+                            <p className="text-sm font-semibold">2-5 day gaps between messages</p>
+                            <p className="text-xs text-muted-foreground mt-1">Too fast = flagged as spam. Too slow = lose context.</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-secondary p-3 rounded-md">
+                              <span className="text-xs text-muted-foreground">High-ticket deals</span>
+                              <p className="text-sm mt-0.5">Longer gaps (4-5 days)</p>
+                            </div>
+                            <div className="bg-secondary p-3 rounded-md">
+                              <span className="text-xs text-muted-foreground">Warm leads</span>
+                              <p className="text-sm mt-0.5">Shorter gaps (2-3 days)</p>
                             </div>
                           </div>
+                          {pb.followUpSystem && (
+                            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                              <div className="bg-secondary p-3 rounded-md text-center">
+                                <span className="text-2xl font-bold accent-text">{pb.followUpSystem?.totalTouches || "4-6"}</span>
+                                <p className="text-xs text-muted-foreground mt-1">Total Touches</p>
+                              </div>
+                              <div className="bg-secondary p-3 rounded-md col-span-1 sm:col-span-3">
+                                <span className="text-xs text-muted-foreground">Delay (days)</span>
+                                <div className="flex gap-1 mt-1 flex-wrap">
+                                  {pb.followUpSystem?.delayDays?.map((d: number, i: number) => (
+                                    <span key={i} className="text-xs px-2 py-0.5 rounded tag-selected border border-primary">Day {d}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </>
+                    )}
 
                     {/* What NOT to Do */}
                     {pb.whatToAvoid && (
@@ -539,32 +621,54 @@ Return ONLY valid JSON (no markdown):
             </motion.div>
           </AnimatePresence>
 
-          {/* Sequences to Try */}
-          <div className="glass-card p-5">
-            <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-2 flex items-center gap-1">
-              Sequences to Try
-              <InfoTooltip text="Different combinations of touchpoints you can test. Start with one and adapt based on what gets replies." />
-            </h3>
-            <p className="text-xs text-muted-foreground mb-4">Start with one sequence and adapt based on what gets replies.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {SEQUENCES.map((seq, idx) => (
-                <div key={idx} className="bg-secondary p-4 rounded-md">
-                  <h4 className="text-sm font-semibold mb-3">{seq.name}</h4>
-                  <div className="space-y-2">
-                    {seq.steps.map((step, j) => (
-                      <div key={j} className="flex items-start gap-2">
-                        <span className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold accent-bg shrink-0 mt-0.5">{j + 1}</span>
-                        <div>
-                          <span className="text-xs font-medium">{step.action}</span>
-                          {step.timing && <p className="text-[10px] text-primary">{step.timing}</p>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+          {playbooks[activeTab]?.audienceType === "D2C" ? (
+            playbooks[activeTab]?.campaignIdeas && (
+              <div className="glass-card p-5">
+                <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-2 flex items-center gap-1">
+                  Campaign Ideas to Try
+                  <InfoTooltip text="Different campaign approaches you can test. Start with one and adapt based on what performs." />
+                </h3>
+                <p className="text-xs text-muted-foreground mb-4">Start with one campaign approach and adapt based on what performs.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {playbooks[activeTab].campaignIdeas.map((c: any, idx: number) => (
+                    <div key={idx} className="bg-secondary p-4 rounded-md">
+                      <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                        <Megaphone className="w-3.5 h-3.5 text-primary shrink-0" />
+                        {c.name}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">{c.description}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            )
+          ) : (
+            <div className="glass-card p-5">
+              <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-2 flex items-center gap-1">
+                Sequences to Try
+                <InfoTooltip text="Different combinations of touchpoints you can test. Start with one and adapt based on what gets replies." />
+              </h3>
+              <p className="text-xs text-muted-foreground mb-4">Start with one sequence and adapt based on what gets replies.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {SEQUENCES.map((seq, idx) => (
+                  <div key={idx} className="bg-secondary p-4 rounded-md">
+                    <h4 className="text-sm font-semibold mb-3">{seq.name}</h4>
+                    <div className="space-y-2">
+                      {seq.steps.map((step, j) => (
+                        <div key={j} className="flex items-start gap-2">
+                          <span className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold accent-bg shrink-0 mt-0.5">{j + 1}</span>
+                          <div>
+                            <span className="text-xs font-medium">{step.action}</span>
+                            {step.timing && <p className="text-[10px] text-primary">{step.timing}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
 
           {/* Message Rules */}

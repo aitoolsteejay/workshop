@@ -636,8 +636,10 @@ function D2CDescriptionBox({ idx, description, options, optionsKey, selectedIdx,
       setGenerating(true);
       try {
         const prompt = `Read this business owner's rough description of one type of individual consumer (D2C, not a business buyer) they want to target, and turn it into 3 distinct, more detailed, cleaner rewritten versions of this customer description.
-Each version must be 2 to 3 sentences describing who this person is, their lifestyle or life stage, and why they'd want this product or service. Write in plain, professional language, fix grammar and capitalisation. Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
+Each version must be 2 to 3 sentences describing who this person is, their lifestyle or life stage, and why they'd want this product or service. Fix grammar and capitalisation. Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
 Make the 3 versions meaningfully different in phrasing and emphasis (for example, one could lead with their lifestyle, one with their motivation, one with their life stage), not just minor rewordings of each other.
+
+${NO_JARGON_RULE}
 
 Customer description: ${key}
 

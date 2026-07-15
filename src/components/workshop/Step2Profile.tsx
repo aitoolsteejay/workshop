@@ -78,8 +78,10 @@ export function Step2Profile({ data, userName, onSave, onNext, onBack }: Step2Pr
       setGeneratingOptions(true);
       try {
         const prompt = `Read this business owner's description of their own business, and turn it into 3 distinct, more detailed rewritten versions of their business offering.
-Each version must be 2 to 3 sentences, clearly covering: the core problem being solved, who it is for, and how they solve it (the method or mechanism). Write in plain, professional language, fix grammar and capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO should be capitalised correctly). Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
+Each version must be 2 to 3 sentences, clearly covering: the core problem being solved, who it is for, and how they solve it (the method or mechanism). Fix grammar and capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO should be capitalised correctly). Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
 Make the 3 versions meaningfully different in phrasing and emphasis (for example, one could lead with the outcome, one with the audience, one with the method), not just minor rewordings of each other.
+
+${NO_JARGON_RULE}
 
 Business description: ${offerKey}
 
