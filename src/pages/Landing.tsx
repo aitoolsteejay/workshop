@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Linkedin, Target, Rocket, Globe, Send, ArrowRight, Users, TrendingUp, MessageSquare, FileText } from "lucide-react";
-import tejasPhoto from "@/assets/tejas.png.asset.json";
+import tejasPhoto from "@/assets/tejas-photo.jpg";
 
 const outcomes = [
   { icon: Linkedin, title: "LinkedIn That Converts", desc: "A rewritten headline and About section that positions you as the authority, so the right people reach out to you." },
@@ -128,7 +128,7 @@ export default function Landing() {
         <div className="flex flex-col md:flex-row gap-12 items-start bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-12 border border-white/50 shadow-lg">
           <div className="shrink-0 flex flex-col items-center gap-6 md:w-64">
             <div className="w-48 h-48 sm:w-64 sm:h-64 rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-gradient-to-br from-amber-100 to-orange-50">
-              <img src={tejasPhoto.url} alt="Tejas Jhaveri" className="w-full h-full object-cover object-top" />
+              <img src={tejasPhoto} alt="Tejas Jhaveri" className="w-full h-full object-cover object-top" />
             </div>
             <div className="flex flex-col gap-2 w-full">
               {[
