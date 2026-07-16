@@ -251,7 +251,9 @@ Design Direction (MANDATORY, do not default to a generic template): ${styleArche
 
 IMPORTANT: The website MUST include a sticky navigation header at the top of every page. The header must contain: the brand logo or name on the left, navigation links in the centre (e.g. About, Services, Results, FAQ, Contact), and a CTA button on the right (e.g. 'Book a Call'). The header must be visible at all times as the user scrolls.
 
-Generate a comprehensive, ready-to-paste prompt for building a high-converting landing page.
+EFFICIENCY (MANDATORY): Write this prompt so an AI page builder (like Lovable) can generate the complete, working site correctly in ONE generation, without needing many follow-up edits to fix errors or missing pieces. Be precise and complete, but keep the scope realistic: avoid requesting complex backend logic, data persistence, or more than one interactive tool. This prompt should be buildable within about 5 Lovable credits total (1 initial generation plus a couple of small follow-up refinements), so prioritise clarity and feasibility over exhaustive extra scope. Keep the prompt itself reasonably concise, every line should earn its place.
+
+Generate a ready-to-paste prompt for building a high-converting landing page.
 
 Inputs:
 - Brand Name: ${form.brandName}
@@ -269,9 +271,9 @@ The generated website must have EXACTLY these 8 sections in this order:
 2. Problem Section
 3. Solution Section
 4. Value Proposition Section
-5. Free Resource Section (MANDATORY): 3 interactive tool-based resources (NOT ebooks/PDFs)
+5. Free Resource Section (MANDATORY): ONE simple, focused interactive tool-based resource (e.g. a single calculator or quiz, NOT an ebook/PDF, and not more than one tool)
 6. CTA Section
-7. FAQ Section: 10-12 questions covering: trust, process, timeline, effort, who it is NOT for, vs alternatives, risk, pricing, onboarding, and results guarantee
+7. FAQ Section: 6-8 questions covering: trust, process, timeline, effort, vs alternatives, pricing, and results guarantee
 8. Footer: TJ's LinkedIn, Instagram, Newsletter, Calendly, Myntmore Services: ${MYNTMORE_NOTION_LINK}
 
 Design rules:
@@ -428,16 +430,16 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
             <pre className="text-xs text-muted-foreground bg-secondary p-4 rounded-md overflow-auto max-h-80 whitespace-pre-wrap">{generatedPrompt}</pre>
           </div>
 
-          <a href="https://aistudio.google.com/apps" target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full h-11 rounded-md border border-primary text-primary hover:bg-primary/10 transition-colors font-medium text-sm">
-            Open Google AI Studio <ExternalLink className="w-4 h-4" />
+          <a href="https://lovable.dev/invite/4J88T9O" target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full h-11 rounded-md accent-bg hover:opacity-90 transition-colors font-semibold text-sm">
+            Build it with Lovable (no coding needed) <ExternalLink className="w-4 h-4" />
           </a>
 
-          <a href="https://lovable.dev/invite/4J88T9O" target="_blank" rel="noopener noreferrer"
+          <a href="https://aistudio.google.com/apps" target="_blank" rel="noopener noreferrer"
             className="glass-card p-4 flex items-center gap-3 hover:border-primary transition-colors">
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Or build it with Lovable (no coding needed) →</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Paste the prompt into Lovable to get a fully deployable website without writing any code.</p>
+              <p className="text-sm font-medium text-foreground">Or open Google AI Studio (Gemini) →</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Paste the prompt into AI Studio to generate the site with Gemini instead.</p>
             </div>
             <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
           </a>
