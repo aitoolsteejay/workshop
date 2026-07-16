@@ -221,6 +221,10 @@ Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown cod
             </Button>
           </div>
           {enhancing && <div className="mt-3"><LoadingSpinner text="Polishing your prompt..." /></div>}
+          <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-3">
+            Open Gemini <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
       )}
 
