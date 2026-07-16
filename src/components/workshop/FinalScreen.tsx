@@ -310,10 +310,12 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
               </ul>
             </div>
           </div>
-          <div className="mt-4 flex gap-3">
-            <span className="text-[11px] px-3 py-1 rounded bg-secondary text-muted-foreground">Primary: {website.primaryColor || "#FFC947"}</span>
-            <span className="text-[11px] px-3 py-1 rounded bg-secondary text-muted-foreground">Secondary: {website.secondaryColor || "#111111"}</span>
-          </div>
+          {(website.primaryColor || website.secondaryColor) && (
+            <div className="mt-4 flex gap-3">
+              {website.primaryColor && <span className="text-[11px] px-3 py-1 rounded bg-secondary text-muted-foreground">Primary: {website.primaryColor}</span>}
+              {website.secondaryColor && <span className="text-[11px] px-3 py-1 rounded bg-secondary text-muted-foreground">Secondary: {website.secondaryColor}</span>}
+            </div>
+          )}
         </section>
       )}
 
