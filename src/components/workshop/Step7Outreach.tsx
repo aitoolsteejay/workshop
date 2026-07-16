@@ -374,54 +374,61 @@ Return ONLY valid JSON (no markdown):
                         Positioning Style
                         <InfoTooltip text="How to present yourself, whether as a peer, expert, challenger, or industry insider, based on who you are talking to" />
                       </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {POSITIONING_STYLES.map(ps => {
-                          const isRecommended = recommendedStyle?.toLowerCase() === ps.name.toLowerCase();
-                          const detail = isRecommended ? pb.strategicApproach?.positioningDetail : null;
-                          return (
-                            <div key={ps.name} className={`bg-secondary p-4 rounded-md ${isRecommended ? "border-l-4 border-[#FFC947]" : "border border-border"}`}>
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="text-sm font-semibold">{ps.name}</h4>
-                                {isRecommended && (
-                                  <span className="text-[10px] font-bold bg-[#FFC947] text-black px-2 py-0.5 rounded">Recommended for you</span>
+
+                      {recommendedStyle && (() => {
+                        const recStyle = POSITIONING_STYLES.find(ps => ps.name.toLowerCase() === recommendedStyle.toLowerCase());
+                        const detail = pb.strategicApproach?.positioningDetail;
+                        return (
+                          <div className="rounded-md border-2 border-[#FFC947] bg-[#FFC947]/10 p-4 mb-3">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="text-[10px] font-bold bg-[#FFC947] text-black px-2 py-0.5 rounded">Recommended for you</span>
+                              <h4 className="text-sm font-semibold">{recommendedStyle}</h4>
+                            </div>
+                            {recStyle && <p className="text-xs text-muted-foreground mb-2">{recStyle.desc}</p>}
+                            {detail && (
+                              <div className="space-y-2 mt-3 pt-3 border-t border-[#FFC947]/30">
+                                {detail.whatItMeans && (
+                                  <div>
+                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">What it means</span>
+                                    <p className="text-xs text-foreground mt-0.5">{detail.whatItMeans}</p>
+                                  </div>
+                                )}
+                                {detail.howToShowUp && (
+                                  <div>
+                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">How to show up</span>
+                                    <ul className="mt-0.5 space-y-0.5">
+                                      {detail.howToShowUp.map((h: string, i: number) => <li key={i} className="text-xs text-foreground">→ {h}</li>)}
+                                    </ul>
+                                  </div>
+                                )}
+                                {detail.whatToAvoid && (
+                                  <div>
+                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">What to avoid</span>
+                                    <ul className="mt-0.5 space-y-0.5">
+                                      {detail.whatToAvoid.map((a: string, i: number) => <li key={i} className="text-xs text-destructive">✗ {a}</li>)}
+                                    </ul>
+                                  </div>
+                                )}
+                                {detail.exampleOpener && (
+                                  <div>
+                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Example opener</span>
+                                    <p className="text-xs text-foreground italic mt-0.5">"{detail.exampleOpener}"</p>
+                                  </div>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground mb-2">{ps.desc}</p>
-                              {isRecommended && detail && (
-                                <div className="space-y-2 mt-3 pt-3 border-t border-border">
-                                  {detail.whatItMeans && (
-                                    <div>
-                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">What it means</span>
-                                      <p className="text-xs text-foreground mt-0.5">{detail.whatItMeans}</p>
-                                    </div>
-                                  )}
-                                  {detail.howToShowUp && (
-                                    <div>
-                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">How to show up</span>
-                                      <ul className="mt-0.5 space-y-0.5">
-                                        {detail.howToShowUp.map((h: string, i: number) => <li key={i} className="text-xs text-foreground">→ {h}</li>)}
-                                      </ul>
-                                    </div>
-                                  )}
-                                  {detail.whatToAvoid && (
-                                    <div>
-                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">What to avoid</span>
-                                      <ul className="mt-0.5 space-y-0.5">
-                                        {detail.whatToAvoid.map((a: string, i: number) => <li key={i} className="text-xs text-destructive">✗ {a}</li>)}
-                                      </ul>
-                                    </div>
-                                  )}
-                                  {detail.exampleOpener && (
-                                    <div>
-                                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Example opener</span>
-                                      <p className="text-xs text-foreground italic mt-0.5">"{detail.exampleOpener}"</p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Other styles</span>
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {POSITIONING_STYLES.filter(ps => ps.name.toLowerCase() !== recommendedStyle?.toLowerCase()).map(ps => (
+                          <span key={ps.name} title={ps.desc}
+                            className="text-xs px-2.5 py-1 rounded-full bg-secondary border border-border text-muted-foreground cursor-default">
+                            {ps.name}
+                          </span>
+                        ))}
                       </div>
                     </div>
 
