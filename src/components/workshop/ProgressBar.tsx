@@ -16,7 +16,8 @@ const stepLabels = [
   "Value Proposition",
   "Website Builder",
   "GTM Strategy",
-  "Add-Ons",
+  "Jewellery Design Generator",
+  "Jewellery Modelling",
   "Outreach Playbook",
   "Final Summary",
 ];
