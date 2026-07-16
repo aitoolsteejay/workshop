@@ -1,3 +1,6 @@
+export const DEFAULT_ICP_COUNT = 3;
+export const MAX_ICP_COUNT = 6;
+
 export const INDUSTRIES = [
   "SaaS", "Fintech", "Healthtech", "Edtech", "E-commerce", "D2C",
   "Agencies", "Consulting", "Coaching", "Real Estate", "PropTech", "Manufacturing", "Logistics",

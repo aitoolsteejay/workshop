@@ -90,8 +90,11 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
           <div>
             <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Target Customers</span>
             <ul className="mt-2 space-y-1">
-              {icps.slice(0, 3).map((icp: any, i: number) => (
-                <li key={i} className="text-sm text-foreground">→ {icp.name}</li>
+              {icps.map((icp: any, i: number) => (
+                <li key={i} className="text-sm text-foreground flex items-center gap-1.5">
+                  → {icp.name}
+                  {icp.audienceType && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">{icp.audienceType}</span>}
+                </li>
               ))}
               {icps.length === 0 && <li className="text-sm text-muted-foreground italic">Not completed</li>}
             </ul>
@@ -126,9 +129,12 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
             <Users className="w-4 h-4 text-primary" /> Target Customer Breakdown
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {icps.slice(0, 3).map((icp: any, i: number) => (
+            {icps.map((icp: any, i: number) => (
               <div key={i} className="glass-card p-6">
-                <h4 className="text-sm font-semibold accent-text mb-4">{icp.name}</h4>
+                <h4 className="text-sm font-semibold accent-text mb-4 flex items-center gap-1.5">
+                  {icp.name}
+                  {icp.audienceType && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">{icp.audienceType}</span>}
+                </h4>
                 <div className="space-y-3">
                   {icp.geographyContext && (
                     <div>
@@ -164,9 +170,14 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
               <Star className="w-4 h-4 text-primary" /> Value Proposition
             </h3>
             <div className="space-y-4">
-              {vps.slice(0, 3).map((vp: any, i: number) => (
+              {vps.map((vp: any, i: number) => (
                 <div key={i} className="bg-secondary p-4 rounded-md">
-                  <span className="text-[11px] text-muted-foreground uppercase font-medium">{vp.icpName || `ICP ${i + 1}`}</span>
+                  <span className="text-[11px] text-muted-foreground uppercase font-medium flex items-center gap-1.5">
+                    {vp.icpName || `ICP ${i + 1}`}
+                    {vp.icpName !== "Channel Partners" && icps[i]?.audienceType && (
+                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-background text-muted-foreground normal-case tracking-normal">{icps[i].audienceType}</span>
+                    )}
+                  </span>
                   <p className="text-sm font-semibold mt-1 leading-relaxed">{vp.corePromise}</p>
                   {vp.positioning && <p className="text-xs text-muted-foreground mt-2 italic leading-relaxed">"{vp.positioning}"</p>}
                   {vp.coreAngle && (
@@ -259,9 +270,9 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
               <div>
                 <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Per-ICP Angles</span>
                 <div className="mt-2 space-y-1">
-                  {playbooks.slice(0, 3).map((pb: any, i: number) => (
+                  {playbooks.map((pb: any, i: number) => (
                     <p key={i} className="text-sm text-foreground leading-relaxed">
-                      <span className="text-primary font-medium">{pb.icpName}:</span> {pb.strategicApproach?.bestAngle || "—"} / {pb.strategicApproach?.positioningStyle || "—"}
+                      <span className="text-primary font-medium">{pb.icpName}{pb.audienceType ? ` (${pb.audienceType})` : ""}:</span> {pb.strategicApproach?.bestAngle || "—"} / {pb.strategicApproach?.positioningStyle || "—"}
                     </p>
                   ))}
                 </div>

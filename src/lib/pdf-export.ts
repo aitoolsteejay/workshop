@@ -184,11 +184,14 @@ export async function generatePDF(sessionData: any) {
   doc.setTextColor(120, 120, 120);
   doc.text("Powered by Myntmore", w / 2, titleY + 40, { align: "center" });
 
+  // ICPs (declared early so the Table of Contents can reflect the actual count)
+  const icps = (sessionData?.icp_data?.result || []).filter(Boolean);
+
   // Table of Contents
   let y = newSection(doc, "Table of Contents");
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
-  const tocItems = ["Profile Analysis", "ICP 1", "ICP 2", "ICP 3", "Value Propositions", "Website Prompt", "Growth Strategy", "Outreach Playbook", ...(addonsPrompt ? ["Bonus Add-Ons"] : [])];
+  const tocItems = ["Profile Analysis", ...icps.map((_: any, i: number) => `ICP ${i + 1}`), "Value Propositions", "Website Prompt", "Growth Strategy", "Outreach Playbook", ...(addonsPrompt ? ["Bonus Add-Ons"] : [])];
   tocItems.forEach((item, i) => {
     doc.text(`${i + 1}. ${item}`, PAGE_MARGIN + 5, y);
     y += 8;
@@ -219,10 +222,10 @@ export async function generatePDF(sessionData: any) {
   }
 
   // ICPs
-  const icps = (sessionData?.icp_data?.result || []).filter(Boolean);
   for (let i = 0; i < icps.length; i++) {
     const icp = icps[i];
-    y = newSection(doc, `ICP ${i + 1}: ${clean(icp.name || "Untitled")}`);
+    const icpLabel = `ICP ${i + 1}: ${clean(icp.name || "Untitled")}${icp.audienceType ? ` (${icp.audienceType})` : ""}`;
+    y = newSection(doc, icpLabel);
     const fields = [
       { key: "whoTheyAre", label: "Who They Are" },
       { key: "coreResponsibilities", label: "Core Responsibilities" },
@@ -262,7 +265,8 @@ export async function generatePDF(sessionData: any) {
   y = newSection(doc, "Value Propositions");
   for (let i = 0; i < vps.length; i++) {
     const vp = vps[i];
-    const vpLabel = vp.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${i + 1}: ${clean(vp.icpName)}`;
+    const vpAudienceType = vp.icpName === "Channel Partners" ? null : icps[i]?.audienceType;
+    const vpLabel = vp.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${i + 1}: ${clean(vp.icpName)}${vpAudienceType ? ` (${vpAudienceType})` : ""}`;
     y = addSubHeader(doc, vpLabel, y);
     if (vp.corePromise) { y = addWrappedText(doc, `Core Promise: ${clean(vp.corePromise)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.beforeState) { y = addSubHeader(doc, "Before", y); y = addBulletList(doc, vp.beforeState, PAGE_MARGIN, y, maxW); y += 2; }
@@ -366,7 +370,7 @@ export async function generatePDF(sessionData: any) {
   y = newSection(doc, "Outreach Playbook");
   if (outreach?.playbooks) {
     for (const pb of outreach.playbooks.filter(Boolean)) {
-      y = addSubHeader(doc, clean(pb.icpName), y);
+      y = addSubHeader(doc, `${clean(pb.icpName)}${pb.audienceType ? ` (${pb.audienceType})` : ""}`, y);
       if (pb.strategicApproach) {
         y = addWrappedText(doc, `Best Angle: ${clean(pb.strategicApproach.bestAngle)}`, PAGE_MARGIN, y, maxW);
         y = addWrappedText(doc, `Positioning Style: ${clean(pb.strategicApproach.positioningStyle)}`, PAGE_MARGIN, y, maxW);

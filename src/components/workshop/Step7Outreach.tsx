@@ -194,7 +194,7 @@ AUDIENCE TYPE ADAPTATION (MANDATORY): Check each ICP's Audience Type above, it c
 - For a B2B ICP: this is a business buyer approached 1:1, mainly on LinkedIn. Fill in "followUpSystem" with a LinkedIn connection-and-DM cadence. Leave "channelPlan" and "campaignIdeas" as null, they are not used for B2B.
 - For a D2C ICP: this is an individual consumer, NOT a business buyer. Do NOT generate any LinkedIn connection request, InMail, or B2B 1:1 outreach content, it is completely irrelevant to how you actually reach individual consumers. Leave "followUpSystem" as null. Instead fill in "channelPlan" and "campaignIdeas" with genuinely different, platform-appropriate ideas for reaching individual consumers (for example organic content, short-form video, paid social ads, influencer or creator seeding, email or SMS flows, community or comment engagement), specific to this business, offer, and audience, not generic advice.
 
-For EACH of the 3 target customer types, generate a strategic playbook with these sections:
+For EACH of the ${icps.length} target customer types, generate a strategic playbook with these sections:
 
 1. "audienceType": exactly "B2B" or "D2C", matching the Audience Type given for this ICP above.
 
@@ -219,7 +219,7 @@ Return ONLY valid JSON (no markdown):
 {
   "playbooks": [
     { "icpName": string, "audienceType": ..., "icpContext": ..., "strategicApproach": ..., "personalisationTips": [...], "followUpSystem": ..., "channelPlan": ..., "campaignIdeas": ..., "whatToAvoid": [...] },
-    ... (3 total)
+    ... (${icps.length} total)
   ]
 }`;
 

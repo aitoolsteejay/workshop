@@ -1,0 +1,77 @@
+From e9bba53261797f35bf5089385542d8bd93a6137c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 13 Jul 2026 11:54:11 +0000
+Subject: [PATCH] Simplify AI-generated language throughout the workshop
+
+The shared NO_JARGON_RULE was too vague to reliably produce plain
+output ("write in plain, professional English... no jargon"), so
+strengthened it with concrete instructions: short single-idea
+sentences, a banned list of consultant-speak substitutions (leverage,
+streamline, drive, enable...) and inflated buzzwords (unlock, elevate,
+seamless, synergy...), active voice, and acronym restraint. Since
+every generation step already shares this one constant, the fix
+applies everywhere at once (ICPs, value props, website copy, GTM
+strategy, outreach playbooks, profile optimisation).
+
+Also added the same rule to the two "polish into 3 options" prompts
+(Step2 business offer, Step3 D2C customer description) that were
+generating user-facing text without it.
+---
+ src/components/workshop/Step2Profile.tsx | 4 +++-
+ src/components/workshop/Step3ICP.tsx     | 4 +++-
+ src/lib/prompt-rules.ts                  | 8 +++++++-
+ 3 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/src/components/workshop/Step2Profile.tsx b/src/components/workshop/Step2Profile.tsx
+index 2ec95f7..e781cac 100644
+--- a/src/components/workshop/Step2Profile.tsx
++++ b/src/components/workshop/Step2Profile.tsx
+@@ -78,9 +78,11 @@ export function Step2Profile({ data, userName, onSave, onNext, onBack }: Step2Pr
+       setGeneratingOptions(true);
+       try {
+         const prompt = `Read this business owner's description of their own business, and turn it into 3 distinct, more detailed rewritten versions of their business offering.
+-Each version must be 2 to 3 sentences, clearly covering: the core problem being solved, who it is for, and how they solve it (the method or mechanism). Write in plain, professional language, fix grammar and capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO should be capitalised correctly). Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
++Each version must be 2 to 3 sentences, clearly covering: the core problem being solved, who it is for, and how they solve it (the method or mechanism). Fix grammar and capitalisation (proper nouns and acronyms like B2B, SaaS, AI, ROI, CRM, SEO should be capitalised correctly). Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
+ Make the 3 versions meaningfully different in phrasing and emphasis (for example, one could lead with the outcome, one with the audience, one with the method), not just minor rewordings of each other.
+ 
++${NO_JARGON_RULE}
++
+ Business description: ${offerKey}
+ 
+ Return ONLY a valid JSON array of exactly 3 strings (no markdown, no code blocks).`;
+diff --git a/src/components/workshop/Step3ICP.tsx b/src/components/workshop/Step3ICP.tsx
+index b4fb12e..7a3766e 100644
+--- a/src/components/workshop/Step3ICP.tsx
++++ b/src/components/workshop/Step3ICP.tsx
+@@ -636,9 +636,11 @@ function D2CDescriptionBox({ idx, description, options, optionsKey, selectedIdx,
+       setGenerating(true);
+       try {
+         const prompt = `Read this business owner's rough description of one type of individual consumer (D2C, not a business buyer) they want to target, and turn it into 3 distinct, more detailed, cleaner rewritten versions of this customer description.
+-Each version must be 2 to 3 sentences describing who this person is, their lifestyle or life stage, and why they'd want this product or service. Write in plain, professional language, fix grammar and capitalisation. Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
++Each version must be 2 to 3 sentences describing who this person is, their lifestyle or life stage, and why they'd want this product or service. Fix grammar and capitalisation. Do not invent details that are not implied by the description; make reasonable, conservative inferences where something is implied but not explicit.
+ Make the 3 versions meaningfully different in phrasing and emphasis (for example, one could lead with their lifestyle, one with their motivation, one with their life stage), not just minor rewordings of each other.
+ 
++${NO_JARGON_RULE}
++
+ Customer description: ${key}
+ 
+ Return ONLY a valid JSON array of exactly 3 strings (no markdown, no code blocks).`;
+diff --git a/src/lib/prompt-rules.ts b/src/lib/prompt-rules.ts
+index 18766bf..83859fd 100644
+--- a/src/lib/prompt-rules.ts
++++ b/src/lib/prompt-rules.ts
+@@ -1,4 +1,10 @@
+-export const NO_JARGON_RULE = `Write in plain, professional English. No jargon. No buzzwords. No complex industry terms unless absolutely necessary. Every sentence must be immediately understandable by someone who is not a marketing expert. Replace any jargon with simpler, clearer alternatives. For example, say "target customers" not "ICPs", say "growth plan" not "GTM roadmap", say "outreach messages" not "touchpoint sequences".`;
++export const NO_JARGON_RULE = `SIMPLE LANGUAGE RULE (MANDATORY): Write like you are explaining this to a smart friend who has never worked in marketing or sales. Someone with a basic level of English must be able to read this once and immediately understand it.
++- Keep sentences short. One idea per sentence. Avoid stacking multiple clauses together with commas and "which"/"that".
++- Use everyday words instead of business or consultant-speak. Say "get more customers" not "drive customer acquisition", say "make it easy to buy" not "streamline the conversion funnel", say "helps you" not "enables you to", say "shows" not "demonstrates" or "showcases", say "use" not "leverage" or "utilise", say "start" not "initiate", say "check" not "validate", say "build" not "cultivate" or "foster".
++- No jargon, no buzzwords, no acronyms unless the acronym is more familiar than the full term (e.g. keep "SEO", "ROI", "CRM"; spell out anything less common). Say "target customers" not "ICPs", say "growth plan" not "GTM roadmap", say "outreach messages" not "touchpoint sequences".
++- Avoid inflated, vague, or "impressive-sounding" phrases: no "unlock", "elevate", "empower", "seamless", "robust", "holistic", "synergy", "game-changing", "cutting-edge", "best-in-class", "paradigm".
++- Prefer active voice ("we help you close more deals") over passive voice ("more deals can be closed").
++- Never sacrifice accuracy for simplicity, just say the same thing in plainer words.`;
+ 
+ export const PERSONALISATION_RULE = `PERSONALISATION RULE (MANDATORY): Every part of this output must be personalised using the user's actual inputs. Do not generate generic or placeholder content. Specifically: Use the user's actual name where relevant. Reference their actual company name. Reference their actual industry and target geography. Reference their actual revenue range when discussing growth targets. Reference their actual goal (more leads / better conversion / brand authority). Reference their specific target customer names and pain points in all messaging. Reference their actual core offer in all strategy and outreach content. If any of these fields are available from previous steps, use them. Never write output that could apply to any generic business. It must feel written specifically for this person.`;
+ 
+-- 
+2.43.0
+

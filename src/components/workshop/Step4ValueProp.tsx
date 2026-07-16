@@ -40,7 +40,7 @@ export function Step4ValueProp({ data, icpData, profileData, onboardingData, onS
   };
 
   const generate = async () => {
-    if (icps.length < 3) { setError("ICP data is missing. Please complete Step 3 first."); return; }
+    if (icps.length === 0) { setError("ICP data is missing. Please complete Step 3 first."); return; }
     setError("");
     setLoading(true);
     setResult([]);
@@ -54,7 +54,7 @@ export function Step4ValueProp({ data, icpData, profileData, onboardingData, onS
       ? allPartners.map((p: any, i: number) => `Partner ${i + 1}: ${p.partnerType} (relevant to ${p.forIcp}). Why they fit: ${p.whyTheyFit || "Not specified"}`).join("\n")
       : "";
 
-    const prompt = `You are a senior strategist. Generate structured Value Propositions for each of these 3 target customer types${partnerSummary ? ", plus one for the Channel Partners audience" : ""}:
+    const prompt = `You are a senior strategist. Generate structured Value Propositions for each of these ${icps.length} target customer types${partnerSummary ? ", plus one for the Channel Partners audience" : ""}:
 
 ${NO_JARGON_RULE}
 
@@ -70,7 +70,7 @@ Core Offer: ${offer}
 ${icpSummary}
 ${partnerSummary ? `\nChannel Partners (a 4th audience: businesses or individuals who could refer or co-sell to us, NOT end customers):\n${partnerSummary}` : ""}
 
-For EACH of the 3 target customer types, provide:
+For EACH of the ${icps.length} target customer types, provide:
 1. corePromise: One powerful sentence that captures the transformation (max 15 words)
 2. beforeState: What life looks like BEFORE using this solution (3 bullet points)
 3. afterState: What life looks like AFTER (3 bullet points)
@@ -103,7 +103,7 @@ ${partnerSummary ? `For the Channel Partners entry, a partner is NOT an end cust
 - Each customer type must feel fundamentally DIFFERENT.
 - Ban phrases like "increase growth", "improve results", "scale faster".
 - Do NOT use em-dashes, asterisks, or hash signs in any output.
-- Return ONLY a valid JSON array of ${partnerSummary ? "4" : "3"} objects (no markdown, no code blocks).`;
+- Return ONLY a valid JSON array of ${partnerSummary ? icps.length + 1 : icps.length} objects (no markdown, no code blocks).`;
 
     try {
       const timeoutP = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 60000));
@@ -154,12 +154,20 @@ ${partnerSummary ? `For the Channel Partners entry, a partner is NOT an end cust
       {result.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="flex gap-1 mb-6">
-            {result.map((vp: any, idx: number) => (
-              <button key={idx} onClick={() => setActiveTab(idx)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
-                {vp?.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${idx + 1}`}
-              </button>
-            ))}
+            {result.map((vp: any, idx: number) => {
+              const audienceType = vp?.icpName === "Channel Partners" ? null : icps[idx]?.audienceType;
+              return (
+                <button key={idx} onClick={() => setActiveTab(idx)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                  {vp?.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${idx + 1}`}
+                  {audienceType && (
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${activeTab === idx ? "bg-black/20 text-primary-foreground" : "bg-background text-muted-foreground"}`}>
+                      {audienceType}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <AnimatePresence mode="wait">
