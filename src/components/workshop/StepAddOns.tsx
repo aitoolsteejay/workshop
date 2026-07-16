@@ -7,6 +7,7 @@ import { sanitizeAIText, sanitizeAIOutput } from "@/lib/sanitize";
 import { useAutosave } from "@/hooks/use-autosave";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
 import { ArrowLeft, Copy, Check, Sparkles, Gem, ExternalLink, Camera } from "lucide-react";
 
 const JEWELLERY_TYPES = ["Anklet", "Bracelet", "Brooch", "Choker", "Cuff", "Earrings", "Hair pin", "Necklace", "Pendant", "Ring"];
@@ -108,10 +109,10 @@ Write ONE single flowing prompt of at least 120 words (not multiple options, not
     }
   };
 
-  const copyPrompt = () => {
+  const copyPrompt = async () => {
     const text = enhancedPrompt || basePrompt;
     if (!text) return;
-    navigator.clipboard.writeText(text);
+    await copyToClipboard(text);
     setCopied(true);
     toast({ title: "✓ Copied", duration: 2000 });
     setTimeout(() => setCopied(false), 2000);
@@ -153,9 +154,9 @@ Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown cod
     }
   };
 
-  const copyModelPrompt = (text: string, idx: number) => {
+  const copyModelPrompt = async (text: string, idx: number) => {
     if (!text) return;
-    navigator.clipboard.writeText(text);
+    await copyToClipboard(text);
     setCopiedModelIdx(idx);
     toast({ title: "✓ Copied", duration: 2000 });
     setTimeout(() => setCopiedModelIdx(null), 2000);

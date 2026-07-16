@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, ArrowLeft, XCircle, CheckCircle2, ArrowRightCircle, XOctagon, Handshake, Gift, Users, MessageSquare } from "lucide-react";
 import { joinField } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/clipboard";
+import { audienceBadgeClass } from "@/lib/audience";
 
 interface Step4Props {
   data: any;
@@ -33,8 +35,8 @@ export function Step4ValueProp({ data, icpData, profileData, onboardingData, onS
   const businessType = joinField(onboardingData?.businessType);
   const sellingTo = joinField(onboardingData?.sellingTo);
 
-  const copyText = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+  const copyText = async (text: string, field: string) => {
+    await copyToClipboard(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
   };
@@ -161,7 +163,7 @@ ${partnerSummary ? `For the Channel Partners entry, a partner is NOT an end cust
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                   {vp?.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${idx + 1}`}
                   {audienceType && (
-                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${activeTab === idx ? "bg-black/20 text-primary-foreground" : "bg-background text-muted-foreground"}`}>
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${audienceBadgeClass(audienceType)}`}>
                       {audienceType}
                     </span>
                   )}

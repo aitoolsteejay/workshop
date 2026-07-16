@@ -6,6 +6,7 @@ import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/w
 import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { joinField } from "@/lib/utils";
+import { audienceBadgeClass } from "@/lib/audience";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
@@ -301,7 +302,7 @@ Return ONLY valid JSON (no markdown):
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                 ICP {idx + 1}
                 {pb?.audienceType && (
-                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${activeTab === idx ? "bg-black/20 text-primary-foreground" : "bg-background text-muted-foreground"}`}>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${audienceBadgeClass(pb.audienceType)}`}>
                     {pb.audienceType}
                   </span>
                 )}
