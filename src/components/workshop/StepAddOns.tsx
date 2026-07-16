@@ -9,14 +9,14 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Copy, Check, Sparkles, Gem, ExternalLink, Camera } from "lucide-react";
 
-const JEWELLERY_TYPES = ["Ring", "Necklace", "Earrings", "Bracelet", "Cuff", "Brooch", "Anklet", "Pendant", "Choker", "Hair pin"];
+const JEWELLERY_TYPES = ["Anklet", "Bracelet", "Brooch", "Choker", "Cuff", "Earrings", "Hair pin", "Necklace", "Pendant", "Ring"];
 
 const CATEGORIES: { key: string; label: string; max: number; options: string[] }[] = [
   { key: "type", label: "Jewellery Type", max: 1, options: JEWELLERY_TYPES },
-  { key: "style", label: "Style", max: 3, options: ["Minimalist", "Art Deco", "Bohemian", "Gothic", "Vintage", "Sculptural", "Geometric", "Nature-inspired", "Brutalist", "Celestial"] },
-  { key: "material", label: "Material / Metal", max: 3, options: ["Yellow gold", "White gold", "Rose gold", "Sterling silver", "Oxidised silver", "Bronze", "Titanium", "Resin", "Mixed metals", "Recycled gold"] },
-  { key: "gemstone", label: "Gemstone or Detail", max: 3, options: ["Diamond", "Emerald", "Sapphire", "Pearl", "Opal", "Turquoise", "Garnet", "No stones", "Enamel", "Seed pearls"] },
-  { key: "mood", label: "Mood / Theme", max: 3, options: ["Romantic", "Edgy", "Playful", "Elegant", "Mystical", "Earthy", "Bold", "Delicate", "Futuristic", "Coastal"] },
+  { key: "style", label: "Style", max: 3, options: ["Art Deco", "Bohemian", "Brutalist", "Celestial", "Geometric", "Gothic", "Minimalist", "Nature-inspired", "Sculptural", "Vintage"] },
+  { key: "material", label: "Material / Metal", max: 3, options: ["Bronze", "Mixed metals", "Oxidised silver", "Recycled gold", "Resin", "Rose gold", "Sterling silver", "Titanium", "White gold", "Yellow gold"] },
+  { key: "gemstone", label: "Gemstone or Detail", max: 3, options: ["Diamond", "Emerald", "Enamel", "Garnet", "No stones", "Opal", "Pearl", "Sapphire", "Seed pearls", "Turquoise"] },
+  { key: "mood", label: "Mood / Theme", max: 3, options: ["Bold", "Coastal", "Delicate", "Earthy", "Edgy", "Elegant", "Futuristic", "Mystical", "Playful", "Romantic"] },
 ];
 
 const MODELLING_STEPS = [

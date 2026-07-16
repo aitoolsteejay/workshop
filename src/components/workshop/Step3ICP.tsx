@@ -21,11 +21,12 @@ import {
 } from "@/components/ui/collapsible";
 
 const ROLES = [
-  "Founder / Co-Founder", "CEO / CXO", "Head of Growth", "Head of Sales",
-  "Head of Marketing", "SDR / BDR Manager", "Enterprise Sales Leader",
-  "Partnerships Manager", "Operations Head", "Strategy Lead", "Other",
+  "CEO / CXO", "Enterprise Sales Leader", "Founder / Co-Founder", "Head of Growth",
+  "Head of Marketing", "Head of Sales", "Operations Head", "Partnerships Manager",
+  "SDR / BDR Manager", "Strategy Lead", "Other",
 ];
 
+// Ordinal (ascending), not alphabetised, so the natural low-to-high progression stays intact.
 const SIZES = ["1–10", "10–50", "50–200", "200–500", "500–1000", "1000+"];
 
 interface IcpInput {

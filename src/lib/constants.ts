@@ -2,29 +2,30 @@ export const DEFAULT_ICP_COUNT = 3;
 export const MAX_ICP_COUNT = 6;
 
 export const INDUSTRIES = [
-  "SaaS", "Fintech", "Healthtech", "Edtech", "E-commerce", "D2C",
-  "Agencies", "Consulting", "Coaching", "Real Estate", "PropTech", "Manufacturing", "Logistics",
-  "HR Tech", "Martech", "LegalTech", "Legal", "Finance", "Healthcare", "Recruitment", "IT Services",
-  "AI / ML Startups", "B2B Services", "Cybersecurity", "DevTools", "Climate Tech",
-  "Automotive", "Retail", "Media", "Gaming", "Travel", "Hospitality", "Construction",
-  "Architecture", "Interior Design", "Fashion", "Jewellery", "Food & Beverage", "FoodTech", "Agriculture", "AgriTech",
-  "Energy", "Renewable Energy", "Telecom", "Insurance", "InsurTech", "Banking", "Accounting", "PR & Communications",
-  "Event Management", "NGO / Non-profit", "Government", "Web3 / Crypto", "Blockchain",
-  "Supply Chain", "Wholesale & Distribution", "Aerospace", "Space Tech", "Defense",
-  "Pharmaceuticals", "Biotech", "Medical Devices", "Dental", "Veterinary", "Mental Health",
-  "Beauty & Wellness", "Sports & Fitness", "Robotics", "IoT", "Data & Analytics",
-  "Cloud Computing", "No-Code / Low-Code", "Digital Marketing", "Advertising",
-  "BPO / Staffing", "Payments", "Wealth Management", "Mobility / EV", "Mining",
-  "Chemicals", "Franchising", "AR / VR", "Publishing", "Music & Entertainment",
+  "Jewellery", "Accounting", "Advertising", "Aerospace", "Agencies", "Agriculture", "AgriTech",
+  "AI / ML Startups", "AR / VR", "Architecture", "Automotive", "B2B Services", "Banking",
+  "Beauty & Wellness", "Biotech", "Blockchain", "BPO / Staffing", "Chemicals", "Climate Tech",
+  "Cloud Computing", "Coaching", "Construction", "Consulting", "Cybersecurity", "D2C",
+  "Data & Analytics", "Defense", "Dental", "DevTools", "Digital Marketing", "E-commerce",
+  "Edtech", "Energy", "Event Management", "Fashion", "Finance", "Fintech", "Food & Beverage",
+  "FoodTech", "Franchising", "Gaming", "Government", "Healthcare", "Healthtech", "Hospitality",
+  "HR Tech", "Insurance", "InsurTech", "Interior Design", "IoT", "IT Services", "Legal",
+  "LegalTech", "Logistics", "Manufacturing", "Martech", "Media", "Medical Devices", "Mental Health",
+  "Mining", "Mobility / EV", "Music & Entertainment", "NGO / Non-profit", "No-Code / Low-Code",
+  "Payments", "Pharmaceuticals", "PR & Communications", "PropTech", "Publishing", "Real Estate",
+  "Recruitment", "Renewable Energy", "Retail", "Robotics", "SaaS", "Space Tech", "Sports & Fitness",
+  "Supply Chain", "Telecom", "Travel", "Veterinary", "Wealth Management", "Web3 / Crypto",
+  "Wholesale & Distribution",
 ];
 
 export const CONSUMER_PERSONAS = [
-  "Young Professionals", "Students", "New Parents", "Parents of School-Age Kids",
-  "Working Mothers", "Homeowners", "Newlyweds", "Retirees / Seniors",
-  "Fitness & Wellness Enthusiasts", "Health-Conscious Consumers", "Tech Enthusiasts",
-  "Fashion-Forward Shoppers", "Budget-Conscious Shoppers", "Premium / Luxury Buyers",
-  "Frequent Travellers", "Foodies", "Pet Owners", "Gamers", "Small Business Owners (Personal Purchase)",
-  "Freelancers / Gig Workers", "Other",
+  "Budget-Conscious Shoppers", "Fashion-Forward Shoppers", "Fitness & Wellness Enthusiasts",
+  "Foodies", "Freelancers / Gig Workers", "Frequent Travellers", "Gamers",
+  "Health-Conscious Consumers", "Homeowners", "New Parents", "Newlyweds",
+  "Parents of School-Age Kids", "Pet Owners", "Premium / Luxury Buyers", "Retirees / Seniors",
+  "Small Business Owners (Personal Purchase)", "Students", "Tech Enthusiasts",
+  "Working Mothers", "Young Professionals",
+  "Other",
 ];
 
 export const SPEND_TIERS = [
@@ -32,10 +33,11 @@ export const SPEND_TIERS = [
 ];
 
 export const CONSUMER_CATEGORIES = [
-  "Fashion & Apparel", "Beauty & Personal Care", "Health & Wellness", "Fitness & Sports",
-  "Food & Beverage", "Home & Lifestyle", "Electronics & Gadgets", "Travel & Leisure",
-  "Parenting & Family", "Education & Learning", "Entertainment & Media", "Automotive",
-  "Pets", "Personal Finance & Banking", "Jewellery & Accessories", "Other",
+  "Automotive", "Beauty & Personal Care", "Education & Learning", "Electronics & Gadgets",
+  "Entertainment & Media", "Fashion & Apparel", "Fitness & Sports", "Food & Beverage",
+  "Health & Wellness", "Home & Lifestyle", "Jewellery & Accessories", "Parenting & Family",
+  "Personal Finance & Banking", "Pets", "Travel & Leisure",
+  "Other",
 ];
 
 export const COUNTRIES = [
