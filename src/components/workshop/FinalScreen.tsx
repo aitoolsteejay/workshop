@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Download, RotateCcw, Copy, Check, Users, Target, Zap, MessageSquare, Globe, ArrowRight, Clock, Star } from "lucide-react";
+import { Download, RotateCcw, Copy, Check, Users, Target, Zap, MessageSquare, Globe, ArrowRight, Clock, Star, Handshake } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,6 +38,10 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
   const { toast } = useToast();
 
   const bestMagnet = strategies[0]?.leadMagnets?.find((lm: any) => lm.bestStart) || strategies[0]?.leadMagnets?.[0];
+  const partnerVP = vps.find((vp: any) => vp.icpName === "Channel Partners");
+  const icpPartnerTypes = icps
+    .map((icp: any) => ({ name: icp.name, types: (icp.channelPartners || []).map((p: any) => p.partnerType).filter(Boolean) }))
+    .filter((x: any) => x.types.length > 0);
 
   const copyFullStrategy = async () => {
     const lines: string[] = [];
@@ -55,6 +59,12 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
       lines.push(`ICP ${i + 1} (${vp.icpName || ""}): ${vp.corePromise || ""}`);
       if (vp.positioning) lines.push(`   Positioning: ${vp.positioning}`);
     });
+
+    if (partnerVP || icpPartnerTypes.length > 0) {
+      lines.push("\n--- CHANNEL PARTNERS ---");
+      if (partnerVP?.corePromise) lines.push(partnerVP.corePromise);
+      icpPartnerTypes.forEach((x: any) => lines.push(`${x.name}: ${x.types.join(", ")}`));
+    }
 
     lines.push("\n--- OUTREACH ---");
     playbooks.forEach((pb: any) => {
@@ -240,6 +250,56 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
           </section>
         )}
       </div>
+
+      {/* Channel Partner Strategy */}
+      {(partnerVP || icpPartnerTypes.length > 0) && (
+        <section className="glass-card p-8 mb-8">
+          <h3 className="text-[16px] font-semibold mb-6 flex items-center gap-2">
+            <Handshake className="w-4 h-4 text-primary" /> Channel Partner Strategy
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              {partnerVP ? (
+                <>
+                  <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Why Partner With You</span>
+                  <p className="text-sm font-semibold text-foreground mt-2 leading-relaxed">{partnerVP.corePromise}</p>
+                  {partnerVP.whatsInItForThem?.length > 0 && (
+                    <ul className="mt-3 space-y-1">
+                      {partnerVP.whatsInItForThem.slice(0, 3).map((w: string, i: number) => (
+                        <li key={i} className="text-sm text-foreground">→ {w}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {partnerVP.cta && (
+                    <p className="text-xs text-primary mt-3 font-medium">{partnerVP.cta}</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Not generated yet</p>
+              )}
+            </div>
+            <div>
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Partner Types by Customer</span>
+              {icpPartnerTypes.length > 0 ? (
+                <div className="mt-2 space-y-3">
+                  {icpPartnerTypes.map((x: any, i: number) => (
+                    <div key={i}>
+                      <p className="text-xs text-muted-foreground">{x.name}</p>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {x.types.map((t: string, j: number) => (
+                          <span key={j} className="text-xs px-2 py-1 rounded tag-selected border border-primary">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic mt-2">Not generated yet</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Outreach System Summary */}
       {playbooks.length > 0 && (
