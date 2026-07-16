@@ -27,7 +27,7 @@ async function loadLogo(): Promise<boolean> {
 const LINKS = {
   linkedin: "https://www.linkedin.com/in/tejasjhaveri",
   instagram: "https://www.instagram.com/tejas_jhaveri",
-  calendly: "https://calendly.com/founder-myntmore/30min",
+  calendly: "https://calendly.com/founder-myntmore/web",
   notion: MYNTMORE_NOTION_LINK,
 };
 

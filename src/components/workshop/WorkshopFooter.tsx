@@ -4,7 +4,7 @@ import { MYNTMORE_NOTION_LINK } from "@/lib/constants";
 const links = [
   { icon: Linkedin, label: "TJ's LinkedIn", href: "https://www.linkedin.com/in/tejasjhaveri" },
   { icon: Instagram, label: "TJ's Instagram", href: "https://www.instagram.com/tejas_jhaveri" },
-  { icon: Calendar, label: "Book a Call with TJ", href: "https://calendly.com/founder-myntmore/30min" },
+  { icon: Calendar, label: "Book a Call with TJ", href: "https://calendly.com/founder-myntmore/web" },
   { icon: BookOpen, label: "Myntmore", href: MYNTMORE_NOTION_LINK },
 ];
 
