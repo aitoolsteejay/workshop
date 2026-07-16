@@ -448,7 +448,7 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
             <pre className="text-xs text-muted-foreground bg-secondary p-4 rounded-md overflow-auto max-h-80 whitespace-pre-wrap">{generatedPrompt}</pre>
           </div>
 
-          <a href="https://lovable.dev/invite/4J88T9O" target="_blank" rel="noopener noreferrer"
+          <a href="https://lovable.dev/invite/W067E3R" target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full h-11 rounded-md accent-bg hover:opacity-90 transition-colors font-semibold text-sm">
             Build it with Lovable (no coding needed) <ExternalLink className="w-4 h-4" />
           </a>
