@@ -8,20 +8,22 @@ import { ArrowLeft } from "lucide-react";
 import { INDUSTRIES } from "@/lib/constants";
 import { useAutosave } from "@/hooks/use-autosave";
 
-const SELLING_TO_OPTIONS = ["D2C", "B2B", "Both"];
-const BUSINESS_TYPES = ["Product-based", "Service-based", "Hybrid"];
+const SELLING_TO_OPTIONS = ["B2B", "Both", "D2C"];
+const BUSINESS_TYPES = ["Hybrid", "Product-based", "Service-based"];
 
+// Ordinal (ascending), not alphabetised, so the natural low-to-high progression stays intact.
 const REVENUE_OPTIONS = [
   "₹0–5 Lakhs", "₹5–10 Lakhs", "₹10–25 Lakhs", "₹25–50 Lakhs",
   "₹50 Lakhs–1 Cr", "₹1–2 Cr", "₹2–5 Cr", "₹5–10 Cr", "₹10 Cr+",
 ];
 
+// Ordinal (ascending), not alphabetised, so the natural low-to-high progression stays intact.
 const EMPLOYEE_OPTIONS = ["1–10", "11–50", "51–200", "201–500", "500+"];
 
 const GOAL_OPTIONS = [
-  { label: "More leads", desc: "Generate more qualified prospects" },
   { label: "Better conversion", desc: "Turn prospects into customers" },
   { label: "Brand authority", desc: "Become the go-to in your space" },
+  { label: "More leads", desc: "Generate more qualified prospects" },
   { label: "All of the above", desc: "Full-stack growth" },
 ];
 

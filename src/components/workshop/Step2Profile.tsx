@@ -13,7 +13,7 @@ import { ArrowLeft, X, Copy, Check, CheckCircle2, ArrowUpCircle } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
 
-const TONE_OPTIONS = ["Bold", "Professional", "Casual", "Witty", "Direct", "Empathetic", "Data-driven"];
+const TONE_OPTIONS = ["Bold", "Casual", "Data-driven", "Direct", "Empathetic", "Professional", "Witty"];
 const MAX_TONES = 3;
 
 const TIERS = [

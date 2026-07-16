@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
 import { ArrowLeft, AlertTriangle, Video, Clock, ShieldAlert, X, Lightbulb, CheckCircle2, XCircle, ArrowRightCircle, Radio, Megaphone, Target } from "lucide-react";
 
-const ANGLES = ["Authority", "ROI", "Pain-led", "Contrarian", "Curiosity", "Offer-led"];
+const ANGLES = ["Authority", "Contrarian", "Curiosity", "Offer-led", "Pain-led", "ROI"];
 const MAX_ANGLES = 2;
 
 const POSITIONING_STYLES = [
