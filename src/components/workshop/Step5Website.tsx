@@ -10,6 +10,7 @@ import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
+import { copyToClipboard as copyTextToClipboard } from "@/lib/clipboard";
 import { Copy, Check, ExternalLink, Upload, ArrowLeft } from "lucide-react";
 import { MYNTMORE_NOTION_LINK } from "@/lib/constants";
 import { joinField } from "@/lib/utils";
@@ -106,6 +107,13 @@ function parseDataUrl(dataUrl: string): GeminiImage | undefined {
   if (!match) return undefined;
   return { mimeType: match[1], data: match[2] };
 }
+
+const COLOR_PRESETS = [
+  { name: "Golden Bold", primary: "#F5B301", secondary: "#14110F" },
+  { name: "Ocean Trust", primary: "#2563EB", secondary: "#F8FAFC" },
+  { name: "Fresh Growth", primary: "#059669", secondary: "#F0FDF4" },
+  { name: "Elegant Plum", primary: "#7C3AED", secondary: "#FAF5FF" },
+];
 
 const STYLE_ARCHETYPES = [
   "Swiss minimalist: generous white space, strict grid alignment, restrained typography, no decorative elements, lots of breathing room",
@@ -305,18 +313,7 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
       console.error("Nothing to copy");
       return;
     }
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const textarea = document.createElement("textarea");
-      textarea.value = text;
-      textarea.style.position = "fixed";
-      textarea.style.opacity = "0";
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-    }
+    await copyTextToClipboard(text);
     toast({ title: "✓ Copied to clipboard", duration: 2000 });
     if (index !== undefined) {
       setCopiedIndex(index);
@@ -334,6 +331,27 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
           <Label className="text-sm text-muted-foreground">Brand / Business Name *</Label>
           <Input value={form.brandName} onChange={e => update("brandName", e.target.value)} className="mt-1 bg-secondary border-border focus:border-primary" />
         </div>
+        <div>
+          <Label className="text-sm text-muted-foreground">Brand Colours *</Label>
+          <p className="text-xs text-muted-foreground mt-1 mb-2">Pick a combination that works, or customise below. Required to generate your prompt.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {COLOR_PRESETS.map(preset => {
+              const isActive = form.primaryColor === preset.primary && form.secondaryColor === preset.secondary;
+              return (
+                <button key={preset.name} type="button"
+                  onClick={() => setForm(p => ({ ...p, primaryColor: preset.primary, secondaryColor: preset.secondary }))}
+                  className={`flex flex-col items-center gap-1.5 p-2.5 rounded-md border transition-colors ${isActive ? "border-primary bg-primary/5" : "border-border bg-secondary hover:border-muted-foreground"}`}>
+                  <div className="flex w-full h-8 rounded overflow-hidden border border-border/50">
+                    <div className="flex-1" style={{ backgroundColor: preset.primary }} />
+                    <div className="flex-1" style={{ backgroundColor: preset.secondary }} />
+                  </div>
+                  <span className="text-xs text-foreground font-medium">{preset.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label className="text-sm text-muted-foreground">Primary Colour</Label>
@@ -410,7 +428,7 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
       {error && <p className="text-destructive text-sm mb-4">{error}</p>}
 
       {!loading && !generatedPrompt && (
-        <Button onClick={generate} className="accent-bg hover:opacity-90 w-full h-11 font-semibold">
+        <Button onClick={generate} disabled={!form.brandName.trim() || !form.primaryColor || !form.secondaryColor} className="accent-bg hover:opacity-90 w-full h-11 font-semibold disabled:opacity-50">
           Generate Website Prompt
         </Button>
       )}
@@ -430,7 +448,7 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
             <pre className="text-xs text-muted-foreground bg-secondary p-4 rounded-md overflow-auto max-h-80 whitespace-pre-wrap">{generatedPrompt}</pre>
           </div>
 
-          <a href="https://lovable.dev/invite/4J88T9O" target="_blank" rel="noopener noreferrer"
+          <a href="https://lovable.dev/invite/W067E3R" target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full h-11 rounded-md accent-bg hover:opacity-90 transition-colors font-semibold text-sm">
             Build it with Lovable (no coding needed) <ExternalLink className="w-4 h-4" />
           </a>

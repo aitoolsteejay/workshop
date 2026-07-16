@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, X, Copy, Check, CheckCircle2, ArrowUpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosave } from "@/hooks/use-autosave";
+import { copyToClipboard } from "@/lib/clipboard";
 
 const TONE_OPTIONS = ["Bold", "Casual", "Data-driven", "Direct", "Empathetic", "Professional", "Witty"];
 const MAX_TONES = 3;
@@ -104,8 +105,8 @@ Return ONLY a valid JSON array of exactly 3 strings (no markdown, no code blocks
     return () => clearTimeout(timer);
   }, [offerKey]);
 
-  const copyText = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+  const copyText = async (text: string, field: string) => {
+    await copyToClipboard(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
   };
@@ -194,6 +195,9 @@ Structure:
 - Paragraph 2: Differentiation + strengths + outcomes delivered
 - Paragraph 3: Positioning + credibility + authority tone
 Rules: No fluff. No repetition. No generic statements. Must feel LinkedIn-ready and website-ready.
+MANDATORY: Write the entire aboutSection in first person ("I", "me", "my"), the way the person would write about themselves on their own LinkedIn profile. Never refer to them by name or in third person within the aboutSection.
+
+HEADLINE RULES (CRITICAL): The 3 "headlines" must NOT include the person's name. A LinkedIn headline sits directly under the name, repeating it wastes space, focus entirely on role, who they help, how, and the result, e.g. "Helping [audience] achieve [outcome] through [method]", never "[Name], who helps...".
 
 IMPORTANT: Do NOT use em-dashes, asterisks, or hash signs in any output.
 
@@ -298,37 +302,41 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
               <Input value={form.linkedinUrl} onChange={e => update("linkedinUrl", e.target.value)} placeholder="https://linkedin.com/in/yourprofile" className="mt-1 bg-secondary border-border focus:border-primary" />
             </div>
 
-            <label className="flex items-center gap-2 p-3 rounded-md bg-secondary border border-border cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.noHeadline}
-                onChange={e => update("noHeadline", e.target.checked)}
-                className="accent-primary w-4 h-4"
-              />
-              <span className="text-sm text-foreground">I don't have a LinkedIn headline</span>
-            </label>
-            {!form.noHeadline && (
-              <div>
+            <div>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <Label className="text-sm text-muted-foreground">Current LinkedIn Headline *</Label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.noHeadline}
+                    onChange={e => update("noHeadline", e.target.checked)}
+                    className="accent-primary w-3.5 h-3.5"
+                  />
+                  <span className="text-xs text-muted-foreground">I don't have a LinkedIn headline</span>
+                </label>
+              </div>
+              {!form.noHeadline && (
                 <Input value={form.headline} onChange={e => update("headline", e.target.value)} placeholder="Reduce hiring time → for Talent Leaders → using automation" className="mt-1 bg-secondary border-border focus:border-primary" />
-              </div>
-            )}
+              )}
+            </div>
 
-            <label className="flex items-center gap-2 p-3 rounded-md bg-secondary border border-border cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.noAbout}
-                onChange={e => update("noAbout", e.target.checked)}
-                className="accent-primary w-4 h-4"
-              />
-              <span className="text-sm text-foreground">I don't have a LinkedIn about section</span>
-            </label>
-            {!form.noAbout && (
-              <div>
+            <div>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <Label className="text-sm text-muted-foreground">About Section *</Label>
-                <Textarea value={form.about} onChange={e => update("about", e.target.value)} placeholder="Your LinkedIn about section..." className="mt-1 bg-secondary border-border focus:border-primary min-h-[80px]" />
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.noAbout}
+                    onChange={e => update("noAbout", e.target.checked)}
+                    className="accent-primary w-3.5 h-3.5"
+                  />
+                  <span className="text-xs text-muted-foreground">I don't have a LinkedIn about section</span>
+                </label>
               </div>
-            )}
+              {!form.noAbout && (
+                <Textarea value={form.about} onChange={e => update("about", e.target.value)} placeholder="Your LinkedIn about section..." className="mt-1 bg-secondary border-border focus:border-primary min-h-[80px]" />
+              )}
+            </div>
           </>
         )}
         <div>
@@ -550,13 +558,6 @@ Return ONLY a valid JSON object (no markdown, no code blocks) with:
                   <p className="text-sm text-muted-foreground">{angle}</p>
                 </div>
               ))}
-            </div>
-          )}
-
-          {result.scoreMeaning && (
-            <div className="glass-card p-6">
-              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Score Explanation</h3>
-              <p className="text-sm text-muted-foreground">{result.scoreMeaning}</p>
             </div>
           )}
 

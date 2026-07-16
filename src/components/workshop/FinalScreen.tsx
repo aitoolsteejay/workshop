@@ -3,26 +3,13 @@ import { motion } from "framer-motion";
 import { Download, RotateCcw, Copy, Check, Users, Target, Zap, MessageSquare, Globe, ArrowRight, Clock, Star, Handshake } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
+import { audienceBadgeClass } from "@/lib/audience";
 
 interface FinalScreenProps {
   sessionData: any;
   onDownloadPDF: () => void;
   onRestart: () => void;
-}
-
-async function robustCopy(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
-  }
 }
 
 export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScreenProps) {
@@ -76,7 +63,7 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
       lines.push(website.generatedPrompt.slice(0, 500) + "...");
     }
 
-    await robustCopy(lines.join("\n"));
+    await copyToClipboard(lines.join("\n"));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast({ title: "✓ Strategy copied to clipboard", duration: 2000 });
@@ -103,7 +90,7 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
               {icps.map((icp: any, i: number) => (
                 <li key={i} className="text-sm text-foreground flex items-center gap-1.5">
                   → {icp.name}
-                  {icp.audienceType && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">{icp.audienceType}</span>}
+                  {icp.audienceType && <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${audienceBadgeClass(icp.audienceType)}`}>{icp.audienceType}</span>}
                 </li>
               ))}
               {icps.length === 0 && <li className="text-sm text-muted-foreground italic">Not completed</li>}
@@ -143,7 +130,7 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
               <div key={i} className="glass-card p-6">
                 <h4 className="text-sm font-semibold accent-text mb-4 flex items-center gap-1.5">
                   {icp.name}
-                  {icp.audienceType && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">{icp.audienceType}</span>}
+                  {icp.audienceType && <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${audienceBadgeClass(icp.audienceType)}`}>{icp.audienceType}</span>}
                 </h4>
                 <div className="space-y-3">
                   {icp.geographyContext && (
@@ -185,7 +172,7 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
                   <span className="text-[11px] text-muted-foreground uppercase font-medium flex items-center gap-1.5">
                     {vp.icpName || `ICP ${i + 1}`}
                     {vp.icpName !== "Channel Partners" && icps[i]?.audienceType && (
-                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-background text-muted-foreground normal-case tracking-normal">{icps[i].audienceType}</span>
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full normal-case tracking-normal ${audienceBadgeClass(icps[i].audienceType)}`}>{icps[i].audienceType}</span>
                     )}
                   </span>
                   <p className="text-sm font-semibold mt-1 leading-relaxed">{vp.corePromise}</p>
@@ -331,8 +318,10 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
                 <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Per-ICP Angles</span>
                 <div className="mt-2 space-y-1">
                   {playbooks.map((pb: any, i: number) => (
-                    <p key={i} className="text-sm text-foreground leading-relaxed">
-                      <span className="text-primary font-medium">{pb.icpName}{pb.audienceType ? ` (${pb.audienceType})` : ""}:</span> {pb.strategicApproach?.bestAngle || "—"} / {pb.strategicApproach?.positioningStyle || "—"}
+                    <p key={i} className="text-sm text-foreground leading-relaxed flex flex-wrap items-center gap-1">
+                      <span className="text-primary font-medium">{pb.icpName}:</span>
+                      {pb.audienceType && <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${audienceBadgeClass(pb.audienceType)}`}>{pb.audienceType}</span>}
+                      <span>{pb.strategicApproach?.bestAngle || "—"} / {pb.strategicApproach?.positioningStyle || "—"}</span>
                     </p>
                   ))}
                 </div>

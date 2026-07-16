@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
 import { callGemini, describeGeminiError, AI_PARSE_ERROR_MESSAGE } from "@/lib/workshop-store";
-import { sanitizeAIText, sanitizeAIOutput } from "@/lib/sanitize";
+import { sanitizeAIOutput } from "@/lib/sanitize";
 import { useAutosave } from "@/hooks/use-autosave";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
 import { ArrowLeft, Copy, Check, Sparkles, Gem, ExternalLink, Camera } from "lucide-react";
 
 const JEWELLERY_TYPES = ["Anklet", "Bracelet", "Brooch", "Choker", "Cuff", "Earrings", "Hair pin", "Necklace", "Pendant", "Ring"];
@@ -27,6 +28,14 @@ const MODELLING_STEPS = [
   "Generate a few variations, then download your favourite for your product listing or ad creative.",
 ];
 
+const DESIGN_STEPS = [
+  "Pick a jewellery type plus any style, material, gemstone, and mood details below.",
+  "Open Gemini and start a new chat.",
+  "Gemini's built-in image generation model, nicknamed Nano Banana, works directly in the app, no separate setup needed.",
+  "Paste the generated prompt below into the chat.",
+  "Generate a few variations, then download your favourite to visualise the design or share it with your jeweller.",
+];
+
 interface StepAddOnsProps {
   data: any;
   onboardingData?: any;
@@ -39,9 +48,6 @@ export function StepAddOns({ data, onboardingData, onSave, onNext, onBack }: Ste
   const [selections, setSelections] = useState<Record<string, string[]>>(
     data?.selections || { type: [], style: [], material: [], gemstone: [], mood: [] }
   );
-  const [enhancedPrompt, setEnhancedPrompt] = useState(data?.enhancedPrompt || "");
-  const [enhancing, setEnhancing] = useState(false);
-  const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [modelType, setModelType] = useState<string>(data?.modelType || "");
   const [modelPrompts, setModelPrompts] = useState<string[]>(data?.modelPrompts || []);
@@ -58,7 +64,6 @@ export function StepAddOns({ data, onboardingData, onSave, onNext, onBack }: Ste
       if (cur.length >= max) return p;
       return { ...p, [catKey]: [...cur, value] };
     });
-    setEnhancedPrompt("");
   };
 
   const basePrompt = useMemo(() => {
@@ -87,31 +92,11 @@ export function StepAddOns({ data, onboardingData, onSave, onNext, onBack }: Ste
     return parts.join(", ") + ".";
   }, [selections]);
 
-  useAutosave({ selections, enhancedPrompt, basePrompt, modelType, modelPrompts }, onSave);
+  useAutosave({ selections, basePrompt, modelType, modelPrompts }, onSave);
 
-  const enhance = async () => {
+  const copyPrompt = async () => {
     if (!basePrompt) return;
-    setEnhancing(true);
-    setError("");
-    try {
-      const prompt = `You are an expert AI-art prompt engineer who writes prompts for AI image generation tools (Midjourney, DALL-E, Stable Diffusion, Gemini). Take this rough jewellery design brief and rewrite it into one vivid, richly detailed, professional image-generation prompt for a jewellery product photo.
-
-Rough brief: ${basePrompt}
-
-Write ONE single flowing prompt of at least 120 words (not multiple options, not a list). It must read as one continuous descriptive passage and cover all of the following in detail: the subject and its materials and craftsmanship, the camera and composition (lens type, framing, angle, depth of field), the lighting setup (key light, fill, rim, how it interacts with the metal and stones), the background and setting, the overall mood and styling, and technical quality descriptors (resolution, sharpness, realism). Use precise, vivid, sensory language the way a professional product photographer or prompt engineer would, technical photography terms are welcome and encouraged here since this is for an image generator, not for a general reader. Do NOT use em-dashes, asterisks, or hash signs. Return ONLY the prompt text, no quotes, no markdown, no explanation.`;
-      const raw = await callGemini(prompt);
-      setEnhancedPrompt(sanitizeAIText(raw.trim()));
-    } catch (e: any) {
-      setError(describeGeminiError(e));
-    } finally {
-      setEnhancing(false);
-    }
-  };
-
-  const copyPrompt = () => {
-    const text = enhancedPrompt || basePrompt;
-    if (!text) return;
-    navigator.clipboard.writeText(text);
+    await copyToClipboard(basePrompt);
     setCopied(true);
     toast({ title: "✓ Copied", duration: 2000 });
     setTimeout(() => setCopied(false), 2000);
@@ -153,16 +138,16 @@ Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown cod
     }
   };
 
-  const copyModelPrompt = (text: string, idx: number) => {
+  const copyModelPrompt = async (text: string, idx: number) => {
     if (!text) return;
-    navigator.clipboard.writeText(text);
+    await copyToClipboard(text);
     setCopiedModelIdx(idx);
     toast({ title: "✓ Copied", duration: 2000 });
     setTimeout(() => setCopiedModelIdx(null), 2000);
   };
 
   const handleNext = () => {
-    onSave({ selections, enhancedPrompt, basePrompt, modelType, modelPrompts });
+    onSave({ selections, basePrompt, modelType, modelPrompts });
     onNext();
   };
 
@@ -171,130 +156,138 @@ Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown cod
       <h2 className="text-[20px] font-bold mb-1">Bonus <span className="accent-text">Add-Ons</span></h2>
       <p className="text-muted-foreground mb-8 text-sm">Extra tools to help bring your business to life</p>
 
-      <div className="glass-card p-6 mb-6 border-primary/30">
-        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          <Gem className="w-4 h-4" />
-          Jewellery Design Prompt Generator
-          <InfoTooltip text="Pick a jewellery type plus any style, material, gemstone, and mood details, and we'll build an AI image-generation prompt you can use in tools like Midjourney or DALL-E to visualise the design" />
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Select a piece type and up to 3 options in each other category to build a design prompt for AI image generators.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        {CATEGORIES.map(cat => (
-          <div key={cat.key} className="glass-card p-6">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{cat.label}</h4>
-            <div className="flex flex-wrap gap-2">
-              {cat.options.map(opt => {
-                const selected = (selections[cat.key] || []).includes(opt);
-                return (
-                  <button key={opt} type="button" onClick={() => toggleTag(cat.key, opt, cat.max)}
-                    className={`text-sm px-4 py-2 rounded-md border transition-all ${
-                      selected ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
-                    }`}>
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {basePrompt && (
-        <div className="glass-card p-6 mt-6">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Generated Prompt</h4>
-          <div className="bg-secondary p-4 rounded-md">
-            <p className="text-sm text-foreground whitespace-pre-wrap">{enhancedPrompt || basePrompt}</p>
-          </div>
-          {error && <p className="text-destructive text-xs mt-2">{error}</p>}
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Button onClick={enhance} disabled={enhancing} variant="outline" size="sm" className="gap-1.5 border-primary text-primary hover:bg-primary/10">
-              <Sparkles className="w-3.5 h-3.5" />
-              {enhancing ? "Enhancing…" : enhancedPrompt ? "Regenerate with AI" : "Enhance with AI"}
-            </Button>
-            <Button onClick={copyPrompt} variant="outline" size="sm" className="gap-1.5">
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? "Copied!" : "Copy Prompt"}
-            </Button>
-          </div>
-          {enhancing && <div className="mt-3"><LoadingSpinner text="Polishing your prompt..." /></div>}
-          <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-3">
-            Open Gemini <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+      <section className="rounded-xl border-2 border-primary/30 p-6 mb-8">
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <Gem className="w-4 h-4" />
+            Jewellery Design Prompt Generator
+            <InfoTooltip text="Pick a jewellery type plus any style, material, gemstone, and mood details, and we'll build an AI image-generation prompt you can use in Gemini to visualise the design" />
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Select a piece type and up to 3 options in each other category to build a design prompt for AI image generators.
+          </p>
         </div>
-      )}
 
-      <div className="glass-card p-6 mt-10 mb-6 border-primary/30">
-        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          <Camera className="w-4 h-4" />
-          AI Jewellery Modelling
-          <InfoTooltip text="Pick a jewellery type and we'll write detailed prompts for Gemini's image model (Nano Banana) so you can generate photos of that piece being worn by a person" />
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Pick a jewellery type below to get 5 detailed prompts for showing it modelled by a person, ready to paste into Gemini.
-        </p>
-      </div>
-
-      <div className="glass-card p-6">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Jewellery Type</h4>
-        <div className="flex flex-wrap gap-2">
-          {JEWELLERY_TYPES.map(opt => (
-            <button key={opt} type="button" onClick={() => { setModelType(opt); setModelPrompts([]); }}
-              className={`text-sm px-4 py-2 rounded-md border transition-all ${
-                modelType === opt ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
-              }`}>
-              {opt}
-            </button>
+        <div className="space-y-6">
+          {CATEGORIES.map(cat => (
+            <div key={cat.key} className="glass-card p-6">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{cat.label}</h4>
+              <div className="flex flex-wrap gap-2">
+                {cat.options.map(opt => {
+                  const selected = (selections[cat.key] || []).includes(opt);
+                  return (
+                    <button key={opt} type="button" onClick={() => toggleTag(cat.key, opt, cat.max)}
+                      className={`text-sm px-4 py-2 rounded-md border transition-all ${
+                        selected ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
+                      }`}>
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </div>
-      </div>
 
-      {modelType && (
-        <div className="glass-card p-6 mt-6">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">How to Use This</h4>
-          <ol className="space-y-2 mb-4">
-            {MODELLING_STEPS.map((step, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                <span className="text-primary font-semibold shrink-0">{i + 1}.</span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
-          <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-            Open Gemini <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-
-          <div className="mt-5">
-            <Button onClick={generateModelPrompts} disabled={modelling} className="accent-bg hover:opacity-90 gap-1.5">
-              <Sparkles className="w-4 h-4" />
-              {modelling ? "Generating…" : modelPrompts.length > 0 ? "Regenerate Prompts" : "Generate Modelling Prompts"}
-            </Button>
-            {modelError && <p className="text-destructive text-xs mt-2">{modelError}</p>}
-            {modelling && <div className="mt-3"><LoadingSpinner text="Writing detailed modelling prompts..." /></div>}
-          </div>
-
-          {modelPrompts.length > 0 && (
-            <div className="space-y-3 mt-5">
-              {modelPrompts.map((p, i) => (
-                <div key={i} className="bg-secondary p-4 rounded-md">
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{p}</p>
-                  <div className="mt-3">
-                    <Button onClick={() => copyModelPrompt(p, i)} variant="outline" size="sm" className="gap-1.5">
-                      {copiedModelIdx === i ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copiedModelIdx === i ? "Copied!" : "Copy Prompt"}
-                    </Button>
-                  </div>
-                </div>
+        {basePrompt && (
+          <div className="glass-card p-6 mt-6">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">How to Use This</h4>
+            <ol className="space-y-2 mb-4">
+              {DESIGN_STEPS.map((step, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                  <span className="text-primary font-semibold shrink-0">{i + 1}.</span>
+                  <span>{step}</span>
+                </li>
               ))}
+            </ol>
+            <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mb-5">
+              Open Gemini <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Generated Prompt</h4>
+            <div className="bg-secondary p-4 rounded-md">
+              <p className="text-sm text-foreground whitespace-pre-wrap">{basePrompt}</p>
             </div>
-          )}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button onClick={copyPrompt} variant="outline" size="sm" className="gap-1.5">
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "Copied!" : "Copy Prompt"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-xl border-2 border-primary/30 p-6 mt-8">
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <Camera className="w-4 h-4" />
+            AI Jewellery Modelling
+            <InfoTooltip text="Pick a jewellery type and we'll write detailed prompts for Gemini's image model (Nano Banana) so you can generate photos of that piece being worn by a person" />
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Pick a jewellery type below to get 5 detailed prompts for showing it modelled by a person, ready to paste into Gemini.
+          </p>
         </div>
-      )}
+
+        <div className="glass-card p-6">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Jewellery Type</h4>
+          <div className="flex flex-wrap gap-2">
+            {JEWELLERY_TYPES.map(opt => (
+              <button key={opt} type="button" onClick={() => { setModelType(opt); setModelPrompts([]); }}
+                className={`text-sm px-4 py-2 rounded-md border transition-all ${
+                  modelType === opt ? "tag-selected border-primary" : "bg-secondary border-border text-muted-foreground hover:border-muted-foreground"
+                }`}>
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {modelType && (
+          <div className="glass-card p-6 mt-6">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">How to Use This</h4>
+            <ol className="space-y-2 mb-4">
+              {MODELLING_STEPS.map((step, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                  <span className="text-primary font-semibold shrink-0">{i + 1}.</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+            <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+              Open Gemini <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+
+            <div className="mt-5">
+              <Button onClick={generateModelPrompts} disabled={modelling} className="accent-bg hover:opacity-90 gap-1.5">
+                <Sparkles className="w-4 h-4" />
+                {modelling ? "Generating…" : modelPrompts.length > 0 ? "Regenerate Prompts" : "Generate Modelling Prompts"}
+              </Button>
+              {modelError && <p className="text-destructive text-xs mt-2">{modelError}</p>}
+              {modelling && <div className="mt-3"><LoadingSpinner text="Writing detailed modelling prompts..." /></div>}
+            </div>
+
+            {modelPrompts.length > 0 && (
+              <div className="space-y-3 mt-5">
+                {modelPrompts.map((p, i) => (
+                  <div key={i} className="bg-secondary p-4 rounded-md">
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{p}</p>
+                    <div className="mt-3">
+                      <Button onClick={() => copyModelPrompt(p, i)} variant="outline" size="sm" className="gap-1.5">
+                        {copiedModelIdx === i ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedModelIdx === i ? "Copied!" : "Copy Prompt"}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       <div className="mt-8 flex items-center justify-between">
         {onBack ? (

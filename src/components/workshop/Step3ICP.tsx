@@ -14,6 +14,7 @@ import { useAutosave } from "@/hooks/use-autosave";
 import { ChevronDown, ArrowLeft, Brain, AlertTriangle, Target, Zap, Radio, User, TrendingUp, Trophy, ShieldAlert, ChevronRight, Plus, X, Briefcase, ShoppingBag } from "lucide-react";
 import { INDUSTRIES, COUNTRIES, DEFAULT_ICP_COUNT, MAX_ICP_COUNT } from "@/lib/constants";
 import { joinField } from "@/lib/utils";
+import { audienceBadgeClass } from "@/lib/audience";
 import {
   Collapsible,
   CollapsibleContent,
@@ -223,6 +224,7 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
   };
 
   const [activeTab, setActiveTab] = useState<number | "partners">(0);
+  const [expandedNode, setExpandedNode] = useState<string | null>(null);
 
   const TOOLTIPS: Record<string, string> = {
     whoTheyAre: "A detailed description of this ideal customer's role, company type, and context",
@@ -322,7 +324,7 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
                   </span>
                   <span className="font-semibold text-sm">ICP {idx + 1}</span>
                   {isBothMode && type && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{type}</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${audienceBadgeClass(type)}`}>{type}</span>
                   )}
                   {type === "D2C" ? (
                     icps[idx].d2cSelectedIdx !== null && (
@@ -457,18 +459,18 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8">
           <div className="flex gap-1 mb-4">
             {result.map((icp: any, idx: number) => (
-              <button key={idx} onClick={() => setActiveTab(idx)}
+              <button key={idx} onClick={() => { setActiveTab(idx); setExpandedNode(null); }}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${activeTab === idx ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                 ICP {idx + 1}
                 {icp?.audienceType && (
-                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${activeTab === idx ? "bg-black/20 text-primary-foreground" : "bg-background text-muted-foreground"}`}>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${audienceBadgeClass(icp.audienceType)}`}>
                     {icp.audienceType}
                   </span>
                 )}
               </button>
             ))}
             {result.some((icp: any) => Array.isArray(icp.channelPartners) && icp.channelPartners.length > 0) && (
-              <button onClick={() => setActiveTab("partners")}
+              <button onClick={() => { setActiveTab("partners"); setExpandedNode(null); }}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "partners" ? "accent-bg" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                 Channel Partners
               </button>
@@ -486,7 +488,7 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
                       <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-1 flex items-center gap-1.5">
                         For ICP {idx + 1}: {icp.name}
                         {icp?.audienceType && (
-                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-background text-muted-foreground normal-case tracking-normal">{icp.audienceType}</span>
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full normal-case tracking-normal ${audienceBadgeClass(icp.audienceType)}`}>{icp.audienceType}</span>
                         )}
                         <InfoTooltip text="Other businesses or individuals who already have this ICP's trust, and could refer or co-sell to them" />
                       </h3>
@@ -512,7 +514,7 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
               <div className="glass-card p-6 text-center">
                 <h3 className="text-base font-semibold accent-text">{result[activeTab as number]?.name}</h3>
                 {result[activeTab as number]?.audienceType && (
-                  <span className="mt-2 inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                  <span className={`mt-2 inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${audienceBadgeClass(result[activeTab as number].audienceType)}`}>
                     {result[activeTab as number].audienceType === "D2C" ? "Individual Consumer" : "Business Buyer"}
                   </span>
                 )}
@@ -547,15 +549,19 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
                         const x = 50 + radius * Math.cos(angle);
                         const y = 50 + radius * Math.sin(angle);
                         const Icon = n.icon;
+                        const isExpanded = expandedNode === n.key;
                         return (
-                          <div key={n.key} className="absolute glass-card p-2.5 text-left w-[38%] sm:w-[30%]"
+                          <button key={n.key} type="button"
+                            onClick={() => setExpandedNode(isExpanded ? null : n.key)}
+                            className={`absolute glass-card p-2.5 text-left w-[38%] sm:w-[30%] cursor-pointer hover:border-primary transition-colors ${isExpanded ? "z-10 shadow-xl" : ""}`}
                             style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}>
                             <div className="flex items-center gap-1 mb-1">
                               <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
                               <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">{n.label}</span>
                             </div>
-                            <p className="text-[11px] sm:text-xs text-foreground line-clamp-3">{n.text}</p>
-                          </div>
+                            <p className={`text-[11px] sm:text-xs text-foreground ${isExpanded ? "" : "line-clamp-3"}`}>{n.text}</p>
+                            {!isExpanded && <span className="text-[9px] text-primary mt-0.5 inline-block">Tap to expand</span>}
+                          </button>
                         );
                       })}
                     </div>
