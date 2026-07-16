@@ -68,7 +68,7 @@ export function Step6GTM({ data, icpData, valuePropData, onboardingData, profile
     const icpDetail = icps.map((icp: any, i: number) =>
       `ICP ${i + 1}: ${icp.name}. Audience Type: ${icp.audienceType || (sellingTo === "D2C" ? "D2C" : "B2B")}. Pain Points: ${(icp.painPoints || []).slice(0, lite ? 2 : undefined).join(", ")}. Goals: ${Array.isArray(icp.goalsDesires) ? icp.goalsDesires.slice(0, lite ? 2 : undefined).join(", ") : (icp.goalsDesires || "")}. Geography: ${icp.geographyContext || "Not specified"}`
     ).join("\n");
-    const vpDetail = vps.map((vp: any, i: number) =>
+    const vpDetail = vps.filter((vp: any) => vp.icpName !== "Channel Partners").map((vp: any, i: number) =>
       `ICP ${i + 1}: ${vp.icpName || vp.corePromise}. Method: ${vp.corePromise || vp.yourMethod}`
     ).join("\n");
     return `Core Offer: ${offer}\nSelling To: ${sellingTo || "Not specified"}\nBusiness Type: ${businessType || "Not specified"}\nIndustry: ${Array.isArray(industry) ? industry.join(", ") : industry}\nICPs:\n${icpDetail}\nValue Propositions:\n${vpDetail}`;
@@ -185,7 +185,8 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
     const chStrats = channels?.icpStrategies || [];
     const exStrats = execution?.icpStrategies || [];
     const mgStrats = magnets?.icpStrategies || [];
-    const maxLen = Math.max(chStrats.length, exStrats.length, mgStrats.length, icps.length);
+    // One strategy per real ICP only, ignore any extra AI-hallucinated entries (e.g. a stray Channel Partners strategy).
+    const maxLen = icps.length || Math.max(chStrats.length, exStrats.length, mgStrats.length);
     const merged: any[] = [];
     for (let i = 0; i < maxLen; i++) {
       merged.push({
