@@ -185,7 +185,7 @@ export async function generatePDF(sessionData: any) {
   const w = doc.internal.pageSize.getWidth();
   const maxW = w - PAGE_MARGIN * 2;
   const userName = sessionData?.user_name || "Attendee";
-  const addonsPrompt = sessionData?.addons_data?.enhancedPrompt || sessionData?.addons_data?.basePrompt;
+  const addonsPrompt = sessionData?.jewellery_design_data?.basePrompt;
 
   // Load logo for all pages
   const logoLoaded = await loadLogo();
@@ -447,12 +447,12 @@ export async function generatePDF(sessionData: any) {
     }
   }
 
-  // Add-Ons
-  const addons = sessionData?.addons_data;
+  // Jewellery Design
+  const jewelleryDesign = sessionData?.jewellery_design_data;
   if (addonsPrompt) {
     y = newSection(doc, "Bonus Add-Ons");
     y = addSubHeader(doc, "Jewellery Design Prompt Generator", y);
-    const sel = addons?.selections || {};
+    const sel = jewelleryDesign?.selections || {};
     const selSummary = ["type", "style", "material", "gemstone", "mood"]
       .map(k => (sel[k] || []).join(", "))
       .filter(Boolean)
