@@ -48,9 +48,9 @@ const PAGE_MARGIN = MARGIN * PX_TO_PT; // ~30pt
 function addHeader(doc: jsPDF) {
   // Add logo top-left on every page
   if (cachedLogoImg) {
-    const logoW = 28;
+    const logoW = 16;
     const logoH = cachedLogoRatio * logoW;
-    doc.addImage(cachedLogoImg, "PNG", PAGE_MARGIN, 6, logoW, logoH);
+    doc.addImage(cachedLogoImg, "PNG", PAGE_MARGIN, 8, logoW, logoH);
   }
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
@@ -78,6 +78,21 @@ function addFooter(doc: jsPDF) {
   }
 }
 
+// Stamps "Page X of N" bottom-right on every page. Run once at the very end,
+// since the total page count is only known after all content is laid out.
+function addPageNumbers(doc: jsPDF) {
+  const totalPages = doc.getNumberOfPages();
+  const w = doc.internal.pageSize.getWidth();
+  const h = doc.internal.pageSize.getHeight();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Page ${i} of ${totalPages}`, w - PAGE_MARGIN, h - 10, { align: "right" });
+  }
+}
+
 function addHeaderFooter(doc: jsPDF) {
   addHeader(doc);
   addFooter(doc);
@@ -90,13 +105,13 @@ function newSection(doc: jsPDF, title: string) {
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text(clean(title), PAGE_MARGIN, 30);
+  doc.text(clean(title), PAGE_MARGIN, 36);
   // Thin grey divider
   doc.setDrawColor(200, 200, 200);
   doc.setLineWidth(0.3);
-  doc.line(PAGE_MARGIN, 34, w - PAGE_MARGIN, 34);
+  doc.line(PAGE_MARGIN, 40, w - PAGE_MARGIN, 40);
   doc.setFont("helvetica", "normal");
-  return 44;
+  return 50;
 }
 
 function addWrappedText(doc: jsPDF, text: string, x: number, y: number, maxWidth: number, lineHeight: number = 5.5): number {
@@ -486,5 +501,6 @@ export async function generatePDF(sessionData: any) {
   doc.setTextColor(120, 120, 120);
   doc.text("Powered by Myntmore", w / 2, y, { align: "center" });
 
+  addPageNumbers(doc);
   doc.save(`B2B_Growth_Strategy_${userName.replace(/\s+/g, "_")}.pdf`);
 }
