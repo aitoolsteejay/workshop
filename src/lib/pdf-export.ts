@@ -110,6 +110,9 @@ function addWrappedText(doc: jsPDF, text: string, x: number, y: number, maxWidth
     if (y > pageH) {
       doc.addPage();
       addHeaderFooter(doc);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(0, 0, 0);
       y = 30;
     }
     doc.text(line, x, y);
@@ -130,7 +133,14 @@ function addBulletList(doc: jsPDF, items: string[], x: number, y: number, maxWid
     doc.text("•", x + 4, y);
     const lines = doc.splitTextToSize(capitalize(clean(item)), maxWidth - 12);
     for (const line of lines) {
-      if (y > pageH) { doc.addPage(); addHeaderFooter(doc); y = 30; }
+      if (y > pageH) {
+        doc.addPage();
+        addHeaderFooter(doc);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(0, 0, 0);
+        y = 30;
+      }
       doc.text(line, bulletX, y);
       y += 5.5;
     }
@@ -148,6 +158,26 @@ function addSubHeader(doc: jsPDF, text: string, y: number): number {
   doc.text(clean(text), PAGE_MARGIN, y);
   doc.setFont("helvetica", "normal");
   return y + 8;
+}
+
+// Rough height (in pt) that a wrapped block of text will need, used to decide
+// whether to keep a short block together on the current page or start fresh.
+function estimateTextHeight(doc: jsPDF, text: string, maxWidth: number, lineHeight: number = 5.5): number {
+  if (!text) return 0;
+  doc.setFontSize(11);
+  return doc.splitTextToSize(capitalize(clean(text)), maxWidth).length * lineHeight;
+}
+
+// Forces a page break now if the given block wouldn't fit in the remaining space,
+// so short trailing blocks don't get orphaned as a couple of lines on an otherwise blank page.
+function ensureSpace(doc: jsPDF, y: number, neededHeight: number): number {
+  const pageH = doc.internal.pageSize.getHeight() - 20;
+  if (y + neededHeight > pageH) {
+    doc.addPage();
+    addHeaderFooter(doc);
+    return 30;
+  }
+  return y;
 }
 
 export async function generatePDF(sessionData: any) {
@@ -250,10 +280,17 @@ export async function generatePDF(sessionData: any) {
       y += 3;
     }
     if (Array.isArray(icp.channelPartners) && icp.channelPartners.length > 0) {
+      // If there's only a sliver of room left, start the whole section on a fresh page
+      // instead of letting just its header (or first entry) get stranded down here.
+      y = ensureSpace(doc, y, 8 + estimateTextHeight(doc, `${icp.channelPartners[0]?.partnerType}: ${icp.channelPartners[0]?.whyTheyFit}`, maxW));
       y = addSubHeader(doc, "Channel Partners", y);
       for (const p of icp.channelPartners) {
-        y = addWrappedText(doc, `${clean(p.partnerType)}: ${clean(p.whyTheyFit)}`, PAGE_MARGIN, y, maxW);
-        if (p.approachAngle) y = addWrappedText(doc, `Approach: ${clean(p.approachAngle)}`, PAGE_MARGIN, y, maxW);
+        const partnerLine = `${clean(p.partnerType)}: ${clean(p.whyTheyFit)}`;
+        const approachLine = p.approachAngle ? `Approach: ${clean(p.approachAngle)}` : "";
+        const needed = estimateTextHeight(doc, partnerLine, maxW) + (approachLine ? estimateTextHeight(doc, approachLine, maxW) : 0) + 2;
+        y = ensureSpace(doc, y, needed);
+        y = addWrappedText(doc, partnerLine, PAGE_MARGIN, y, maxW);
+        if (approachLine) y = addWrappedText(doc, approachLine, PAGE_MARGIN, y, maxW);
         y += 2;
       }
       y += 3;
