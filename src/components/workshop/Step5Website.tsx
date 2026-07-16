@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -164,14 +164,16 @@ const LOVABLE_FAQS = [
 export function Step5Website({ data, icpData, valuePropData, profileData, onboardingData, userName, onSave, onNext, onBack }: Step5Props) {
   const [form, setForm] = useState({
     brandName: data?.brandName || "",
-    primaryColor: data?.primaryColor || "#FFC947",
-    secondaryColor: data?.secondaryColor || "#111111",
+    primaryColor: data?.primaryColor || "",
+    secondaryColor: data?.secondaryColor || "",
   });
   const [designRef, setDesignRef] = useState<string | null>(data?.designRef || null);
   const [generatedPrompt, setGeneratedPrompt] = useState(data?.generatedPrompt || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
+  const primaryColorRef = useRef<HTMLInputElement>(null);
+  const secondaryColorRef = useRef<HTMLInputElement>(null);
 
   useAutosave({ ...form, generatedPrompt, designRef }, onSave);
 
@@ -190,6 +192,7 @@ export function Step5Website({ data, icpData, valuePropData, profileData, onboar
 
   const generate = async () => {
     if (!form.brandName.trim()) { setError("Brand name is required"); return; }
+    if (!form.primaryColor || !form.secondaryColor) { setError("Choose a primary and secondary colour"); return; }
     setError("");
     setLoading(true);
 
@@ -333,15 +336,39 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
           <div>
             <Label className="text-sm text-muted-foreground">Primary Colour</Label>
             <div className="flex items-center gap-2 mt-1">
-              <input type="color" value={form.primaryColor} onChange={e => update("primaryColor", e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0" />
-              <span className="text-sm text-muted-foreground font-mono">{form.primaryColor}</span>
+              {form.primaryColor ? (
+                <>
+                  <button type="button" onClick={() => primaryColorRef.current?.click()} aria-label="Change primary colour"
+                    className="w-10 h-10 rounded cursor-pointer border border-border" style={{ backgroundColor: form.primaryColor }} />
+                  <span className="text-sm text-muted-foreground font-mono">{form.primaryColor}</span>
+                </>
+              ) : (
+                <button type="button" onClick={() => primaryColorRef.current?.click()}
+                  className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-dashed border-border bg-secondary text-muted-foreground hover:border-muted-foreground transition-colors">
+                  <span className="w-4 h-4 rounded-full border border-muted-foreground" />
+                  Choose colour
+                </button>
+              )}
+              <input ref={primaryColorRef} type="color" value={form.primaryColor || "#000000"} onChange={e => update("primaryColor", e.target.value)} className="sr-only" />
             </div>
           </div>
           <div>
             <Label className="text-sm text-muted-foreground">Secondary Colour</Label>
             <div className="flex items-center gap-2 mt-1">
-              <input type="color" value={form.secondaryColor} onChange={e => update("secondaryColor", e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0" />
-              <span className="text-sm text-muted-foreground font-mono">{form.secondaryColor}</span>
+              {form.secondaryColor ? (
+                <>
+                  <button type="button" onClick={() => secondaryColorRef.current?.click()} aria-label="Change secondary colour"
+                    className="w-10 h-10 rounded cursor-pointer border border-border" style={{ backgroundColor: form.secondaryColor }} />
+                  <span className="text-sm text-muted-foreground font-mono">{form.secondaryColor}</span>
+                </>
+              ) : (
+                <button type="button" onClick={() => secondaryColorRef.current?.click()}
+                  className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-dashed border-border bg-secondary text-muted-foreground hover:border-muted-foreground transition-colors">
+                  <span className="w-4 h-4 rounded-full border border-muted-foreground" />
+                  Choose colour
+                </button>
+              )}
+              <input ref={secondaryColorRef} type="color" value={form.secondaryColor || "#000000"} onChange={e => update("secondaryColor", e.target.value)} className="sr-only" />
             </div>
           </div>
         </div>
