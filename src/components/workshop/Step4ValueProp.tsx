@@ -7,7 +7,7 @@ import { sanitizeAIOutput } from "@/lib/sanitize";
 import { NO_JARGON_RULE, PERSONALISATION_RULE, GEO_AWARENESS_RULE, BUSINESS_TYPE_RULE } from "@/lib/prompt-rules";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Check, ArrowLeft, XCircle, CheckCircle2, ArrowRightCircle, XOctagon } from "lucide-react";
+import { Copy, Check, ArrowLeft, XCircle, CheckCircle2, ArrowRightCircle, XOctagon, Handshake, Gift, Users, MessageSquare } from "lucide-react";
 import { joinField } from "@/lib/utils";
 
 interface Step4Props {
@@ -70,7 +70,7 @@ Core Offer: ${offer}
 ${icpSummary}
 ${partnerSummary ? `\nChannel Partners (a 4th audience: businesses or individuals who could refer or co-sell to us, NOT end customers):\n${partnerSummary}` : ""}
 
-For EACH target customer type${partnerSummary ? " AND the Channel Partners audience" : ""}, provide:
+For EACH of the 3 target customer types, provide:
 1. corePromise: One powerful sentence that captures the transformation (max 15 words)
 2. beforeState: What life looks like BEFORE using this solution (3 bullet points)
 3. afterState: What life looks like AFTER (3 bullet points)
@@ -86,7 +86,20 @@ For EACH target customer type${partnerSummary ? " AND the Channel Partners audie
 
 Each ICP above is explicitly marked Audience Type B2B or D2C, its value proposition must reflect that. For a B2B ICP: frame corePromise, positioning, and content around business outcomes, ROI, risk reduction, and professional credibility, channels like LinkedIn and case studies. For a D2C ICP: frame everything around a personal transformation for an individual, emotional and lifestyle benefits, social proof, and channels like Instagram, TikTok, and community. Never use business/ROI language for a D2C ICP or purely emotional/lifestyle language for a B2B ICP.
 
-${partnerSummary ? `For the Channel Partners entry specifically: frame every field around what is in it for THEM as a partner (extra revenue, a better offering for their own clients, low-effort referral, credibility), not around solving an end customer's problem. Set icpName to exactly "Channel Partners".\n\n` : ""}Rules:
+${partnerSummary ? `For the Channel Partners entry, a partner is NOT an end customer buying a transformation, they are a business or individual deciding whether it is worth referring or co-selling for us. Do NOT reuse the ICP fields above (no beforeState, afterState, threeStepSystem, whyOthersFail, whyYouWin). Instead use this DIFFERENT set of fields:
+- icpName: exactly "Channel Partners"
+- corePromise: one powerful sentence capturing why partnering with us is worth their time (max 15 words)
+- whatsInItForThem: array of 4 bullet points, concrete tangible benefits for THEM specifically (extra revenue or commission, a stronger offering for their own clients, minimal extra effort on their part, credibility by association)
+- idealPartnerProfile: one short paragraph describing what makes a great partner for us, specific enough that it is obvious who to approach
+- partnershipSteps: array of exactly 3 objects each with "step" (short name) and "description", describing how the partnership actually works end to end, for example how they refer someone, what we handle from there, and how they benefit or get paid
+- whyPartnerWithUs: array of 3-4 bullet points on why partnering with us specifically beats their other options, such as doing it themselves, referring to someone else, or not referring at all
+- howToApproachThem: a short paragraph (2-3 sentences) on the best practical way to reach out to and pitch this type of partner, which channel to use, what tone to take, what to lead with
+- shortPitch: a 2-3 sentence pitch written as if speaking directly to a prospective partner
+- cta: a clear call to action for the partner, for example proposing a short call or a simple first step
+- positioning: a single statement in exactly this format: "We help [partner type] give their clients [outcome] by [what we do], while they [what they get out of it]"
+- coreAngle: the strongest hook for approaching this partner type, one of "Authority", "ROI", "Speed", or "Trust", with a one-line reason
+
+` : ""}Rules:
 - Each customer type must feel fundamentally DIFFERENT.
 - Ban phrases like "increase growth", "improve results", "scale faster".
 - Do NOT use em-dashes, asterisks, or hash signs in any output.
@@ -121,6 +134,9 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
     </button>
   );
 
+  const activeVP = result[activeTab];
+  const isPartner = activeVP?.icpName === "Channel Partners";
+
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-4xl mx-auto">
       <h2 className="text-[20px] font-bold mb-1">Your <span className="accent-text">Value Proposition</span></h2>
@@ -149,11 +165,77 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-4">
               <div className="glass-card p-6 text-center">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Core Promise</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+                  {isPartner ? "Why Partner With Us" : "Core Promise"}
+                </p>
                 <p className="text-xl font-bold accent-text">{result[activeTab]?.corePromise}</p>
-                <p className="text-sm text-muted-foreground mt-1">{result[activeTab]?.icpName}</p>
+                <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1.5">
+                  {isPartner && <Handshake className="w-3.5 h-3.5" />}
+                  {result[activeTab]?.icpName}
+                </p>
               </div>
 
+              {isPartner ? (
+                <>
+                  <div className="glass-card p-5">
+                    <h4 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
+                      <Gift className="w-3.5 h-3.5" /> What's In It For Them
+                      <InfoTooltip text="The concrete, tangible benefits a partner gets out of referring or co-selling for you" />
+                    </h4>
+                    <div className="space-y-2">
+                      {result[activeTab]?.whatsInItForThem?.map((w: string, i: number) => (
+                        <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-primary flex items-start gap-2">
+                          <ArrowRightCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                          <span className="text-sm text-foreground">{w}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {result[activeTab]?.idealPartnerProfile && (
+                    <div className="glass-card p-5">
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" /> Ideal Partner Profile
+                        <InfoTooltip text="What makes someone a great fit to approach as a partner" />
+                      </h4>
+                      <p className="text-sm text-foreground">{result[activeTab].idealPartnerProfile}</p>
+                    </div>
+                  )}
+
+                  <div className="glass-card p-5">
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-1">
+                      How the Partnership Works
+                      <InfoTooltip text="The end-to-end flow of the partnership, from referral to payout" />
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {result[activeTab]?.partnershipSteps?.map((step: any, i: number) => (
+                        <div key={i} className="bg-secondary p-4 rounded-md">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold accent-bg">{i + 1}</span>
+                            <span className="text-sm font-semibold">{step.step}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{step.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="glass-card p-5">
+                    <h4 className="text-xs font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-1">
+                      Why Partner With Us
+                      <InfoTooltip text="Why this partnership beats their other options: doing it themselves, referring elsewhere, or not referring at all" />
+                    </h4>
+                    <div className="space-y-2">
+                      {result[activeTab]?.whyPartnerWithUs?.map((w: string, i: number) => (
+                        <div key={i} className="bg-secondary p-3 rounded-md border-l-2 border-primary flex items-start gap-2">
+                          <ArrowRightCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                          <span className="text-sm text-foreground">{w}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="glass-card p-5">
                   <h4 className="text-xs font-medium text-destructive uppercase tracking-wider mb-3">Before</h4>
@@ -178,7 +260,9 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
                   </div>
                 </div>
               </div>
+              )}
 
+              {!isPartner && (
               <div className="glass-card p-5">
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-1">
                   3-Step System
@@ -196,7 +280,9 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
                   ))}
                 </div>
               </div>
+              )}
 
+              {!isPartner && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="glass-card p-5">
                   <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1">
@@ -227,6 +313,7 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Core Angle */}
               {result[activeTab]?.coreAngle && (
@@ -246,21 +333,23 @@ ${partnerSummary ? `For the Channel Partners entry specifically: frame every fie
               )}
 
               <div className="glass-card p-5">
-                <h4 className="text-xs font-medium text-primary uppercase tracking-wider mb-4">Strategy Behind Your Content Creation</h4>
+                <h4 className="text-xs font-medium text-primary uppercase tracking-wider mb-4 flex items-center gap-1">
+                  {isPartner ? <><MessageSquare className="w-3.5 h-3.5" /> How to Reach Out</> : "Strategy Behind Your Content Creation"}
+                </h4>
                 <div className="space-y-3">
                   <div className="bg-secondary p-3 rounded-md flex items-start justify-between">
                     <div>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        Strategy Behind Your Content Creation
-                        <InfoTooltip text="How to position your content so it attracts this specific type of customer" />
+                        {isPartner ? "How to Approach Them" : "Content Strategy"}
+                        <InfoTooltip text={isPartner ? "The best practical way to reach out to and pitch this type of partner" : "How to position your content so it attracts this specific type of customer"} />
                       </span>
-                      <p className="text-sm mt-0.5">{result[activeTab]?.contentStrategy || result[activeTab]?.oneLiner}</p>
+                      <p className="text-sm mt-0.5">{isPartner ? result[activeTab]?.howToApproachThem : (result[activeTab]?.contentStrategy || result[activeTab]?.oneLiner)}</p>
                     </div>
-                    <CopyBtn text={result[activeTab]?.contentStrategy || result[activeTab]?.oneLiner || ""} id={`contentstrat-${activeTab}`} />
+                    <CopyBtn text={(isPartner ? result[activeTab]?.howToApproachThem : (result[activeTab]?.contentStrategy || result[activeTab]?.oneLiner)) || ""} id={`contentstrat-${activeTab}`} />
                   </div>
                   <div className="bg-secondary p-3 rounded-md flex items-start justify-between">
                     <div>
-                      <span className="text-xs text-muted-foreground">Short Pitch</span>
+                      <span className="text-xs text-muted-foreground">{isPartner ? "Partner Pitch" : "Short Pitch"}</span>
                       <p className="text-sm mt-0.5">{result[activeTab]?.shortPitch}</p>
                     </div>
                     <CopyBtn text={result[activeTab]?.shortPitch || ""} id={`pitch-${activeTab}`} />
