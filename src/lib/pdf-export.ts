@@ -274,6 +274,17 @@ export async function generatePDF(sessionData: any) {
         y += 2;
       }
     }
+    if (vp.whatsInItForThem) { y = addSubHeader(doc, "What's In It For Them", y); y = addBulletList(doc, vp.whatsInItForThem, PAGE_MARGIN, y, maxW); y += 2; }
+    if (vp.idealPartnerProfile) { y = addWrappedText(doc, `Ideal Partner Profile: ${clean(vp.idealPartnerProfile)}`, PAGE_MARGIN, y, maxW); y += 2; }
+    if (vp.partnershipSteps) {
+      y = addSubHeader(doc, "How the Partnership Works", y);
+      for (const step of vp.partnershipSteps) {
+        y = addWrappedText(doc, `${clean(step.step)}: ${clean(step.description)}`, PAGE_MARGIN, y, maxW);
+        y += 2;
+      }
+    }
+    if (vp.whyPartnerWithUs) { y = addSubHeader(doc, "Why Partner With Us", y); y = addBulletList(doc, vp.whyPartnerWithUs, PAGE_MARGIN, y, maxW); y += 2; }
+    if (vp.howToApproachThem) { y = addWrappedText(doc, `How to Approach Them: ${clean(vp.howToApproachThem)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.contentStrategy || vp.oneLiner) { y = addWrappedText(doc, `Content Strategy: ${clean(vp.contentStrategy || vp.oneLiner)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.shortPitch) { y = addWrappedText(doc, `Pitch: ${clean(vp.shortPitch)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.positioning) {
