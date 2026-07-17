@@ -28,7 +28,7 @@ const LINKS = {
   linkedin: "https://www.linkedin.com/in/tejasjhaveri",
   instagram: "https://www.instagram.com/tejas_jhaveri",
   calendly: "https://calendly.com/founder-myntmore/web",
-  notion: MYNTMORE_NOTION_LINK,
+  website: "https://myntmore.com",
 };
 
 function clean(text: string): string {
@@ -86,8 +86,8 @@ function addFooter(doc: jsPDF) {
   const footerLinks = [
     { text: "TJ's LinkedIn", url: LINKS.linkedin, x: PAGE_MARGIN },
     { text: "Instagram", url: LINKS.instagram, x: PAGE_MARGIN + 35 },
-    { text: "Book a Call", url: LINKS.calendly, x: PAGE_MARGIN + 60 },
-    { text: "Myntmore Services", url: LINKS.notion, x: PAGE_MARGIN + 87 },
+    { text: "Book a Call with TJ", url: LINKS.calendly, x: PAGE_MARGIN + 62 },
+    { text: "Myntmore Website", url: LINKS.website, x: PAGE_MARGIN + 107 },
   ];
 
   for (const link of footerLinks) {
@@ -306,8 +306,29 @@ interface CardGroup {
   val: string[] | string;
 }
 
+function estimateCardHeight(doc: jsPDF, cardTitle: string, groups: CardGroup[], maxW: number): number {
+  const padding = 6;
+  let innerH = 6; // for cardTitle
+  for (const group of groups) {
+    if (!group.val || (Array.isArray(group.val) && group.val.length === 0)) continue;
+    const cleanLabel = clean(group.label).toUpperCase();
+    const labelLines = doc.splitTextToSize(cleanLabel, maxW - 12);
+    let contentH = 0;
+    if (Array.isArray(group.val)) {
+      for (const item of group.val) {
+        const lines = doc.splitTextToSize(capitalize(clean(item)), maxW - 18);
+        contentH += lines.length * 5 + 1;
+      }
+    } else {
+      const lines = doc.splitTextToSize(capitalize(clean(group.val)), maxW - 12);
+      contentH = lines.length * 5;
+    }
+    innerH += labelLines.length * 4.5 + contentH + 4;
+  }
+  return innerH + padding * 2;
+}
+
 function addStyledCard(doc: jsPDF, cardTitle: string, groups: CardGroup[], y: number, maxW: number): number {
-  const lineHeight = 5;
   const padding = 6;
 
   // Calculate the height needed for this card
@@ -703,12 +724,18 @@ export async function generatePDF(sessionData: any) {
   for (let i = 0; i < icps.length; i++) {
     const icp = icps[i];
     const icpLabel = `ICP ${i + 1}: ${clean(icp.name || "Untitled")}${icp.audienceType ? ` (${icp.audienceType})` : ""}`;
-    y = newSection(doc, icpLabel);
-
+    
+    // Group 1: Profile & Demographics (First group follows subheader directly, check height to prevent orphans)
     const card1 = [
       { label: "Who They Are", val: icp.whoTheyAre },
       { label: "Target Geography Context", val: icp.geographyContext }
     ].filter(g => g.val);
+    
+    const firstCardH = card1.length > 0 ? estimateCardHeight(doc, "Profile & Demographics", card1, maxW) : 30;
+    
+    // Ensure space for new section header (already handled by newSection) but just to align
+    y = newSection(doc, icpLabel);
+    
     if (card1.length > 0) {
       y = addStyledCard(doc, "Profile & Demographics", card1, y, maxW);
     }
@@ -721,22 +748,34 @@ export async function generatePDF(sessionData: any) {
       y = addStyledCard(doc, "Role & Mindset", card2, y, maxW);
     }
 
-    const card3 = [
-      { label: "Pain Points", val: icp.painPoints },
+    const card3a = [
+      { label: "Pain Points", val: icp.painPoints }
+    ].filter(g => g.val);
+    if (card3a.length > 0) {
+      y = addStyledCard(doc, "Challenges & Pain Points", card3a, y, maxW);
+    }
+
+    const card3b = [
       { label: "Goals & Desires", val: icp.goalsDesires },
       { label: "Buying Triggers", val: icp.buyingTriggers }
     ].filter(g => g.val);
-    if (card3.length > 0) {
-      y = addStyledCard(doc, "Challenges, Desires & Triggers", card3, y, maxW);
+    if (card3b.length > 0) {
+      y = addStyledCard(doc, "Goals & Buying Triggers", card3b, y, maxW);
     }
 
-    const card4 = [
+    const card4a = [
       { label: "How To Position", val: icp.howToPosition },
-      { label: "Objections & Concerns", val: icp.objections },
+      { label: "Objections & Concerns", val: icp.objections }
+    ].filter(g => g.val);
+    if (card4a.length > 0) {
+      y = addStyledCard(doc, "Positioning & Objections", card4a, y, maxW);
+    }
+
+    const card4b = [
       { label: "Where They Hang Out", val: icp.whereTheyHangOut }
     ].filter(g => g.val);
-    if (card4.length > 0) {
-      y = addStyledCard(doc, "Positioning & Engagement Strategy", card4, y, maxW);
+    if (card4b.length > 0) {
+      y = addStyledCard(doc, "Where They Hang Out", card4b, y, maxW);
     }
 
     if (Array.isArray(icp.channelPartners) && icp.channelPartners.length > 0) {
@@ -759,17 +798,35 @@ export async function generatePDF(sessionData: any) {
     const vp = vps[i];
     const vpAudienceType = vp.icpName === "Channel Partners" ? null : icps[i]?.audienceType;
     const vpLabel = vp.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${i + 1}: ${clean(vp.icpName)}${vpAudienceType ? ` (${vpAudienceType})` : ""}`;
-    y = addSubHeader(doc, vpLabel, y);
 
     const isPartner = vp.icpName === "Channel Partners";
+    let firstCardTitle = "";
+    let firstCardVal: CardGroup[] = [];
 
     if (!isPartner) {
-      const cardVal = [
+      firstCardTitle = "Value Prop Foundation";
+      firstCardVal = [
         { label: "Core Promise", val: vp.corePromise },
         { label: "Core Angle", val: vp.coreAngle },
         { label: "Positioning Statement", val: vp.positioning }
       ].filter(g => g.val);
-      y = addStyledCard(doc, "Value Prop Foundation", cardVal, y, maxW);
+    } else {
+      firstCardTitle = "Partner Value Foundation";
+      firstCardVal = [
+        { label: "Core Promise", val: vp.corePromise },
+        { label: "Core Angle", val: vp.coreAngle },
+        { label: "Ideal Partner Profile", val: vp.idealPartnerProfile },
+        { label: "Positioning Statement", val: vp.positioning }
+      ].filter(g => g.val);
+    }
+
+    // Pre-check space for subheader + first card to prevent orphan headings at the page footer
+    const firstH = estimateCardHeight(doc, firstCardTitle, firstCardVal, maxW);
+    y = ensureSpace(doc, y, 6 + 4 + firstH);
+    y = addSubHeader(doc, vpLabel, y);
+
+    if (!isPartner) {
+      y = addStyledCard(doc, "Value Prop Foundation", firstCardVal, y, maxW);
 
       const cardTrans = [
         { label: "Before State", val: vp.beforeState },
@@ -783,13 +840,7 @@ export async function generatePDF(sessionData: any) {
       ].filter(g => g.val);
       y = addStyledCard(doc, "Differentiating Edge", cardEdge, y, maxW);
     } else {
-      const cardPartner = [
-        { label: "Core Promise", val: vp.corePromise },
-        { label: "Core Angle", val: vp.coreAngle },
-        { label: "Ideal Partner Profile", val: vp.idealPartnerProfile },
-        { label: "Positioning Statement", val: vp.positioning }
-      ].filter(g => g.val);
-      y = addStyledCard(doc, "Partner Value Foundation", cardPartner, y, maxW);
+      y = addStyledCard(doc, "Partner Value Foundation", firstCardVal, y, maxW);
 
       const cardBenefits = [
         { label: "What's In It For Them", val: vp.whatsInItForThem },
@@ -848,8 +899,16 @@ export async function generatePDF(sessionData: any) {
     const strategies = (gtm.icpStrategies || (gtm.channels ? [gtm] : [])).filter(Boolean);
     for (let si = 0; si < strategies.length; si++) {
       const strat = strategies[si];
-      if (strat.icpName) { y = addSubHeader(doc, `ICP ${si + 1}: ${clean(strat.icpName)}`, y); y += 2; }
+      
+      if (strat.icpName) {
+        // Prevent orphan subheader by checking for at least 32mm of space before printing
+        y = ensureSpace(doc, y, 32);
+        y = addSubHeader(doc, `ICP ${si + 1}: ${clean(strat.icpName)}`, y);
+        y += 2;
+      }
+      
       if (strat.channels && strat.channels.length > 0) {
+        y = ensureSpace(doc, y, 26);
         y = addSubHeader(doc, "Primary Channels", y);
         const headers = ["Channel", "Effort / ROI", "Use Case & Tips"];
         const rows = strat.channels.map((ch: any) => [
@@ -860,6 +919,7 @@ export async function generatePDF(sessionData: any) {
         y = drawTable(doc, headers, rows, PAGE_MARGIN, y, [35, 30, maxW - 65]);
       }
       if (strat.timeline && strat.timeline.length > 0) {
+        y = ensureSpace(doc, y, 26);
         y = addSubHeader(doc, "Execution Timeline", y);
         const headers = ["Phase", "Focus Area", "Action Checklist"];
         const rows = strat.timeline.map((phase: any) => [
@@ -870,6 +930,7 @@ export async function generatePDF(sessionData: any) {
         y = drawTable(doc, headers, rows, PAGE_MARGIN, y, [30, 45, maxW - 75]);
       }
       if (strat.partners?.types && strat.partners.types.length > 0) {
+        y = ensureSpace(doc, y, 26);
         y = addSubHeader(doc, "Partner Strategy", y);
         const headers = ["Partner Type", "Strategic Angle & Offer", "Copy-Paste Outreach Snippet"];
         const rows = strat.partners.types.map((p: any) => [
@@ -880,6 +941,7 @@ export async function generatePDF(sessionData: any) {
         y = drawTable(doc, headers, rows, PAGE_MARGIN, y, [40, 50, maxW - 90]);
       }
       if (strat.leadMagnets && strat.leadMagnets.length > 0) {
+        y = ensureSpace(doc, y, 15);
         y = addSubHeader(doc, "Lead Magnets", y);
         for (const lm of strat.leadMagnets) {
           const title = `${lm.name} (${lm.type || lm.format})${lm.bestStart ? " [Best Starting Point]" : ""}`;
@@ -894,6 +956,7 @@ export async function generatePDF(sessionData: any) {
         }
       }
       if (strat.eventLedGrowth) {
+        y = ensureSpace(doc, y, 15);
         y = addSubHeader(doc, "Event-Led Growth", y);
         let text = "";
         if (strat.eventLedGrowth.onlineEvents) {
@@ -923,19 +986,26 @@ export async function generatePDF(sessionData: any) {
   y = newSection(doc, "Outreach Playbook");
   if (outreach?.playbooks) {
     for (const pb of outreach.playbooks.filter(Boolean)) {
+      // Pre-calculate space for the playbook subheader and its first ICP Context card
+      const contextCardVal = [
+        { label: "Who they are", val: pb.icpContext?.who },
+        { label: "Mindset", val: pb.icpContext?.mindset },
+        { label: "What they care about", val: pb.icpContext?.careAbout },
+        { label: "What they ignore", val: pb.icpContext?.ignore }
+      ].filter(g => g.val);
+      
+      const firstCardH = contextCardVal.length > 0 ? estimateCardHeight(doc, "ICP Target Context", contextCardVal, maxW) : 30;
+      y = ensureSpace(doc, y, 6 + 4 + firstCardH);
       y = addSubHeader(doc, `${clean(pb.icpName)}${pb.audienceType ? ` (${pb.audienceType})` : ""}`, y);
 
       // ICP Context
-      if (pb.icpContext) {
-        let contextText = `Who they are: ${pb.icpContext.who}\n`;
-        contextText += `Mindset: ${pb.icpContext.mindset}\n\n`;
-        if (pb.icpContext.careAbout && pb.icpContext.careAbout.length > 0) {
-          contextText += `What they care about:\n` + pb.icpContext.careAbout.map((c: string) => `• ${c}`).join("\n") + "\n\n";
-        }
-        if (pb.icpContext.ignore && pb.icpContext.ignore.length > 0) {
-          contextText += `What they ignore:\n` + pb.icpContext.ignore.map((c: string) => `• ${c}`).join("\n");
-        }
-        y = addCalloutBox(doc, "ICP Target Context", contextText.trim(), y, maxW);
+      if (contextCardVal.length > 0) {
+        y = addCalloutBox(doc, "ICP Target Context", 
+          `Who they are: ${pb.icpContext.who}\nMindset: ${pb.icpContext.mindset}\n\n` +
+          (pb.icpContext.careAbout?.length ? `What they care about:\n${pb.icpContext.careAbout.map((c: string) => `• ${c}`).join("\n")}\n\n` : "") +
+          (pb.icpContext.ignore?.length ? `What they ignore:\n${pb.icpContext.ignore.map((c: string) => `• ${c}`).join("\n")}` : ""), 
+          y, maxW
+        );
       }
 
       // Strategic Approach
@@ -963,6 +1033,7 @@ export async function generatePDF(sessionData: any) {
       }
 
       if (pb.personalisationTips) {
+        y = ensureSpace(doc, y, 15);
         y = addSubHeader(doc, "Personalisation Tips", y);
         y = addBulletList(doc, pb.personalisationTips, PAGE_MARGIN, y, maxW);
         y += 3;
@@ -992,12 +1063,14 @@ export async function generatePDF(sessionData: any) {
         y = addCalloutBox(doc, "D2C Channel & Content Marketing Plan", text.trim(), y, maxW);
       }
       if (pb.campaignIdeas && pb.campaignIdeas.length > 0) {
+        y = ensureSpace(doc, y, 15);
         y = addSubHeader(doc, "Campaign Ideas to Try", y);
         for (const c of pb.campaignIdeas) {
           y = addCalloutBox(doc, c.name, c.description, y, maxW);
         }
       }
       if (pb.whatToAvoid) {
+        y = ensureSpace(doc, y, 15);
         y = addSubHeader(doc, "What to Avoid", y);
         y = addBulletList(doc, pb.whatToAvoid, PAGE_MARGIN, y, maxW);
       }
