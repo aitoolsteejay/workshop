@@ -116,7 +116,12 @@ Return ONLY a raw JSON array of exactly 4 objects, nothing else, no markdown cod
         </div>
 
         <div className="glass-card p-6">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Jewellery Type</h4>
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
+            <span>Jewellery Type</span>
+            <span className="text-[10px] text-muted-foreground font-normal lowercase tracking-normal">
+              (select only 1)
+            </span>
+          </h4>
           <div className="flex flex-wrap gap-2">
             {JEWELLERY_TYPES.map(opt => (
               <button key={opt} type="button" onClick={() => { setModelType(opt); setModelPrompts([]); }}

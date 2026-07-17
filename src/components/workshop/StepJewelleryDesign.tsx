@@ -111,7 +111,12 @@ export function StepJewelleryDesign({ data, onboardingData, onSave, onNext, onBa
         <div className="space-y-6">
           {CATEGORIES.map(cat => (
             <div key={cat.key} className="glass-card p-6">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{cat.label}</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
+                <span>{cat.label}</span>
+                <span className="text-[10px] text-muted-foreground font-normal lowercase tracking-normal">
+                  {cat.max === 1 ? "(select only 1)" : "(select a maximum of 3)"}
+                </span>
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {cat.options.map(opt => {
                   const selected = (selections[cat.key] || []).includes(opt);
