@@ -153,6 +153,10 @@ ${partnerSummary ? `For the Channel Partners entry, a partner is NOT an end cust
       {loading && <LoadingSpinner text="Generating Value Proposition..." />}
       {error && <p className="text-destructive text-sm mb-4">{error}</p>}
 
+      {!loading && result.length > 0 && (
+        <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground mb-4">Regenerate</Button>
+      )}
+
       {result.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="flex gap-1 mb-6">

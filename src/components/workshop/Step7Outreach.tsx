@@ -693,6 +693,8 @@ Return ONLY valid JSON (no markdown):
               ))}
             </div>
           </div>
+
+          <Button onClick={generate} disabled={loading} variant="ghost" className="w-full text-muted-foreground">Regenerate Playbook</Button>
         </motion.div>
       )}
 

@@ -244,6 +244,10 @@ Rules: No em-dashes, asterisks, or hash signs. Return ONLY valid JSON.`;
         </motion.div>
       )}
 
+      {!loading && strategies.length > 0 && (
+        <Button onClick={() => generate(false)} disabled={loading} variant="ghost" className="w-full mb-4 text-muted-foreground">Regenerate</Button>
+      )}
+
       {strategies.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="flex gap-1 mb-1 overflow-x-auto border-b border-border">

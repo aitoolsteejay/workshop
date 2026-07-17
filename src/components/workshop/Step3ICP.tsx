@@ -453,6 +453,10 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
         </Button>
       )}
 
+      {!loading && result.length > 0 && (
+        <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground">Regenerate ICPs</Button>
+      )}
+
       {loading && <LoadingSpinner text="Generating your ICPs... this takes ~20 seconds" />}
 
       {result.length > 0 && (
