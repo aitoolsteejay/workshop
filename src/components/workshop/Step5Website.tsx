@@ -433,6 +433,10 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
         </Button>
       )}
 
+      {!loading && generatedPrompt && (
+        <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground">Regenerate Website Prompt</Button>
+      )}
+
       {loading && <LoadingSpinner text="Generating your website prompt..." />}
 
       {generatedPrompt && (
@@ -485,9 +489,6 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
             </div>
           </div>
 
-          {/* Regenerate button ABOVE FAQ */}
-          <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground">Regenerate</Button>
-
           {/* FAQ Section */}
           <div className="glass-card p-5">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">Frequently Asked Questions</h3>
@@ -529,6 +530,8 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
               </TabsContent>
             </Tabs>
           </div>
+
+          <Button onClick={generate} variant="ghost" className="w-full text-muted-foreground">Regenerate Website Prompt</Button>
         </motion.div>
       )}
 

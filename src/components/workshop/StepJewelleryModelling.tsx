@@ -170,6 +170,10 @@ Return ONLY a raw JSON array of exactly 4 objects, nothing else, no markdown cod
                 ))}
               </div>
             )}
+
+            {modelPrompts.length > 0 && (
+              <Button onClick={generateModelPrompts} disabled={modelling} variant="ghost" className="w-full mt-5 text-muted-foreground">Regenerate Prompts</Button>
+            )}
           </div>
         )}
       </section>
