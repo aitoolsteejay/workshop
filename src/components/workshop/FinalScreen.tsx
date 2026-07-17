@@ -1,9 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Download, RotateCcw, Copy, Check, Users, Target, Zap, MessageSquare, Globe, ArrowRight, Clock, Star, Handshake } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { copyToClipboard } from "@/lib/clipboard";
+import { Download, RotateCcw, Users, Target, Zap, MessageSquare, Globe, ArrowRight, Clock, Star, Handshake } from "lucide-react";
 import { audienceBadgeClass } from "@/lib/audience";
 
 interface FinalScreenProps {
@@ -21,53 +18,12 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
   const profile = sessionData?.profile_data || {};
   const playbooks = outreach?.playbooks || [];
   const strategies = gtm?.icpStrategies || [];
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
 
   const bestMagnet = strategies[0]?.leadMagnets?.find((lm: any) => lm.bestStart) || strategies[0]?.leadMagnets?.[0];
   const partnerVP = vps.find((vp: any) => vp.icpName === "Channel Partners");
   const icpPartnerTypes = icps
     .map((icp: any) => ({ name: icp.name, types: (icp.channelPartners || []).map((p: any) => p.partnerType).filter(Boolean) }))
     .filter((x: any) => x.types.length > 0);
-
-  const copyFullStrategy = async () => {
-    const lines: string[] = [];
-    lines.push("=== GROWTH STRATEGY SUMMARY ===\n");
-
-    lines.push("--- TARGET CUSTOMERS ---");
-    icps.forEach((icp: any, i: number) => {
-      lines.push(`${i + 1}. ${icp.name}`);
-      if (icp.painPoints?.[0]) lines.push(`   Key pain: ${icp.painPoints[0]}`);
-      if (icp.buyingTriggers?.[0]) lines.push(`   Trigger: ${icp.buyingTriggers[0]}`);
-    });
-
-    lines.push("\n--- VALUE PROPOSITION ---");
-    vps.forEach((vp: any, i: number) => {
-      lines.push(`ICP ${i + 1} (${vp.icpName || ""}): ${vp.corePromise || ""}`);
-      if (vp.positioning) lines.push(`   Positioning: ${vp.positioning}`);
-    });
-
-    if (partnerVP || icpPartnerTypes.length > 0) {
-      lines.push("\n--- CHANNEL PARTNERS ---");
-      if (partnerVP?.corePromise) lines.push(partnerVP.corePromise);
-      icpPartnerTypes.forEach((x: any) => lines.push(`${x.name}: ${x.types.join(", ")}`));
-    }
-
-    lines.push("\n--- OUTREACH ---");
-    playbooks.forEach((pb: any) => {
-      lines.push(`${pb.icpName}: ${pb.strategicApproach?.bestAngle || ""} angle, ${pb.strategicApproach?.positioningStyle || ""} style`);
-    });
-
-    if (website.generatedPrompt) {
-      lines.push("\n--- WEBSITE PROMPT ---");
-      lines.push(website.generatedPrompt.slice(0, 500) + "...");
-    }
-
-    await copyToClipboard(lines.join("\n"));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast({ title: "✓ Strategy copied to clipboard", duration: 2000 });
-  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-[1200px] mx-auto pt-20 px-6">
@@ -395,10 +351,6 @@ export function FinalScreen({ sessionData, onDownloadPDF, onRestart }: FinalScre
         <Button onClick={onDownloadPDF} className="accent-bg hover:opacity-90 h-12 px-8 font-semibold">
           <Download className="w-4 h-4 mr-2" />
           Download Full Strategy PDF
-        </Button>
-        <Button variant="outline" onClick={copyFullStrategy} className="h-12 px-6 border-border text-muted-foreground hover:text-foreground">
-          {copied ? <Check className="w-4 h-4 mr-2 text-emerald-400" /> : <Copy className="w-4 h-4 mr-2" />}
-          {copied ? "Copied!" : "Copy Full Strategy"}
         </Button>
         <Button variant="outline" onClick={onRestart} className="h-12 px-6 border-border text-muted-foreground hover:text-foreground">
           <RotateCcw className="w-4 h-4 mr-2" />

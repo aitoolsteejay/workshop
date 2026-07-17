@@ -13,12 +13,17 @@ import { ArrowLeft, Copy, Check, Sparkles, ExternalLink, Camera } from "lucide-r
 const JEWELLERY_TYPES = ["Anklet", "Bracelet", "Brooch", "Choker", "Cuff", "Earrings", "Hair pin", "Necklace", "Pendant", "Ring"];
 
 const MODELLING_STEPS = [
-  "Have a clear photo of your actual jewellery piece ready (recommended, not required).",
+  "Have a clear photo of your actual jewellery piece ready, this is required for accurate results.",
   "Open Gemini and start a new chat.",
   "Gemini's built-in image generation model, nicknamed Nano Banana, works directly in the app, no separate setup needed.",
-  "Paste one of the prompts below. For best results, attach your product photo in the same message so Gemini uses your actual design.",
+  "Attach your product photo to the chat message, then paste one of the prompts below in the same message. This tells Gemini to use your actual design instead of inventing a new one.",
   "Generate a few variations, then download your favourite for your product listing or ad creative.",
 ];
+
+interface ModelPrompt {
+  label: string;
+  prompt: string;
+}
 
 interface StepJewelleryModellingProps {
   data: any;
@@ -30,7 +35,7 @@ interface StepJewelleryModellingProps {
 
 export function StepJewelleryModelling({ data, onboardingData, onSave, onNext, onBack }: StepJewelleryModellingProps) {
   const [modelType, setModelType] = useState<string>(data?.modelType || "");
-  const [modelPrompts, setModelPrompts] = useState<string[]>(data?.modelPrompts || []);
+  const [modelPrompts, setModelPrompts] = useState<ModelPrompt[]>(data?.modelPrompts || []);
   const [modelling, setModelling] = useState(false);
   const [modelError, setModelError] = useState("");
   const [copiedModelIdx, setCopiedModelIdx] = useState<number | null>(null);
@@ -44,13 +49,19 @@ export function StepJewelleryModelling({ data, onboardingData, onSave, onNext, o
     setModelError("");
     try {
       const typeName = modelType === "Earrings" ? "earrings" : modelType.toLowerCase();
-      const prompt = `You are an expert at writing prompts for Gemini's native image generation model (nicknamed "Nano Banana") to create photorealistic images of jewellery being worn by a real person.
+      const prompt = `You are an expert at writing prompts for Gemini's native image generation model (nicknamed "Nano Banana") to create photorealistic images of jewellery being worn by a real person, using a reference photo of the actual piece attached to the same chat message.
 
-Write 5 distinct, richly detailed image-generation prompts for showing a ${typeName} being modelled by a person. Each prompt must be a single flowing paragraph of at least 60 words. Together, the 5 prompts should cover a good mix of shot types: for example a clean studio close-up on the body part, a natural everyday lifestyle shot, an outdoor or editorial styled shot, a close macro detail shot, and a shot with styled hair, makeup, and outfit context.
+Write exactly 4 distinct, richly detailed image-generation prompts for a ${typeName}, one for each of these categories, in this exact order:
+1. "On an Indian Model": the ${typeName} styled on an Indian female model, elegant and natural.
+2. "Close-Up Detail": a tight macro close-up focused on the ${typeName} itself as worn, showing its craftsmanship and fine detail.
+3. "Street Style Lifestyle": a candid lifestyle shot of a person wearing the ${typeName} while walking on a city street, natural movement and setting.
+4. "Fun & Creative": one playful, imaginative concept, for example a foreign tourist wearing the ${typeName} together with Indian bridal wear, the ${typeName} floating in space, the ${typeName} in front of the Eiffel Tower, or the ${typeName} resting on an open treasure chest. Pick one such idea or something similarly fun and unexpected. Keep it lighthearted, tasteful, and appropriate, never vulgar, offensive, or in poor taste.
 
-For each prompt, describe: which exact body part or area the ${typeName} is worn on, a natural and inclusive description of the model (skin tone, styling) without naming any real celebrity or public figure, the camera angle and framing, the lighting setup, the background or setting, and the overall mood. Do NOT use em-dashes, asterisks, or hash signs.
+CRITICAL: every single prompt must explicitly instruct the image model to use the EXACT jewellery piece shown in the reference photo attached to the chat message, preserving its exact design, metal, gemstones, and proportions without altering or reinventing it. Make this instruction explicit within each prompt itself, for example wording like "using the exact ${typeName} shown in the attached reference photo, keeping its design, metal, and stones unchanged,".
 
-Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown code fences. Example format: ["prompt one text", "prompt two text", "prompt three text", "prompt four text", "prompt five text"]`;
+Each prompt must be a single flowing paragraph of at least 60 words. For each prompt, also describe: which exact body part or area the ${typeName} is worn on (where relevant), a natural and inclusive description of the model (skin tone, styling) without naming any real celebrity or public figure, the camera angle and framing, the lighting setup, the background or setting, and the overall mood. Do NOT use em-dashes, asterisks, or hash signs.
+
+Return ONLY a raw JSON array of exactly 4 objects, nothing else, no markdown code fences, in this exact order, each shaped like {"label": string, "prompt": string}. Use these exact labels in order: "On an Indian Model", "Close-Up Detail", "Street Style Lifestyle", "Fun & Creative".`;
       const raw = await callGemini(prompt);
       let parsed;
       try {
@@ -61,12 +72,12 @@ Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown cod
         setModelling(false);
         return;
       }
-      if (!Array.isArray(parsed) || parsed.length === 0) {
+      if (!Array.isArray(parsed) || parsed.length === 0 || !parsed.every((p: any) => p?.label && p?.prompt)) {
         setModelError(AI_PARSE_ERROR_MESSAGE);
         setModelling(false);
         return;
       }
-      setModelPrompts(sanitizeAIOutput(parsed.map((p: any) => String(p).trim())));
+      setModelPrompts(sanitizeAIOutput(parsed.map((p: any) => ({ label: String(p.label).trim(), prompt: String(p.prompt).trim() }))));
     } catch (e: any) {
       setModelError(describeGeminiError(e));
     } finally {
@@ -100,7 +111,7 @@ Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown cod
             <InfoTooltip text="Pick a jewellery type and we'll write detailed prompts for Gemini's image model (Nano Banana) so you can generate photos of that piece being worn by a person" />
           </h3>
           <p className="text-sm text-muted-foreground">
-            Pick a jewellery type below to get 5 detailed prompts for showing it modelled by a person, ready to paste into Gemini.
+            Pick a jewellery type below to get 4 categorised prompts (on an Indian model, close-up, street style, and a fun creative shot) ready to paste into Gemini alongside your reference photo.
           </p>
         </div>
 
@@ -147,9 +158,10 @@ Return ONLY a raw JSON array of exactly 5 strings, nothing else, no markdown cod
               <div className="space-y-3 mt-5">
                 {modelPrompts.map((p, i) => (
                   <div key={i} className="bg-secondary p-4 rounded-md">
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{p}</p>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">{p.label}</span>
+                    <p className="text-sm text-foreground whitespace-pre-wrap mt-1">{p.prompt}</p>
                     <div className="mt-3">
-                      <Button onClick={() => copyModelPrompt(p, i)} variant="outline" size="sm" className="gap-1.5">
+                      <Button onClick={() => copyModelPrompt(p.prompt, i)} variant="outline" size="sm" className="gap-1.5">
                         {copiedModelIdx === i ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         {copiedModelIdx === i ? "Copied!" : "Copy Prompt"}
                       </Button>
