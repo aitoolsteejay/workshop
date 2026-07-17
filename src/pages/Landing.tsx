@@ -62,9 +62,6 @@ export default function Landing() {
             >
               Start the Free Workshop <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link to="#results" className="text-base font-bold text-black/80 hover:text-black transition">
-              See What You'll Build →
-            </Link>
           </div>
 
           {/* Stats row */}
@@ -199,7 +196,7 @@ export default function Landing() {
                 Start the Free Workshop <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
-            <p className="mt-6 text-white/40 text-sm font-medium">Free · No credit card · Takes about 15 minutes</p>
+            <p className="mt-6 text-white/40 text-sm font-medium">Free · No credit card</p>
           </div>
         </div>
       </section>
