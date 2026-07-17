@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { InfoTooltip } from "./InfoTooltip";
@@ -38,6 +39,7 @@ interface IcpInput {
   roleOther: string;
   geography: string[];
   geographyOther: string;
+  geographyCities: string;
   d2cDescription: string;
   d2cOptions: string[];
   d2cOptionsKey: string;
@@ -58,7 +60,7 @@ export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, on
   const businessType = joinField(onboardingData?.businessType);
   const sellingTo = joinField(onboardingData?.sellingTo);
 
-  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "", roleOther: "", geography: [], geographyOther: "", d2cDescription: "", d2cOptions: [], d2cOptionsKey: "", d2cSelectedIdx: null, icpType: null });
+  const emptyIcp = (): IcpInput => ({ roles: [], sizes: [], industries: [], industryOther: "", roleOther: "", geography: [], geographyOther: "", geographyCities: "", d2cDescription: "", d2cOptions: [], d2cOptionsKey: "", d2cSelectedIdx: null, icpType: null });
   const [icps, setIcps] = useState<IcpInput[]>(() => {
     const inputs = data?.inputs || [];
     while (inputs.length < DEFAULT_ICP_COUNT) inputs.push(emptyIcp());
@@ -116,6 +118,15 @@ export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, on
     return selected;
   };
 
+  const getGeographyDetail = (icp: IcpInput) => {
+    const countries = getGeographies(icp).join(", ");
+    if (!countries) return "Not specified";
+    const cities = icp.geography.includes("India") && icp.geographyCities.trim()
+      ? ` (Cities in India: ${icp.geographyCities.split(",").map(s => s.trim()).filter(Boolean).join(", ")})`
+      : "";
+    return countries + cities;
+  };
+
   const getRoles = (icp: IcpInput) => {
     const selected = icp.roles.filter(x => x !== "Other");
     if (icp.roles.includes("Other") && icp.roleOther) {
@@ -149,9 +160,9 @@ export function Step3ICP({ data, profileData, onboardingData, onSave, onNext, on
       const type = getIcpType(i);
       if (type === "D2C") {
         const description = icps[i].d2cSelectedIdx !== null ? icps[i].d2cOptions[icps[i].d2cSelectedIdx] : icps[i].d2cDescription;
-        return `ICP ${i + 1} Audience Type: D2C (individual consumer). Customer Description (from the business owner, AI-cleaned): ${description}. Target Geography: ${getGeographies(icps[i]).join(", ") || "Not specified"}`;
+        return `ICP ${i + 1} Audience Type: D2C (individual consumer). Customer Description (from the business owner, AI-cleaned): ${description}. Target Geography: ${getGeographyDetail(icps[i])}`;
       }
-      return `ICP ${i + 1} Audience Type: B2B (business buyer). Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}, Target Geography: ${getGeographies(icps[i]).join(", ") || "Not specified"}`;
+      return `ICP ${i + 1} Audience Type: B2B (business buyer). Inputs: Roles: ${getRoles(icps[i]).join(", ")}, Company Sizes: ${icps[i].sizes.filter(x => x !== "Other").join(", ")}, Industries: ${getIndustries(icps[i]).join(", ")}, Target Geography: ${getGeographyDetail(icps[i])}`;
     }).join("\n");
 
     const prompt = `You are an expert Growth Strategist skilled at building both B2B and D2C customer profiles. Generate ${icps.length} deep, strategic Ideal Customer Profiles.
@@ -390,6 +401,17 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
                       otherValue={icps[idx].geographyOther}
                       onOtherChange={v => updateIcp(idx, "geographyOther", v)}
                     />
+                    {icps[idx].geography.includes("India") && (
+                      <div>
+                        <Label className="text-xs font-medium text-muted-foreground">Cities in India</Label>
+                        <Input
+                          placeholder="e.g. Mumbai, Delhi, Bangalore — separate multiple cities with a comma"
+                          value={icps[idx].geographyCities}
+                          onChange={e => updateIcp(idx, "geographyCities", e.target.value)}
+                          className="mt-1 bg-secondary border-border focus:border-primary text-sm"
+                        />
+                      </div>
+                    )}
                     <MultiSelect
                       label="Roles"
                       options={ROLES}
@@ -421,6 +443,17 @@ Return ONLY a valid JSON array of exactly ${icps.length} objects (no markdown, n
                       otherValue={icps[idx].geographyOther}
                       onOtherChange={v => updateIcp(idx, "geographyOther", v)}
                     />
+                    {icps[idx].geography.includes("India") && (
+                      <div>
+                        <Label className="text-xs font-medium text-muted-foreground">Cities in India</Label>
+                        <Input
+                          placeholder="e.g. Mumbai, Delhi, Bangalore — separate multiple cities with a comma"
+                          value={icps[idx].geographyCities}
+                          onChange={e => updateIcp(idx, "geographyCities", e.target.value)}
+                          className="mt-1 bg-secondary border-border focus:border-primary text-sm"
+                        />
+                      </div>
+                    )}
                   </>
                 )}
               </div>
