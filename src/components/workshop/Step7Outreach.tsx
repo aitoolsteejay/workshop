@@ -321,7 +321,7 @@ Return ONLY valid JSON (no markdown):
                   <>
                     {/* ICP Context */}
                     <div className="glass-card p-5">
-                      <h3 className="text-xs font-medium text-primary uppercase tracking-wider mb-3">ICP Context: {pb.icpName}</h3>
+                      <h3 className="text-xs font-bold text-primary uppercase tracking-wider mb-3">ICP Context: {pb.icpName}</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <span className="text-xs text-muted-foreground">Who they are</span>
