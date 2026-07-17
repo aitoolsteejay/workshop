@@ -201,6 +201,8 @@ export async function generatePDF(sessionData: any) {
   const maxW = w - PAGE_MARGIN * 2;
   const userName = sessionData?.user_name || "Attendee";
   const addonsPrompt = sessionData?.jewellery_design_data?.basePrompt;
+  const modellingData = sessionData?.jewellery_modelling_data;
+  const showAddons = !!(addonsPrompt || (modellingData?.modelPrompts && modellingData.modelPrompts.length > 0));
 
   // Load logo for all pages
   const logoLoaded = await loadLogo();
@@ -236,7 +238,7 @@ export async function generatePDF(sessionData: any) {
   let y = newSection(doc, "Table of Contents");
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
-  const tocItems = ["Profile Analysis", ...icps.map((_: any, i: number) => `ICP ${i + 1}`), "Value Propositions", "Website Prompt", "Growth Strategy", "Outreach Playbook", ...(addonsPrompt ? ["Bonus Add-Ons"] : [])];
+  const tocItems = ["Profile Analysis", ...icps.map((_: any, i: number) => `ICP ${i + 1}`), "Value Propositions", "Website Prompt", "Growth Strategy", "Outreach Playbook", ...(showAddons ? ["Bonus Add-Ons"] : [])];
   tocItems.forEach((item, i) => {
     doc.text(`${i + 1}. ${item}`, PAGE_MARGIN + 5, y);
     y += 8;
@@ -264,6 +266,28 @@ export async function generatePDF(sessionData: any) {
     y += 3;
     y = addSubHeader(doc, "Generated Headlines", y);
     y = addBulletList(doc, profile.headlines, PAGE_MARGIN, y, maxW);
+    y += 3;
+
+    if (profile.aboutSection) {
+      y = ensureSpace(doc, y, 15);
+      y = addSubHeader(doc, "Optimised About Section", y);
+      const paras = profile.aboutSection.split(/\n\n+/).filter(Boolean);
+      for (const para of paras) {
+        y = addWrappedText(doc, para, PAGE_MARGIN, y, maxW);
+        y += 2;
+      }
+      y += 3;
+    }
+
+    if (profile.positioningAngles) {
+      y = ensureSpace(doc, y, 15);
+      y = addSubHeader(doc, "Positioning Angles", y);
+      const angles = Array.isArray(profile.positioningAngles)
+        ? profile.positioningAngles
+        : String(profile.positioningAngles).split(/\n+|(?=\d+\.\s)/).map((s: string) => s.replace(/^\d+\.\s*/, "").trim()).filter(Boolean);
+      y = addBulletList(doc, angles, PAGE_MARGIN, y, maxW);
+      y += 3;
+    }
   }
 
   // ICPs
@@ -321,6 +345,7 @@ export async function generatePDF(sessionData: any) {
     const vpLabel = vp.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${i + 1}: ${clean(vp.icpName)}${vpAudienceType ? ` (${vpAudienceType})` : ""}`;
     y = addSubHeader(doc, vpLabel, y);
     if (vp.corePromise) { y = addWrappedText(doc, `Core Promise: ${clean(vp.corePromise)}`, PAGE_MARGIN, y, maxW); y += 2; }
+    if (vp.coreAngle) { y = addWrappedText(doc, `Core Angle: ${clean(vp.coreAngle)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.beforeState) { y = addSubHeader(doc, "Before", y); y = addBulletList(doc, vp.beforeState, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.afterState) { y = addSubHeader(doc, "After", y); y = addBulletList(doc, vp.afterState, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.threeStepSystem) {
@@ -330,6 +355,8 @@ export async function generatePDF(sessionData: any) {
         y += 2;
       }
     }
+    if (vp.whyOthersFail) { y = addSubHeader(doc, "Why Others Fail", y); y = addBulletList(doc, vp.whyOthersFail, PAGE_MARGIN, y, maxW); y += 2; }
+    if (vp.whyYouWin) { y = addSubHeader(doc, "Why We Win", y); y = addBulletList(doc, vp.whyYouWin, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.whatsInItForThem) { y = addSubHeader(doc, "What's In It For Them", y); y = addBulletList(doc, vp.whatsInItForThem, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.idealPartnerProfile) { y = addWrappedText(doc, `Ideal Partner Profile: ${clean(vp.idealPartnerProfile)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.partnershipSteps) {
@@ -343,6 +370,7 @@ export async function generatePDF(sessionData: any) {
     if (vp.howToApproachThem) { y = addWrappedText(doc, `How to Approach Them: ${clean(vp.howToApproachThem)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.contentStrategy || vp.oneLiner) { y = addWrappedText(doc, `Content Strategy: ${clean(vp.contentStrategy || vp.oneLiner)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.shortPitch) { y = addWrappedText(doc, `Pitch: ${clean(vp.shortPitch)}`, PAGE_MARGIN, y, maxW); y += 2; }
+    if (vp.cta) { y = addWrappedText(doc, `Call to Action: ${clean(vp.cta)}`, PAGE_MARGIN, y, maxW); y += 2; }
     if (vp.positioning) {
       y = addSubHeader(doc, "Positioning Statement", y);
       y = addWrappedText(doc, clean(vp.positioning), PAGE_MARGIN, y, maxW);
@@ -366,8 +394,13 @@ export async function generatePDF(sessionData: any) {
       if (strat.channels) {
         y = addSubHeader(doc, "Primary Channels", y);
         for (const ch of strat.channels) {
+          y = ensureSpace(doc, y, 10 + estimateTextHeight(doc, ch.useCase || "", maxW));
           y = addWrappedText(doc, `${clean(ch.name)} (Effort: ${ch.effort}, ROI: ${ch.roi})${ch.startHere ? " , START HERE" : ""}`, PAGE_MARGIN, y, maxW);
           y = addWrappedText(doc, clean(ch.useCase), PAGE_MARGIN, y, maxW);
+          y += 1;
+          if (ch.tips && ch.tips.length > 0) {
+            y = addBulletList(doc, ch.tips, PAGE_MARGIN, y, maxW);
+          }
           y += 3;
         }
       }
@@ -382,14 +415,38 @@ export async function generatePDF(sessionData: any) {
       if (strat.partners?.types) {
         y = addSubHeader(doc, "Partner Strategy", y);
         for (const p of strat.partners.types) {
-          y = addWrappedText(doc, `${clean(p.type)}: ${clean(p.angle)}`, PAGE_MARGIN, y, maxW);
+          const mainLine = `${clean(p.type)}: ${clean(p.angle)}`;
+          const detailsLine = p.offer ? `Offer: ${clean(p.offer)}` : "";
+          const snippetLine = p.snippet ? `Snippet: "${clean(p.snippet)}"` : "";
+
+          y = ensureSpace(doc, y, estimateTextHeight(doc, mainLine, maxW) + (detailsLine ? estimateTextHeight(doc, detailsLine, maxW) : 0) + (snippetLine ? estimateTextHeight(doc, snippetLine, maxW) : 0) + 4);
+          y = addWrappedText(doc, mainLine, PAGE_MARGIN, y, maxW);
+          if (detailsLine) y = addWrappedText(doc, detailsLine, PAGE_MARGIN, y, maxW);
+          if (snippetLine) y = addWrappedText(doc, snippetLine, PAGE_MARGIN, y, maxW);
           y += 2;
         }
       }
       if (strat.leadMagnets) {
         y = addSubHeader(doc, "Lead Magnets", y);
         for (const lm of strat.leadMagnets) {
-          y = addWrappedText(doc, `${clean(lm.name)} (${lm.type || lm.format}) for ${clean(lm.targetICP || strat.icpName || `ICP ${si + 1}`)}`, PAGE_MARGIN, y, maxW);
+          const headerLine = `${clean(lm.name)} (${lm.type || lm.format})${lm.bestStart ? " [Best Starting Point]" : ""}`;
+          const icpLine = `For: ${clean(lm.targetICP || strat.icpName || `ICP ${si + 1}`)}`;
+          const whyLine = lm.whyItWorks ? `Why it works: ${clean(lm.whyItWorks)}` : "";
+          const whenLine = lm.whenToUse ? `When to use: ${clean(lm.whenToUse)}` : "";
+
+          let needed = estimateTextHeight(doc, headerLine, maxW) + estimateTextHeight(doc, icpLine, maxW) + (whyLine ? estimateTextHeight(doc, whyLine, maxW) : 0) + (whenLine ? estimateTextHeight(doc, whenLine, maxW) : 0) + 4;
+          if (lm.includes && lm.includes.length > 0) {
+            needed += lm.includes.length * 6;
+          }
+          y = ensureSpace(doc, y, needed);
+
+          y = addWrappedText(doc, headerLine, PAGE_MARGIN, y, maxW);
+          y = addWrappedText(doc, icpLine, PAGE_MARGIN, y, maxW);
+          if (lm.includes && lm.includes.length > 0) {
+            y = addBulletList(doc, lm.includes, PAGE_MARGIN, y, maxW);
+          }
+          if (whyLine) y = addWrappedText(doc, whyLine, PAGE_MARGIN, y, maxW);
+          if (whenLine) y = addWrappedText(doc, whenLine, PAGE_MARGIN, y, maxW);
           y += 3;
         }
       }
@@ -409,6 +466,15 @@ export async function generatePDF(sessionData: any) {
           }
           y += 2;
         }
+        if (strat.eventLedGrowth.eventFunnel) {
+          const funnel = strat.eventLedGrowth.eventFunnel;
+          y = ensureSpace(doc, y, 15);
+          y = addWrappedText(doc, "Event Funnel:", PAGE_MARGIN, y, maxW);
+          if (funnel.preEvent) y = addWrappedText(doc, `  Pre-Event: ${clean(funnel.preEvent)}`, PAGE_MARGIN, y, maxW);
+          if (funnel.duringEvent) y = addWrappedText(doc, `  During Event: ${clean(funnel.duringEvent)}`, PAGE_MARGIN, y, maxW);
+          if (funnel.postEvent) y = addWrappedText(doc, `  Post-Event: ${clean(funnel.postEvent)}`, PAGE_MARGIN, y, maxW);
+          y += 2;
+        }
         if (strat.eventLedGrowth.conversionStrategy) {
           y = addWrappedText(doc, `Conversion: ${clean(strat.eventLedGrowth.conversionStrategy)}`, PAGE_MARGIN, y, maxW);
         }
@@ -423,19 +489,66 @@ export async function generatePDF(sessionData: any) {
   if (outreach?.playbooks) {
     for (const pb of outreach.playbooks.filter(Boolean)) {
       y = addSubHeader(doc, `${clean(pb.icpName)}${pb.audienceType ? ` (${pb.audienceType})` : ""}`, y);
-      if (pb.strategicApproach) {
-        y = addWrappedText(doc, `Best Angle: ${clean(pb.strategicApproach.bestAngle)}`, PAGE_MARGIN, y, maxW);
-        y = addWrappedText(doc, `Positioning Style: ${clean(pb.strategicApproach.positioningStyle)}`, PAGE_MARGIN, y, maxW);
+
+      // ICP Context
+      if (pb.icpContext) {
+        y = ensureSpace(doc, y, 15);
+        y = addSubHeader(doc, "ICP Context", y);
+        if (pb.icpContext.who) y = addWrappedText(doc, `Who they are: ${clean(pb.icpContext.who)}`, PAGE_MARGIN, y, maxW);
+        if (pb.icpContext.mindset) y = addWrappedText(doc, `Mindset: ${clean(pb.icpContext.mindset)}`, PAGE_MARGIN, y, maxW);
+        if (pb.icpContext.careAbout && pb.icpContext.careAbout.length > 0) {
+          y = addWrappedText(doc, "They care about:", PAGE_MARGIN, y, maxW);
+          y = addBulletList(doc, pb.icpContext.careAbout, PAGE_MARGIN, y, maxW);
+        }
+        if (pb.icpContext.ignore && pb.icpContext.ignore.length > 0) {
+          y = addWrappedText(doc, "They ignore:", PAGE_MARGIN, y, maxW);
+          y = addBulletList(doc, pb.icpContext.ignore, PAGE_MARGIN, y, maxW);
+        }
         y += 3;
       }
+
+      // Strategic Approach
+      if (pb.strategicApproach) {
+        y = ensureSpace(doc, y, 15);
+        y = addSubHeader(doc, "Strategic Approach", y);
+        y = addWrappedText(doc, `Best Angle: ${clean(pb.strategicApproach.bestAngle)}`, PAGE_MARGIN, y, maxW);
+        y = addWrappedText(doc, `Positioning Style: ${clean(pb.strategicApproach.positioningStyle)}`, PAGE_MARGIN, y, maxW);
+
+        const detail = pb.strategicApproach.positioningDetail;
+        if (detail) {
+          if (detail.whatItMeans) y = addWrappedText(doc, `What it means: ${clean(detail.whatItMeans)}`, PAGE_MARGIN, y, maxW);
+          if (detail.howToShowUp && detail.howToShowUp.length > 0) {
+            y = addWrappedText(doc, "How to show up:", PAGE_MARGIN, y, maxW);
+            y = addBulletList(doc, detail.howToShowUp, PAGE_MARGIN, y, maxW);
+          }
+          if (detail.whatToAvoid && detail.whatToAvoid.length > 0) {
+            y = addWrappedText(doc, "What to avoid:", PAGE_MARGIN, y, maxW);
+            y = addBulletList(doc, detail.whatToAvoid, PAGE_MARGIN, y, maxW);
+          }
+          if (detail.exampleOpener) {
+            y = addWrappedText(doc, `Example Opener: "${clean(detail.exampleOpener)}"`, PAGE_MARGIN, y, maxW);
+          }
+        }
+        if (pb.strategicApproach.whatNotToDo && pb.strategicApproach.whatNotToDo.length > 0) {
+          y = addWrappedText(doc, "What NOT to do:", PAGE_MARGIN, y, maxW);
+          y = addBulletList(doc, pb.strategicApproach.whatNotToDo, PAGE_MARGIN, y, maxW);
+        }
+        y += 3;
+      }
+
       if (pb.personalisationTips) {
         y = addSubHeader(doc, "Personalisation Tips", y);
         y = addBulletList(doc, pb.personalisationTips, PAGE_MARGIN, y, maxW);
         y += 3;
       }
       if (pb.followUpSystem) {
+        y = ensureSpace(doc, y, 15);
+        y = addSubHeader(doc, "Follow-Up System", y);
         y = addWrappedText(doc, `Total Touches: ${pb.followUpSystem.totalTouches}`, PAGE_MARGIN, y, maxW);
         y = addWrappedText(doc, `Tone Evolution: ${clean(pb.followUpSystem.toneEvolution)}`, PAGE_MARGIN, y, maxW);
+        if (pb.followUpSystem.escalationLogic) {
+          y = addWrappedText(doc, `Escalation Logic: ${clean(pb.followUpSystem.escalationLogic)}`, PAGE_MARGIN, y, maxW);
+        }
         y += 3;
       }
       if (pb.channelPlan) {
@@ -462,19 +575,37 @@ export async function generatePDF(sessionData: any) {
     }
   }
 
-  // Jewellery Design
-  const jewelleryDesign = sessionData?.jewellery_design_data;
-  if (addonsPrompt) {
+  // Jewellery Design & Modelling (Bonus Add-Ons)
+  if (showAddons) {
     y = newSection(doc, "Bonus Add-Ons");
-    y = addSubHeader(doc, "Jewellery Design Prompt Generator", y);
-    const sel = jewelleryDesign?.selections || {};
-    const selSummary = ["type", "style", "material", "gemstone", "mood"]
-      .map(k => (sel[k] || []).join(", "))
-      .filter(Boolean)
-      .join(" | ");
-    if (selSummary) { y = addWrappedText(doc, `Selections: ${selSummary}`, PAGE_MARGIN, y, maxW); y += 3; }
-    y = addSubHeader(doc, "Generated Prompt", y);
-    y = addWrappedText(doc, clean(addonsPrompt), PAGE_MARGIN, y, maxW);
+
+    if (addonsPrompt) {
+      y = addSubHeader(doc, "Jewellery Design Prompt Generator", y);
+      const sel = jewelleryDesign?.selections || {};
+      const selSummary = ["type", "style", "material", "gemstone", "mood"]
+        .map(k => (sel[k] || []).join(", "))
+        .filter(Boolean)
+        .join(" | ");
+      if (selSummary) { y = addWrappedText(doc, `Selections: ${selSummary}`, PAGE_MARGIN, y, maxW); y += 3; }
+      y = addSubHeader(doc, "Generated Prompt", y);
+      y = addWrappedText(doc, clean(addonsPrompt), PAGE_MARGIN, y, maxW);
+      y += 5;
+    }
+
+    if (modellingData?.modelPrompts && modellingData.modelPrompts.length > 0) {
+      y = ensureSpace(doc, y, 15);
+      y = addSubHeader(doc, "AI Jewellery Modelling", y);
+      if (modellingData.modelType) {
+        y = addWrappedText(doc, `Jewellery Type: ${clean(modellingData.modelType)}`, PAGE_MARGIN, y, maxW);
+        y += 3;
+      }
+      for (const p of modellingData.modelPrompts) {
+        y = ensureSpace(doc, y, 8 + estimateTextHeight(doc, p.prompt, maxW));
+        y = addSubHeader(doc, p.label, y);
+        y = addWrappedText(doc, p.prompt, PAGE_MARGIN, y, maxW);
+        y += 3;
+      }
+    }
   }
 
   // Thank You page
