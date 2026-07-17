@@ -108,11 +108,39 @@ function parseDataUrl(dataUrl: string): GeminiImage | undefined {
   return { mimeType: match[1], data: match[2] };
 }
 
-const COLOR_PRESETS = [
-  { name: "Golden Bold", primary: "#F5B301", secondary: "#14110F" },
+const ALL_COLOR_PRESETS = [
   { name: "Ocean Trust", primary: "#2563EB", secondary: "#F8FAFC" },
   { name: "Fresh Growth", primary: "#059669", secondary: "#F0FDF4" },
   { name: "Elegant Plum", primary: "#7C3AED", secondary: "#FAF5FF" },
+  { name: "Indigo Slate", primary: "#4F46E5", secondary: "#F8FAFC" },
+  { name: "Sunset Glow", primary: "#F97316", secondary: "#FFF7ED" },
+  { name: "Sky Calm", primary: "#0284C7", secondary: "#F0F9FF" },
+  { name: "Teal Breeze", primary: "#0D9488", secondary: "#F0FDFA" },
+  { name: "Rose Petal", primary: "#E11D48", secondary: "#FFF1F2" },
+  { name: "Crimson Peak", primary: "#DC2626", secondary: "#FEF2F2" },
+  { name: "Deep Violet", primary: "#6D28D9", secondary: "#F5F3FF" },
+  { name: "Forest Green", primary: "#15803D", secondary: "#F0FDF4" },
+  { name: "Fuchsia Flare", primary: "#C026D3", secondary: "#FDF4FF" },
+  { name: "Cobalt Ice", primary: "#1D4ED8", secondary: "#EFF6FF" },
+  { name: "Terracotta", primary: "#C2410C", secondary: "#FFF7ED" },
+  { name: "Dark Teal", primary: "#115E59", secondary: "#F0FDFA" },
+  { name: "Burgundy", primary: "#881337", secondary: "#FFF1F2" },
+  { name: "Plum Mist", primary: "#581C87", secondary: "#F9F5FF" },
+  { name: "Emerald Pine", primary: "#047857", secondary: "#ECFDF5" },
+  { name: "Orchid Dream", primary: "#9333EA", secondary: "#FAF5FF" },
+  { name: "Clay Warmth", primary: "#B45309", secondary: "#FFFBEB" },
+  { name: "Steel Slate", primary: "#475569", secondary: "#F8FAFC" },
+  { name: "Midnight Sky", primary: "#1E3A8A", secondary: "#EFF6FF" },
+  { name: "Jade Whisper", primary: "#0F766E", secondary: "#F0FDFA" },
+  { name: "Grape Vines", primary: "#701A75", secondary: "#FDF4FF" },
+  { name: "Ocean Breeze", primary: "#0E7490", secondary: "#ECFEFF" },
+  { name: "Slate Mist", primary: "#334155", secondary: "#F8FAFC" },
+  { name: "Warm Copper", primary: "#9A3412", secondary: "#FFF7ED" },
+  { name: "Fern Green", primary: "#166534", secondary: "#F0FDF4" },
+  { name: "Deep Navy", primary: "#172554", secondary: "#EFF6FF" },
+  { name: "Sweet Rosé", primary: "#9D174D", secondary: "#FFF1F2" },
+  { name: "Eggplant", primary: "#4A044E", secondary: "#FDF4FF" },
+  { name: "Mint Leaf", primary: "#065F46", secondary: "#ECFDF5" }
 ];
 
 const STYLE_ARCHETYPES = [
@@ -170,11 +198,16 @@ const LOVABLE_FAQS = [
 ];
 
 export function Step5Website({ data, icpData, valuePropData, profileData, onboardingData, userName, onSave, onNext, onBack }: Step5Props) {
-  const [form, setForm] = useState({
+  const presets = useMemo(() => {
+    const shuffled = [...ALL_COLOR_PRESETS].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4);
+  }, []);
+
+  const [form, setForm] = useState(() => ({
     brandName: data?.brandName || "",
-    primaryColor: data?.primaryColor || "",
-    secondaryColor: data?.secondaryColor || "",
-  });
+    primaryColor: data?.primaryColor || presets[0]?.primary || "",
+    secondaryColor: data?.secondaryColor || presets[0]?.secondary || "",
+  }));
   const [designRef, setDesignRef] = useState<string | null>(data?.designRef || null);
   const [generatedPrompt, setGeneratedPrompt] = useState(data?.generatedPrompt || "");
   const [loading, setLoading] = useState(false);
@@ -335,7 +368,7 @@ Output a detailed, ready-to-paste prompt. Do NOT return JSON. Return plain text.
           <Label className="text-sm text-muted-foreground">Brand Colours *</Label>
           <p className="text-xs text-muted-foreground mt-1 mb-2">Pick a combination that works, or customise below. Required to generate your prompt.</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {COLOR_PRESETS.map(preset => {
+            {presets.map(preset => {
               const isActive = form.primaryColor === preset.primary && form.secondaryColor === preset.secondary;
               return (
                 <button key={preset.name} type="button"
