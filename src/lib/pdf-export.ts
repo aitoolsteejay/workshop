@@ -301,6 +301,138 @@ function addParagraph(doc: jsPDF, label: string, val: string, y: number, maxW: n
   return y + 2;
 }
 
+interface CardGroup {
+  label: string;
+  val: string[] | string;
+}
+
+function addStyledCard(doc: jsPDF, cardTitle: string, groups: CardGroup[], y: number, maxW: number): number {
+  const lineHeight = 5;
+  const padding = 6;
+
+  // Calculate the height needed for this card
+  let innerH = 0;
+
+  // Card header height
+  innerH += 6; // for cardTitle
+
+  const formattedGroups: any[] = [];
+
+  for (const group of groups) {
+    if (!group.val || (Array.isArray(group.val) && group.val.length === 0)) continue;
+
+    const cleanLabel = clean(group.label).toUpperCase();
+    const labelLines = doc.splitTextToSize(cleanLabel, maxW - 12);
+
+    let contentH = 0;
+    let contentData: any = null;
+
+    if (Array.isArray(group.val)) {
+      // It's a list of bullets
+      const bulletsList: string[][] = [];
+      for (const item of group.val) {
+        const cleanItem = clean(item);
+        const lines = doc.splitTextToSize(capitalize(cleanItem), maxW - 18); // extra indent for bullet
+        bulletsList.push(lines);
+        contentH += lines.length * 5 + 1; // 5mm line height + 1mm spacing between bullets
+      }
+      contentData = { type: "list", data: bulletsList };
+    } else {
+      // It's a string paragraph
+      const cleanVal = clean(group.val);
+      const lines = doc.splitTextToSize(capitalize(cleanVal), maxW - 12);
+      contentH = lines.length * 5;
+      contentData = { type: "text", data: lines };
+    }
+
+    formattedGroups.push({
+      labelLines,
+      contentData,
+      height: labelLines.length * 4.5 + contentH + 4 // label height + content height + spacing
+    });
+
+    innerH += labelLines.length * 4.5 + contentH + 4;
+  }
+
+  if (formattedGroups.length === 0) return y;
+
+  const totalH = innerH + padding * 2;
+
+  // Page check
+  y = ensureSpace(doc, y, totalH);
+
+  // Draw card background
+  doc.setFillColor(249, 250, 251); // Soft off-white background (gray-50)
+  doc.rect(PAGE_MARGIN, y, maxW, totalH, "F");
+
+  // Draw left border accent strip
+  doc.setFillColor(251, 191, 36); // Brand Gold
+  doc.rect(PAGE_MARGIN, y, 2.5, totalH, "F");
+
+  // Draw gray card border outline
+  doc.setDrawColor(229, 231, 235); // gray-200
+  doc.setLineWidth(0.3);
+  doc.line(PAGE_MARGIN + 2.5, y, PAGE_MARGIN + maxW, y); // top
+  doc.line(PAGE_MARGIN + maxW, y, PAGE_MARGIN + maxW, y + totalH); // right
+  doc.line(PAGE_MARGIN + 2.5, y + totalH, PAGE_MARGIN + maxW, y + totalH); // bottom
+
+  let currentY = y + padding + 3.5;
+
+  // Print Card Title (Bold Amber)
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(180, 120, 20);
+  doc.text(cardTitle.toUpperCase(), PAGE_MARGIN + 6, currentY);
+  currentY += 6;
+
+  // Print groups
+  for (const group of formattedGroups) {
+    // Print label (small, bold, muted grey)
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(107, 114, 128);
+    for (const line of group.labelLines) {
+      doc.text(line, PAGE_MARGIN + 6, currentY);
+      currentY += 4.5;
+    }
+
+    // Print content
+    if (group.contentData.type === "list") {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(55, 65, 81);
+
+      for (const lines of group.contentData.data) {
+        // Bullet point dot
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(251, 191, 36); // gold bullet dot
+        doc.text("•", PAGE_MARGIN + 8, currentY);
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(55, 65, 81);
+
+        for (let i = 0; i < lines.length; i++) {
+          doc.text(lines[i], PAGE_MARGIN + 12, currentY);
+          currentY += 5;
+        }
+        currentY += 1;
+      }
+    } else {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(55, 65, 81);
+
+      for (const line of group.contentData.data) {
+        doc.text(line, PAGE_MARGIN + 6, currentY);
+        currentY += 5;
+      }
+    }
+    currentY += 2; // spacing between groups
+  }
+
+  return y + totalH + 5;
+}
+
 function drawTable(doc: jsPDF, headers: string[], rows: any[][], x: number, y: number, colWidths: number[]): number {
   const rowHeight = 8;
   const padding = 2;
@@ -533,20 +665,17 @@ export async function generatePDF(sessionData: any) {
       y = drawTable(doc, headers, rows, PAGE_MARGIN, y, [40, 20, maxW - 60]);
     }
 
-    y = ensureSpace(doc, y, 10);
-    y = addSubHeader(doc, "What's Working", y);
-    y = addBulletList(doc, profile.whatsWorking, PAGE_MARGIN, y, maxW);
-    y += 3;
+    const findings = [
+      { label: "What's Working", val: profile.whatsWorking },
+      { label: "To Improve", val: profile.toImprove }
+    ].filter(g => g.val);
+    if (findings.length > 0) {
+      y = addStyledCard(doc, "Audit Findings", findings, y, maxW);
+    }
 
-    y = ensureSpace(doc, y, 10);
-    y = addSubHeader(doc, "To Improve", y);
-    y = addBulletList(doc, profile.toImprove, PAGE_MARGIN, y, maxW);
-    y += 3;
-
-    y = ensureSpace(doc, y, 10);
-    y = addSubHeader(doc, "Generated Headlines", y);
-    y = addBulletList(doc, profile.headlines, PAGE_MARGIN, y, maxW);
-    y += 3;
+    if (profile.headlines) {
+      y = addStyledCard(doc, "Generated Headlines", [{ label: "Alternative Headlines", val: profile.headlines }], y, maxW);
+    }
 
     if (profile.aboutSection) {
       y = ensureSpace(doc, y, 15);
@@ -575,35 +704,41 @@ export async function generatePDF(sessionData: any) {
     const icp = icps[i];
     const icpLabel = `ICP ${i + 1}: ${clean(icp.name || "Untitled")}${icp.audienceType ? ` (${icp.audienceType})` : ""}`;
     y = newSection(doc, icpLabel);
-    const fields = [
-      { key: "whoTheyAre", label: "Who They Are" },
-      { key: "coreResponsibilities", label: "Core Responsibilities" },
-      { key: "painPoints", label: "Pain Points" },
-      { key: "goalsDesires", label: "Goals and Desires" },
-      { key: "buyingTriggers", label: "Buying Triggers" },
-      { key: "objections", label: "Objections" },
-      { key: "psychology", label: "Psychology" },
-      { key: "whereTheyHangOut", label: "Where They Hang Out" },
-      { key: "howToPosition", label: "How to Position" },
-      { key: "geographyContext", label: "Target Geography Context" },
-    ];
-    for (const f of fields) {
-      const val = icp[f.key];
-      if (!val) continue;
 
-      if (Array.isArray(val)) {
-        y = ensureSpace(doc, y, 12);
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(107, 114, 128);
-        doc.text(f.label.toUpperCase(), PAGE_MARGIN, y);
-        y += 4;
-        y = addBulletList(doc, val, PAGE_MARGIN, y, maxW);
-        y += 3;
-      } else {
-        y = addParagraph(doc, f.label, val, y, maxW);
-      }
+    const card1 = [
+      { label: "Who They Are", val: icp.whoTheyAre },
+      { label: "Target Geography Context", val: icp.geographyContext }
+    ].filter(g => g.val);
+    if (card1.length > 0) {
+      y = addStyledCard(doc, "Profile & Demographics", card1, y, maxW);
     }
+
+    const card2 = [
+      { label: "Core Responsibilities", val: icp.coreResponsibilities },
+      { label: "Psychology & Mindset", val: icp.psychology }
+    ].filter(g => g.val);
+    if (card2.length > 0) {
+      y = addStyledCard(doc, "Role & Mindset", card2, y, maxW);
+    }
+
+    const card3 = [
+      { label: "Pain Points", val: icp.painPoints },
+      { label: "Goals & Desires", val: icp.goalsDesires },
+      { label: "Buying Triggers", val: icp.buyingTriggers }
+    ].filter(g => g.val);
+    if (card3.length > 0) {
+      y = addStyledCard(doc, "Challenges, Desires & Triggers", card3, y, maxW);
+    }
+
+    const card4 = [
+      { label: "How To Position", val: icp.howToPosition },
+      { label: "Objections & Concerns", val: icp.objections },
+      { label: "Where They Hang Out", val: icp.whereTheyHangOut }
+    ].filter(g => g.val);
+    if (card4.length > 0) {
+      y = addStyledCard(doc, "Positioning & Engagement Strategy", card4, y, maxW);
+    }
+
     if (Array.isArray(icp.channelPartners) && icp.channelPartners.length > 0) {
       y = ensureSpace(doc, y, 15);
       y = addSubHeader(doc, "Channel Partners", y);
@@ -626,20 +761,46 @@ export async function generatePDF(sessionData: any) {
     const vpLabel = vp.icpName === "Channel Partners" ? "Channel Partners" : `ICP ${i + 1}: ${clean(vp.icpName)}${vpAudienceType ? ` (${vpAudienceType})` : ""}`;
     y = addSubHeader(doc, vpLabel, y);
 
-    if (vp.corePromise) { y = addParagraph(doc, "Core Promise", vp.corePromise, y, maxW); }
-    if (vp.coreAngle) { y = addParagraph(doc, "Core Angle", vp.coreAngle, y, maxW); }
+    const isPartner = vp.icpName === "Channel Partners";
 
-    if (vp.beforeState && vp.beforeState.length > 0) {
-      y = ensureSpace(doc, y, 10);
-      y = addSubHeader(doc, "Before State", y);
-      y = addBulletList(doc, vp.beforeState, PAGE_MARGIN, y, maxW);
-      y += 2;
-    }
-    if (vp.afterState && vp.afterState.length > 0) {
-      y = ensureSpace(doc, y, 10);
-      y = addSubHeader(doc, "After State", y);
-      y = addBulletList(doc, vp.afterState, PAGE_MARGIN, y, maxW);
-      y += 2;
+    if (!isPartner) {
+      const cardVal = [
+        { label: "Core Promise", val: vp.corePromise },
+        { label: "Core Angle", val: vp.coreAngle },
+        { label: "Positioning Statement", val: vp.positioning }
+      ].filter(g => g.val);
+      y = addStyledCard(doc, "Value Prop Foundation", cardVal, y, maxW);
+
+      const cardTrans = [
+        { label: "Before State", val: vp.beforeState },
+        { label: "After State", val: vp.afterState }
+      ].filter(g => g.val);
+      y = addStyledCard(doc, "Transformation Map", cardTrans, y, maxW);
+
+      const cardEdge = [
+        { label: "Why Others Fail", val: vp.whyOthersFail },
+        { label: "Why We Win", val: vp.whyYouWin }
+      ].filter(g => g.val);
+      y = addStyledCard(doc, "Differentiating Edge", cardEdge, y, maxW);
+    } else {
+      const cardPartner = [
+        { label: "Core Promise", val: vp.corePromise },
+        { label: "Core Angle", val: vp.coreAngle },
+        { label: "Ideal Partner Profile", val: vp.idealPartnerProfile },
+        { label: "Positioning Statement", val: vp.positioning }
+      ].filter(g => g.val);
+      y = addStyledCard(doc, "Partner Value Foundation", cardPartner, y, maxW);
+
+      const cardBenefits = [
+        { label: "What's In It For Them", val: vp.whatsInItForThem },
+        { label: "Why Partner With Us", val: vp.whyPartnerWithUs }
+      ].filter(g => g.val);
+      y = addStyledCard(doc, "Partner Benefits", cardBenefits, y, maxW);
+
+      const cardApproach = [
+        { label: "How to Approach Them", val: vp.howToApproachThem }
+      ].filter(g => g.val);
+      y = addStyledCard(doc, "Partner Outreach Strategy", cardApproach, y, maxW);
     }
 
     if (vp.threeStepSystem && vp.threeStepSystem.length > 0) {
@@ -653,26 +814,6 @@ export async function generatePDF(sessionData: any) {
       y = drawTable(doc, headers, rows, PAGE_MARGIN, y, [40, maxW - 40]);
     }
 
-    if (vp.whyOthersFail && vp.whyOthersFail.length > 0) {
-      y = ensureSpace(doc, y, 10);
-      y = addSubHeader(doc, "Why Others Fail", y);
-      y = addBulletList(doc, vp.whyOthersFail, PAGE_MARGIN, y, maxW);
-      y += 2;
-    }
-    if (vp.whyYouWin && vp.whyYouWin.length > 0) {
-      y = ensureSpace(doc, y, 10);
-      y = addSubHeader(doc, "Why We Win", y);
-      y = addBulletList(doc, vp.whyYouWin, PAGE_MARGIN, y, maxW);
-      y += 2;
-    }
-    if (vp.whatsInItForThem && vp.whatsInItForThem.length > 0) {
-      y = ensureSpace(doc, y, 10);
-      y = addSubHeader(doc, "What's In It For Them", y);
-      y = addBulletList(doc, vp.whatsInItForThem, PAGE_MARGIN, y, maxW);
-      y += 2;
-    }
-    if (vp.idealPartnerProfile) { y = addParagraph(doc, "Ideal Partner Profile", vp.idealPartnerProfile, y, maxW); }
-
     if (vp.partnershipSteps && vp.partnershipSteps.length > 0) {
       y = ensureSpace(doc, y, 15);
       y = addSubHeader(doc, "How the Partnership Works", y);
@@ -684,22 +825,15 @@ export async function generatePDF(sessionData: any) {
       y = drawTable(doc, headers, rows, PAGE_MARGIN, y, [40, maxW - 40]);
     }
 
-    if (vp.whyPartnerWithUs && vp.whyPartnerWithUs.length > 0) {
-      y = ensureSpace(doc, y, 10);
-      y = addSubHeader(doc, "Why Partner With Us", y);
-      y = addBulletList(doc, vp.whyPartnerWithUs, PAGE_MARGIN, y, maxW);
-      y += 2;
+    const cardPitch = [
+      { label: "Content Strategy", val: vp.contentStrategy || vp.oneLiner },
+      { label: "Pitch", val: vp.shortPitch },
+      { label: "Call to Action", val: vp.cta }
+    ].filter(g => g.val);
+    if (cardPitch.length > 0) {
+      y = addStyledCard(doc, "Content & Pitch Strategy", cardPitch, y, maxW);
     }
-    if (vp.howToApproachThem) { y = addParagraph(doc, "How to Approach Them", vp.howToApproachThem, y, maxW); }
-    if (vp.contentStrategy || vp.oneLiner) { y = addParagraph(doc, "Content Strategy", vp.contentStrategy || vp.oneLiner, y, maxW); }
-    if (vp.shortPitch) { y = addParagraph(doc, "Pitch", vp.shortPitch, y, maxW); }
-    if (vp.cta) { y = addParagraph(doc, "Call to Action", vp.cta, y, maxW); }
-    if (vp.positioning) {
-      y = ensureSpace(doc, y, 15);
-      y = addSubHeader(doc, "Positioning Statement", y);
-      y = addWrappedText(doc, vp.positioning, PAGE_MARGIN, y, maxW);
-      y += 3;
-    }
+    
     y += 5;
   }
 
