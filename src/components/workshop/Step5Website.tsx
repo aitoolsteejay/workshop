@@ -282,7 +282,7 @@ The generated website must have EXACTLY these 8 sections in this order:
 5. Free Resource Section (MANDATORY): ONE simple, focused interactive tool-based resource (e.g. a single calculator or quiz, NOT an ebook/PDF, and not more than one tool)
 6. CTA Section
 7. FAQ Section: 6-8 questions covering: trust, process, timeline, effort, vs alternatives, pricing, and results guarantee
-8. Footer: TJ's LinkedIn, Instagram, Newsletter, Calendly, Myntmore Services: ${MYNTMORE_NOTION_LINK}
+8. Footer: TJ's LinkedIn, Instagram, Newsletter, Calendly, Myntmore Website: https://myntmore.com
 
 Design rules:
 - ${themeInstruction}
