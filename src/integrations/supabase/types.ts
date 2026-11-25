@@ -19,8 +19,10 @@ export type Database = {
           created_at: string | null
           current_step: number | null
           gtm_data: Json | null
+          content_ideas_data: Json | null
           icp_data: Json | null
           id: string
+          meme_data: Json | null
           onboarding_data: Json | null
           outreach_data: Json | null
           profile_data: Json | null
@@ -36,8 +38,10 @@ export type Database = {
           created_at?: string | null
           current_step?: number | null
           gtm_data?: Json | null
+          content_ideas_data?: Json | null
           icp_data?: Json | null
           id?: string
+          meme_data?: Json | null
           onboarding_data?: Json | null
           outreach_data?: Json | null
           profile_data?: Json | null
@@ -53,8 +57,10 @@ export type Database = {
           created_at?: string | null
           current_step?: number | null
           gtm_data?: Json | null
+          content_ideas_data?: Json | null
           icp_data?: Json | null
           id?: string
+          meme_data?: Json | null
           onboarding_data?: Json | null
           outreach_data?: Json | null
           profile_data?: Json | null

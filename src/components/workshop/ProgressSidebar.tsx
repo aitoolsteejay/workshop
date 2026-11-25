@@ -11,6 +11,8 @@ const STEP_NAMES = [
   "Jewellery Design Generator",
   "Jewellery Modelling",
   "Outreach Playbook",
+  "Meme Marketing",
+  "Content Ideas",
   "Final Summary",
 ];
 
@@ -23,7 +25,7 @@ export function ProgressSidebar({ currentStep, onNavigate }: ProgressSidebarProp
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  if (currentStep < 1 || currentStep > 10) return null;
+  if (currentStep < 1 || currentStep > STEP_NAMES.length) return null;
 
   const content = (
     <nav className="flex flex-col h-full">

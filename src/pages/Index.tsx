@@ -10,6 +10,8 @@ import { Step6GTM } from "@/components/workshop/Step6GTM";
 import { StepJewelleryDesign } from "@/components/workshop/StepJewelleryDesign";
 import { StepJewelleryModelling } from "@/components/workshop/StepJewelleryModelling";
 import { Step7Outreach } from "@/components/workshop/Step7Outreach";
+import { StepMemeMarketing } from "@/components/workshop/StepMemeMarketing";
+import { StepContentIdeas } from "@/components/workshop/StepContentIdeas";
 import { FinalScreen } from "@/components/workshop/FinalScreen";
 import { ProgressBar } from "@/components/workshop/ProgressBar";
 import { ProgressSidebar } from "@/components/workshop/ProgressSidebar";
@@ -23,13 +25,14 @@ import { generatePDF } from "@/lib/pdf-export";
 import { useToast } from "@/hooks/use-toast";
 
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 12;
 
 const Index = () => {
   const [step, setStep] = useState(-1);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionData, setSessionData] = useState<any>(null);
   const [fromBackup, setFromBackup] = useState(false);
+  const [memeSeed, setMemeSeed] = useState("");
   const { toast } = useToast();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -166,6 +169,12 @@ const Index = () => {
               <Step7Outreach data={sessionData?.outreach_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d, opts) => saveField("outreach_data", d, opts)} onNext={() => goToStep(10)} onBack={() => goToStep(8)} />
             )}
             {step === 10 && (
+              <StepMemeMarketing data={sessionData?.meme_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} seedCaption={memeSeed} onSave={(d, opts) => saveField("meme_data", d, opts)} onNext={() => goToStep(11)} onBack={() => goToStep(9)} />
+            )}
+            {step === 11 && (
+              <StepContentIdeas data={sessionData?.content_ideas_data} icpData={sessionData?.icp_data} valuePropData={sessionData?.value_prop_data} profileData={sessionData?.profile_data} onboardingData={sessionData?.onboarding_data} onSave={(d, opts) => saveField("content_ideas_data", d, opts)} onMakeMeme={(caption) => { setMemeSeed(caption); goToStep(10); }} onNext={() => goToStep(12)} onBack={() => goToStep(10)} />
+            )}
+            {step === 12 && (
               <FinalScreen sessionData={sessionData} onDownloadPDF={() => generatePDF(sessionData)} onRestart={handleStartFresh} />
             )}
           </AnimatePresence>

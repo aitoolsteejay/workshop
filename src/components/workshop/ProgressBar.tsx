@@ -19,6 +19,8 @@ const stepLabels = [
   "Jewellery Design Generator",
   "Jewellery Modelling",
   "Outreach Playbook",
+  "Meme Marketing",
+  "Content Ideas",
   "Final Summary",
 ];
 
