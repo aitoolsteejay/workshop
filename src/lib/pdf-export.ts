@@ -573,7 +573,8 @@ export async function generatePDF(sessionData: any) {
   const w = doc.internal.pageSize.getWidth();
   const maxW = w - PAGE_MARGIN * 2;
   const userName = sessionData?.user_name || "Attendee";
-  const addonsPrompt = sessionData?.jewellery_design_data?.basePrompt;
+  const jewelleryDesign = sessionData?.jewellery_design_data;
+  const addonsPrompt = jewelleryDesign?.basePrompt;
   const modellingData = sessionData?.jewellery_modelling_data;
   const showAddons = !!(addonsPrompt || (modellingData?.modelPrompts && modellingData.modelPrompts.length > 0));
 
